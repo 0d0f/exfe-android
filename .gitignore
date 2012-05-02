@@ -1,0 +1,12 @@
+*~
+*.lock
+*.DS_Store
+*.swp
+*.out
+
+*.class
+EXFE/bin/*
+EXFE/gen/*
+EXFETest/bin/*
+EXFETest/gen/*
+

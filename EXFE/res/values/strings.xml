@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, CrossActivity!</string>
+    <string name="app_name">EXFE</string>
+    <string name="login_identity">Identity:</string>
+    <string name="login_password">Password:</string>
+    <string name="login_sign_in">Sign In</string>
+    <string name="login_sign_in_fail_hint">Incorrect identity or password</string>
+
+    <plurals name="seconds_ago">
+        <item quantity="one">One second ago.</item>
+        <item quantity="other">%d seconds ago.</item>
+    </plurals>
+    <plurals name="seconds_later">
+        <item quantity="one">One second later.</item>
+        <item quantity="other">%d seconds later.</item>
+    </plurals>
+    
+    <plurals name="minutes_ago">
+        <item quantity="one">One minute ago.</item>
+        <item quantity="other">%d minutes ago.</item>
+    </plurals>
+    <plurals name="minutes_later">
+        <item quantity="one">One minute later.</item>
+        <item quantity="other">%d minutes later.</item>
+    </plurals>
+    
+    <plurals name="hours_ago">
+        <item quantity="one">One hour ago.</item>
+        <item quantity="other">%d hours ago.</item>
+    </plurals>
+    <plurals name="hours_later">
+        <item quantity="one">One hour later.</item>
+        <item quantity="other">%d hours later.</item>
+    </plurals>
+    
+    <plurals name="days_ago">
+        <item quantity="one">One day ago.</item>
+        <item quantity="other">%d days ago.</item>
+    </plurals>
+    <plurals name="days_later">
+        <item quantity="one">One day later.</item>
+        <item quantity="other">%d days later.</item>
+    </plurals>
+    
+    <plurals name="months_ago">
+        <item quantity="one">One month ago.</item>
+        <item quantity="other">%d months ago.</item>
+    </plurals>
+    <plurals name="months_later">
+        <item quantity="one">One month later.</item>
+        <item quantity="other">%d months later.</item>
+    </plurals>
+    
+    <plurals name="years_ago">
+        <item quantity="one">One year ago.</item>
+        <item quantity="other">%d years ago.</item>
+    </plurals>
+    <plurals name="years_later">
+        <item quantity="one">One year later.</item>
+        <item quantity="other">%d years later.</item>
+    </plurals>
+</resources>
