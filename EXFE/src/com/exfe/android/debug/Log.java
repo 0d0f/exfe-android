@@ -1,14 +1,22 @@
 package com.exfe.android.debug;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Set;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Environment;
+
+import com.exfe.android.BuildConfig;
 
 public class Log {
-	public static boolean DEBUG = true;
-	
+	public static boolean DEBUG = BuildConfig.DEBUG;
+
 	public static void v(Class<?> tag, String msg, Object... args) {
 		v(tag.getSimpleName(), msg, args);
 	}
@@ -292,8 +300,10 @@ public class Log {
 							if (subb != null && subb.size() > 0)
 								print(subb);
 						} catch (ClassCastException e) {
-							android.util.Log.e("Bundle Data", "Key = " + key + " : Value = "
-									+ String.valueOf(b.get(key)));
+							android.util.Log.e(
+									"Bundle Data",
+									"Key = " + key + " : Value = "
+											+ String.valueOf(b.get(key)));
 						}
 					}
 				}
@@ -311,5 +321,24 @@ public class Log {
 
 	public static void printStackTrace(Exception e) {
 		e.printStackTrace();
+	}
+
+	public static void dumpString(String s, Context ctx) {
+		if (Environment.getExternalStorageState().equals(
+				Environment.MEDIA_MOUNTED)) {
+			File file = new File(
+					ctx.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+					"dumpString.txt");
+			Log.d("LOG", "Dump String to %s", file.getAbsolutePath());
+			try {
+				OutputStream os = new FileOutputStream(file);
+				os.write(s.getBytes());
+				os.close();
+			} catch (IOException e) {
+				Log.w("ExternalStorage", e, "Error writing %s", file);
+			}
+		}else{
+			Log.w("ExternalStorage", "No External Storage or not ready.");
+		}
 	}
 }

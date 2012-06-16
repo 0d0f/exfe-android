@@ -1,11 +1,16 @@
 package com.exfe.android.model.entity;
 
+import java.sql.SQLException;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Place extends Entity {
+import com.exfe.android.db.DatabaseHelper;
+import com.j256.ormlite.dao.Dao;
 
-	private Long mId;
+public class Place extends Entity {
+	
+	private long mId;
 	private String mTitle;
 	private String mDescription;
 	private String mLng;
@@ -36,8 +41,8 @@ public class Place extends Entity {
 		mUpdateAt = json.optString("updated_at", "");
 	}
 
-	public JSONObject toJSON(){
-		JSONObject json = super.toJSON();
+	public JSONObject toJSON(boolean deep) {
+		JSONObject json = super.toJSON(deep);
 		try {
 			json.put("id", mId);
 			json.put("title", mTitle);
@@ -54,22 +59,21 @@ public class Place extends Entity {
 		
 		return json;
 	}
-
+	
 	/**
 	 * @return the id
 	 */
-	public Long getId() {
+	public long getId() {
 		return this.mId;
 	}
 
-
 	/**
-	 * @param id the id to set
+	 * @param id
+	 *            the id to set
 	 */
-	public void setId(Long id) {
+	public void setId(long id) {
 		this.mId = id;
 	}
-
 
 	/**
 	 * @return the title
@@ -196,5 +200,21 @@ public class Place extends Entity {
 	 */
 	public void setUpdateAt(String updateAt) {
 		this.mUpdateAt = updateAt;
+	}
+	
+	@Override
+	public void saveToDao(DatabaseHelper dbhelper){
+		try {
+			Dao<Place, Long> dao = dbhelper.getCachedDao(getClass());
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void loadFromDao(DatabaseHelper dbhelper) {
+		// TODO Auto-generated method stub
+		
 	}
 }

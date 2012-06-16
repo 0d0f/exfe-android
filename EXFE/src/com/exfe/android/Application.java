@@ -2,6 +2,7 @@ package com.exfe.android;
 
 import com.exfe.android.debug.Log;
 import com.exfe.android.model.Model;
+import com.exfe.android.util.ImageCache;
 
 import android.content.res.Configuration;
 
@@ -24,6 +25,18 @@ public class Application extends android.app.Application {
 	public void onCreate() {
 		super.onCreate();
 		mModel = new Model(this);
+		ImageCache.getInst(this);
+	}
+
+	/* (non-Javadoc)
+	 * @see android.app.Application#onTerminate()
+	 */
+	@Override
+	public void onTerminate() {
+		// TODO Auto-generated method stub
+		super.onTerminate();
+		mModel.releaseHelper();
+		mModel = null;
 	}
 
 	@Override

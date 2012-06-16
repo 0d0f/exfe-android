@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="red">#FFFF0000</color>
+    <color name="green">#FF00FF00</color>
+    <color name="blue">#FF0000FF</color>
+    
+    <color name="nav_bar_background">#FFE0E0E0</color>
+    <color name="bav_bar_title">#FF3A3A3A</color>
+    <color name="body_background">#FFF0F0F0</color>
+    <color name="list_item_background">#FFF0F0F0</color>
+    <color name="list_divider">#FFC9C9C9</color>
+    <color name="btn_text">#FF303030</color>
+    <color name="cross_text_hightlight">#FF1E6295</color>
+</resources>

@@ -1,7 +1,12 @@
-package com.exfe.android;
+package com.exfe.android.controller;
 
 import java.util.Observable;
 import java.util.Observer;
+
+import com.exfe.android.Activity;
+import com.exfe.android.R;
+import com.exfe.android.R.id;
+import com.exfe.android.R.layout;
 
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -13,7 +18,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class NotificationActivity extends Activity implements Observer {
-	private static final String TAG = NotificationActivity.class.getSimpleName();
 	
 	/** Called when the activity is first created. */
 	@Override

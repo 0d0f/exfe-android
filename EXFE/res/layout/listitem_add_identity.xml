@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/list_identity_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingLeft="@dimen/base_margin"
+    android:paddingRight="@dimen/base_margin" >
+
+    <TextView
+        android:id="@+id/identity_main"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/list_item_height"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:text="@string/add_identity"
+        android:textColor="@color/btn_text"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:gravity="center_vertical"
+        android:text=">"
+        android:textColor="@color/btn_text"
+        android:textStyle="bold" />
+
+</LinearLayout>

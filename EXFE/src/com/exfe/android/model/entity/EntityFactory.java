@@ -17,6 +17,7 @@ public class EntityFactory {
 	public static final int TYPE_USER = 8;
 	public static final int TYPE_EXFEE = 9;
 	public static final int TYPE_INVITATION = 10;
+	public static final int TYPE_RSVP = 11;
 	public static final int TYPE_WIDGET = 100;
 	public static final int TYPE_BACKGROUND = 101;
 	public static final int TYPE_ATTRIBUTE = 200;
@@ -33,6 +34,7 @@ public class EntityFactory {
 	public static final String STRING_USER = "user";
 	public static final String STRING_EXFEE = "exfee";
 	public static final String STRING_INVITATION = "invitation";
+	public static final String STRING_RSVP = "rsvp";
 	public static final String STRING_WIDGET = "widget";
 	//public static final String STRING_ATTRIBUTE = "attr";
 	//public static final String STRING_RELATIVE = "relative";	
@@ -59,6 +61,8 @@ public class EntityFactory {
 			return TYPE_EXFEE;
 		} else if (STRING_INVITATION.equalsIgnoreCase(typeString)) {
 			return TYPE_INVITATION;
+		} else if (STRING_RSVP.equalsIgnoreCase(typeString)) {
+			return TYPE_RSVP;
 		}else if (STRING_WIDGET.equalsIgnoreCase(typeString)) {
 			return TYPE_WIDGET;
 		}
@@ -99,6 +103,9 @@ public class EntityFactory {
 		case TYPE_INVITATION:
 			return STRING_INVITATION;
 			// break;
+		case TYPE_RSVP:
+			return STRING_RSVP;
+			// break;
 		default:
 			return STRING_UNKNOWN;
 			// break;
@@ -106,6 +113,9 @@ public class EntityFactory {
 	}
 
 	public static Entity create(JSONObject json) {
+		if (json == null){
+			return null;
+		}
 		Entity result = null;
 		if (json.has("type")) {
 			String value = null;
@@ -147,6 +157,9 @@ public class EntityFactory {
 					case TYPE_INVITATION:
 						result = new Invitation(json);
 						break;
+					case TYPE_RSVP:
+						result = new Rsvp(json);
+						break;
 					default:
 						//unknown type
 						break;
@@ -161,5 +174,4 @@ public class EntityFactory {
 		}
 		return result;
 	}
-
 }

@@ -6,7 +6,7 @@ import org.json.JSONObject;
 public class Background extends Widget {
 
 	private String mImage;
-	
+
 	public Background() {
 		// TODO Auto-generated constructor stub
 	}
@@ -15,16 +15,15 @@ public class Background extends Widget {
 		super(json);
 		// TODO Auto-generated constructor stub
 	}
-	
-	public void parseJSON(JSONObject json){
+
+	public void parseJSON(JSONObject json) {
 		super.parseJSON(json);
-		
+
 		mImage = json.optString("image", "");
 	}
 	
-	
-	public JSONObject toJSON() {
-		JSONObject json = super.toJSON();
+	public JSONObject toJSON(boolean deep) {
+		JSONObject json = super.toJSON(deep);
 		try {
 			json.put("image", mImage);
 		} catch (JSONException e) {
@@ -42,7 +41,8 @@ public class Background extends Widget {
 	}
 
 	/**
-	 * @param image the image to set
+	 * @param image
+	 *            the image to set
 	 */
 	public void setImage(String image) {
 		this.mImage = image;

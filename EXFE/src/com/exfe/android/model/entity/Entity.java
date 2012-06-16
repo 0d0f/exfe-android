@@ -1,11 +1,17 @@
 package com.exfe.android.model.entity;
 
+import java.util.Comparator;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Entity {
+import com.exfe.android.db.DatabaseHelper;
 
-	private static final String TAG = Entity.class.getSimpleName();
+public abstract class Entity {
+	public static final long NO_ID = 0;
+	
+	public final String TAG = getClass().getSimpleName();
+	
 
 	protected int mType = EntityFactory.TYPE_UNKNOWN;
 
@@ -22,6 +28,10 @@ public class Entity {
 	}
 
 	public JSONObject toJSON(){
+		return toJSON(true);
+	}
+
+	public JSONObject toJSON(boolean deep) {
 		JSONObject json = new JSONObject();
 		try {
 			json.put("type", EntityFactory.getTypeString(mType));
@@ -39,6 +49,24 @@ public class Entity {
 			e.printStackTrace();
 		}
 		return "";
+	}
+	
+	public <T extends Entity> T cloneSelf(){
+		T entity = null;
+		try {
+			@SuppressWarnings("unchecked")
+			Class<T> cls = (Class<T>) getClass();
+			entity = cls.newInstance();
+			entity.parseJSON(toJSON());
+		} catch (InstantiationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IllegalAccessException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		return entity;
 	}
 
 	public static String getFieldName(String jsonName) {
@@ -79,4 +107,34 @@ public class Entity {
 		}
 		return "";
 	}
+	
+	/**
+	 * @return the id
+	 */
+	public abstract long getId();
+	
+	/**
+	 * @param id
+	 *            the id to set
+	 */
+	public abstract void setId(long id);
+	
+	public abstract void saveToDao(DatabaseHelper dbhelper);
+	
+	public abstract void loadFromDao(DatabaseHelper dbhelper);
+	
+	public static final Comparator<Entity> sIdComparator = new Comparator<Entity>() {
+
+		@Override
+		public int compare(Entity lhs, Entity rhs) {
+			if (lhs.getId() == rhs.getId()) {
+				return 0;
+			} else if (lhs.getId() < rhs.getId()) {
+				return -1;
+			} else {
+				return 1;
+			}
+
+		}
+	};
 }

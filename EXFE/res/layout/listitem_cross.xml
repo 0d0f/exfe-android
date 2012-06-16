@@ -2,53 +2,63 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/list_cross_root"
     android:layout_width="match_parent"
-    android:layout_height="80sp"
-    android:orientation="horizontal" >
+    android:layout_height="wrap_content"
+    android:minHeight="@dimen/list_item_height"
+    android:orientation="horizontal"
+    android:padding="@dimen/list_commom_margin" >
 
     <ImageView
         android:id="@+id/cross_host_avatar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/list_avatar_width"
+        android:layout_height="@dimen/list_avatar_height"
         android:layout_gravity="center_vertical"
+        android:contentDescription="@string/image_hint_avatar"
         android:src="@drawable/ic_launcher" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginLeft="@dimen/list_commom_margin"
         android:orientation="vertical" >
 
-        <TextView
+        <CheckedTextView
             android:id="@+id/cross_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="3"
             android:layout_gravity="center_vertical"
+            android:layout_weight="3"
+            android:checkMark="@null"
             android:gravity="center_vertical"
-            android:hint="Title"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+            android:hint="@string/text_hint_title"
+            android:textColor="@color/hightlight"
+            android:textSize="@dimen/list_main_text_size" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="2"
             android:orientation="horizontal" >
-            <TextView
+
+            <CheckedTextView
                 android:id="@+id/cross_place"
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:hint="Place"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
-            
+                android:layout_weight="1"
+                android:checkMark="@null"
+                android:hint="@string/text_hint_place"
+                android:textColor="@color/hightlight"
+                android:textSize="@dimen/list_alternative_text_size" />
 
-            <TextView
+            <CheckedTextView
                 android:id="@+id/cross_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:hint="Time"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:checkMark="@null"
+                android:hint="@string/text_hint_time"
+                android:textColor="@color/hightlight"
+                android:textSize="@dimen/list_alternative_text_size" />
         </LinearLayout>
     </LinearLayout>
 

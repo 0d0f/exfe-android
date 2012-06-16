@@ -1,10 +1,16 @@
 package com.exfe.android.model.entity;
 
+import java.sql.SQLException;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.exfe.android.db.DatabaseHelper;
+import com.j256.ormlite.dao.Dao;
+
 public class Widget extends Entity {
 
+	private long mId = NO_ID;
 	private String mCategory;
 	private long mWidgetId;
 	
@@ -23,12 +29,12 @@ public class Widget extends Entity {
 		mType = EntityFactory.TYPE_WIDGET;
 		
 		mCategory = json.optString("type");
-		mWidgetId = json.optLong("widget_id", 0);
+		mWidgetId = json.optLong("widget_id", Entity.NO_ID);
 	}
 	
 	
-	public JSONObject toJSON() {
-		JSONObject json = super.toJSON();
+	public JSONObject toJSON(boolean deep) {
+		JSONObject json = super.toJSON(deep);
 		try {
 			json.put("widget_id", mWidgetId);
 			json.put("type", mCategory);
@@ -37,6 +43,21 @@ public class Widget extends Entity {
 		}
 
 		return json;
+	}
+	
+	/**
+	 * @return the id
+	 */
+	public long getId() {
+		return this.mId;
+	}
+
+	/**
+	 * @param id
+	 *            the id to set
+	 */
+	public void setId(long id) {
+		this.mId = id;
 	}
 
 	/**
@@ -66,5 +87,20 @@ public class Widget extends Entity {
 	public void setCategory(String category) {
 		this.mCategory = category;
 	}
+	
+	@Override
+	public void saveToDao(DatabaseHelper dbhelper){
+		try {
+			Dao<Widget, Long> dao = dbhelper.getCachedDao(getClass());
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
+	@Override
+	public void loadFromDao(DatabaseHelper dbhelper) {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -2,37 +2,52 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:background="@color/body_background"
     android:orientation="vertical" >
 
     <FrameLayout
         android:id="@+id/nav_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="@dimen/nav_bar_height"
+        android:layout_marginBottom="@dimen/base_small_margin"
+        android:background="@color/nav_bar_background"
+        android:paddingLeft="@dimen/base_smaill_margin" >
 
         <TextView
             android:id="@+id/textView1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Settings" />
+            android:text="@string/profile"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@color/bav_bar_title"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/btn_back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right|center_horizontal"
-            android:text="Close" />
+            android:layout_gravity="left|center_horizontal"
+            android:text="@string/close"
+            android:textSize="@dimen/button_text_size"
+            android:textStyle="bold" />
     </FrameLayout>
 
     <LinearLayout
         android:id="@+id/user_head"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/base_smaill_margin"
+        android:layout_marginLeft="@dimen/base_margin"
+        android:layout_marginRight="@dimen/base_margin"
+        android:layout_marginTop="@dimen/base_margin" >
 
         <ImageView
             android:id="@+id/user_avatar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/avatar_width"
+            android:layout_height="@dimen/avatar_height"
+            android:layout_marginLeft="@dimen/base_margin"
+            android:layout_marginRight="@dimen/base_margin"
             android:src="@android:drawable/sym_def_app_icon" />
 
         <TextView
@@ -40,22 +55,34 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
+            android:layout_marginLeft="@dimen/base_small_margin"
+            android:gravity="left|center_vertical"
+            android:hint="(user name)"
+            android:maxLines="2"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:hint="(user name)" />
+            android:textColor="@color/black" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/user_cross_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|center"
+        android:layout_marginLeft="@dimen/base_margin"
+        android:layout_marginRight="@dimen/base_margin"
+        android:hint="@string/text_hint_crosses_attended" />
 
     <ListView
         android:id="@+id/user_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1" >
+        android:layout_marginLeft="@dimen/base_margin"
+        android:layout_marginRight="@dimen/base_margin"
+        android:layout_weight="1"
+        android:background="@color/list_item_background"
+        android:cacheColorHint="@color/list_item_background"
+        android:divider="@color/list_divider"
+        android:dividerHeight="@dimen/list_divider_hight" >
     </ListView>
-
-    <Button
-        android:id="@+id/btn_sign_out"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right"
-        android:text="Sign Out" />
 
 </LinearLayout>

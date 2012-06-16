@@ -11,18 +11,20 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.Observable;
 
 import com.exfe.android.exception.ExfeException;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Path;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.text.TextUtils;
 
-public class ImageCache {
+public class ImageCache extends Observable {
 
 	private static ImageCache sInst = null;
 	private static HashMap<String, Bitmap> sImgs = null;
@@ -31,9 +33,13 @@ public class ImageCache {
 	public synchronized static ImageCache getInst(Context appContext) {
 
 		if (sInst == null) {
-			sInst = new ImageCache();
-			sImgs = new HashMap<String, Bitmap>();
-			sContext = appContext;
+			synchronized (ImageCache.class) {
+				if (sInst == null) {
+					sInst = new ImageCache();
+					sImgs = new HashMap<String, Bitmap>();
+					sContext = appContext;
+				}
+			}
 		}
 
 		return sInst;
@@ -59,7 +65,7 @@ public class ImageCache {
 		return imageCachePath;
 	}
 
-	public static String getImageName(String url) {
+	public String getImageName(String url) {
 		String key = "";
 		try {
 			key = MD5.getMD5(url);
@@ -79,7 +85,7 @@ public class ImageCache {
 		return key;
 	}
 
-	public static String getImageUrl(String fileName) {
+	public String getImageUrl(String fileName) {
 		if (TextUtils.isEmpty(fileName) || fileName.length() < 2) {
 			fileName = "default.png";
 		}
@@ -93,15 +99,23 @@ public class ImageCache {
 		return String.format("http://img.exfe.com/%c/%c/80_80_%s",
 				fileName.charAt(0), fileName.charAt(1), fileName);
 	}
+	
+	public void clearCachedFiles(){
+		File cached = new File(getCachePath());
+		for(File f: cached.listFiles()){
+			f.delete();
+		}
+		sImgs.clear();
+	}
 
-	public Drawable getImageFrom(String url) {
+	public Bitmap getImageFrom(String url) {
 		String key = "";
 		try {
 			key = MD5.getMD5(url);
 			if (sImgs.containsKey(key)) {
 				Bitmap bm = sImgs.get(key);
 				if (bm != null) {
-					return new BitmapDrawable(bm);
+					return bm;
 				}
 			}
 
@@ -109,6 +123,12 @@ public class ImageCache {
 			File cacheFile = new File(cacheFilename);
 			if (!cacheFile.exists()) {
 				new DownloadFile().execute(url, cacheFile.toString());
+			} else {
+				Bitmap b = BitmapFactory.decodeFile(cacheFilename);
+				if (b != null) {
+					sImgs.put(key, b);
+				}
+				return b;
 			}
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -120,8 +140,10 @@ public class ImageCache {
 		return null;
 	}
 
-	private static class DownloadFile extends
-			AsyncTask<String, Integer, Boolean> {
+	private class DownloadFile extends AsyncTask<String, Integer, Boolean> {
+
+		private URL url = null;
+		private File local = null;
 
 		@Override
 		protected Boolean doInBackground(String... params) {
@@ -129,8 +151,8 @@ public class ImageCache {
 			InputStream input = null;
 			OutputStream output = null;
 			try {
-				URL url = new URL(params[0]);
-				File local = new File(params[1]);
+				url = new URL(params[0]);
+				local = new File(params[1]);
 				if (local.exists()) {
 					return Boolean.FALSE;
 				}
@@ -155,10 +177,23 @@ public class ImageCache {
 				}
 				output.flush();
 
+				String key = MD5.getMD5(url.toString());
+				if (!sImgs.containsKey(key)) {
+					Bitmap b = BitmapFactory
+							.decodeFile(local.getAbsolutePath());
+					if (b != null) {
+						sImgs.put(key, b);
+					}
+				}
+				ImageCache.this.setChanged();
+				return Boolean.TRUE;
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchAlgorithmException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} finally {
@@ -181,7 +216,19 @@ public class ImageCache {
 				}
 			}
 
-			return Boolean.TRUE;
+			return Boolean.FALSE;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+		 */
+		@Override
+		protected void onPostExecute(Boolean result) {
+			if (result == true) {
+				ImageCache.this.notifyObservers(url.toString());
+			}
 		}
 
 	}

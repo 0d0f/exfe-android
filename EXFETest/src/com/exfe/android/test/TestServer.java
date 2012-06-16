@@ -3,6 +3,8 @@
  */
 package com.exfe.android.test;
 
+import java.util.Date;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -11,7 +13,7 @@ import android.test.ActivityInstrumentationTestCase2;
 import android.text.TextUtils;
 
 import com.exfe.android.Const;
-import com.exfe.android.CrossActivity;
+import com.exfe.android.controller.CrossActivity;
 import com.exfe.android.debug.Log;
 import com.exfe.android.model.Model;
 import com.exfe.android.model.entity.Cross;
@@ -117,11 +119,34 @@ public class TestServer extends ActivityInstrumentationTestCase2<CrossActivity> 
 		}
 	}
 
-	public final void testGetUserCrosses() {
-		assertFalse("Missing token", TextUtils.isEmpty(mModel.getToken()));
+	public final void testGetCrosses() {
+		assertFalse("Missing token", TextUtils.isEmpty(mModel.Me().getToken()));
 
-		Response response = mModel.getServer().getCrossesByUser(
-				mModel.getUserId());
+		Response response = mModel.getServer().getCrosses();
+		assertEquals(200, response.getCode());
+
+		JSONObject res = response.getResponse();
+		JSONArray array = res.optJSONArray("crosses");
+		if (array != null) {
+			for (int i = 0; i < array.length(); i++) {
+				JSONObject json = array.optJSONObject(i);
+				if (json != null) {
+					Cross cross = (Cross) EntityFactory.create(json);
+					Log.d(TAG, "%s", json.toString());
+					assertTrue(cross.getId() > 0);
+					Log.d(TAG, "%s", cross.toJSON().toString());
+				}
+			}
+		}
+
+	}
+	
+	public final void testGetUpdatedCrosses() {
+		assertFalse("Missing token", TextUtils.isEmpty(mModel.Me().getToken()));
+
+		@SuppressWarnings("deprecation")
+		Date d = new Date("25 Apr 2012");
+		Response response = mModel.getServer().getCrossesUpdatedAfter(d);
 		assertEquals(200, response.getCode());
 
 		JSONObject res = response.getResponse();

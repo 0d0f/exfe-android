@@ -1,54 +1,44 @@
 package com.exfe.android.model;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Observable;
+import java.util.Random;
 
-import com.exfe.android.Application;
-import com.exfe.android.debug.Log;
-import com.exfe.android.model.db.ExfeSQLiteOpenHelper;
-import com.exfe.android.model.entity.Cross;
-import com.exfe.android.model.entity.Entity;
-import com.exfe.android.net.ServerAPI1;
-import com.exfe.android.net.ServerAPI2;
-
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
-import android.os.Bundle;
+import android.os.Looper;
 import android.provider.Settings;
+import android.provider.Settings.Secure;
+import android.telephony.TelephonyManager;
+
+import com.exfe.android.Application;
+import com.exfe.android.db.DatabaseHelper;
+import com.exfe.android.net.ServerAPI1;
+import com.exfe.android.net.ServerAPI2;
+import com.j256.ormlite.android.apptools.OpenHelperManager;
 
 public class Model extends Observable {
 
 	private static final String TAG = Model.class.getSimpleName();
 
-	public static final String MODEL_PREF_KEY_TOKEN = "token";
-	public static final String MODEL_PREF_KEY_USERNAME = "username";
-	public static final String MODEL_PREF_KEY_PROVIDER = "provider";
-	public static final String MODEL_PREF_KEY_USER_ID = "userid";
-
 	public static final String OBSERVER_FIELD_TYPE = "ACTION_TYPE";
 
 	public static final int ACTION_TYPE_NOTIFICATION_BASE = 100;
-	public static final int ACTION_TYPE_UPDATE_CROSSES = ACTION_TYPE_NOTIFICATION_BASE + 1;
 
+	public static final int ACTION_TYPE_CROSSES_BASE = 200;
+	public static final int ACTION_TYPE_CONVERSATION_BASE = 300;
+	public static final int ACTION_TYPE_ME_BASE = 400;
+	
+	public Looper mLooper = Looper.getMainLooper();
+
+	private CrossesModel mCrosses = null;
+	private MeModel mMe = null;
+	private ConversationModel mConversation = null;
 	private Application mAppContext = null;
-	private SQLiteOpenHelper mSQLHelper = null;
-	private String mToken = null;
-	private long mUserId = 0;
-	private String mUsername = null;
-	private String mProvider = null;
-	private String mDeviceToken = null;
-	private String mDeviceTokenReg = null;
-	private String mLastUpdateTime = null;
-	private String mMyUsers = null;
-	private String mMyIdentites = null;
+	private DatabaseHelper mDBHelper = null;
 
-	private HashMap<Long, Cross> mCross = new HashMap<Long, Cross>();
+	private boolean mAutoNotification = true;
 
 	public Model(Application appContext) {
 		super();
@@ -56,38 +46,26 @@ public class Model extends Observable {
 			throw new IllegalArgumentException("appConext should not be null.");
 		}
 		mAppContext = appContext;
-
-		SharedPreferences sp = getDefaultSharedPreference();
-		mToken = sp.getString(MODEL_PREF_KEY_TOKEN, "");
-		mUserId = sp.getLong(MODEL_PREF_KEY_USER_ID, 0);
-		mUsername = sp.getString(MODEL_PREF_KEY_USERNAME, "");
-		mProvider = sp.getString(MODEL_PREF_KEY_PROVIDER, "");
-
-		// mAppContext.registerActivityLifecycleCallbacks(mLifecycle);
 	}
 
+	// Server API v1
 	public ServerAPI1 getServerv1() {
 		return new ServerAPI1(this);
 	}
 
+	// Server API v2
 	public ServerAPI2 getServer() {
 		return new ServerAPI2(this);
-	}
-
-	public SQLiteOpenHelper getSQLHepler() {
-		if (mSQLHelper == null) {
-			synchronized (mSQLHelper) {
-				if (mSQLHelper == null) {
-					mSQLHelper = new ExfeSQLiteOpenHelper(getAppContext());
-				}
-			}
-		}
-		return mSQLHelper;
 	}
 
 	public SharedPreferences getDefaultSharedPreference() {
 		return getAppContext().getSharedPreferences("model",
 				Context.MODE_PRIVATE);
+	}
+	
+	public NotificationManager getNotificationManager(){
+		NotificationManager mNotificationManager = (NotificationManager) getAppContext().getSystemService(Context.NOTIFICATION_SERVICE);
+		return mNotificationManager;
 	}
 
 	public Application getAppContext() {
@@ -98,212 +76,142 @@ public class Model extends Observable {
 		this.mAppContext = appContext;
 	}
 
-	/**
-	 * @return the token
-	 */
-	public String getToken() {
-		return this.mToken;
-	}
-
-	/**
-	 * @param token
-	 *            the token to set
-	 */
-	public void setToken(String token) {
-		if (!this.mToken.equalsIgnoreCase(token)) {
-			SharedPreferences sp = getDefaultSharedPreference();
-			SharedPreferences.Editor editor = sp.edit();
-			editor.putString(MODEL_PREF_KEY_TOKEN, token);
-			editor.commit();
+	public void setChanged() {
+		if (this.mAutoNotification == true) {
+			super.setChanged();
 		}
-		this.mToken = token;
 	}
 
 	/**
-	 * @return the userId
+	 * @return the autoNotification
 	 */
-	public long getUserId() {
-		return this.mUserId;
+	public boolean isAutoNotification() {
+		return mAutoNotification;
 	}
 
 	/**
-	 * @param userId
-	 *            the userId to set
+	 * @param autoNotification
+	 *            the autoNotification to set
 	 */
-	public void setUserId(long userId) {
-		if (this.mUserId != userId) {
-			SharedPreferences sp = getDefaultSharedPreference();
-			SharedPreferences.Editor editor = sp.edit();
-			editor.putLong(MODEL_PREF_KEY_USER_ID, userId);
-			editor.commit();
+	public void setAutoNotification(boolean autoNotification) {
+		this.mAutoNotification = autoNotification;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Observable#notifyObservers()
+	 */
+	@Override
+	public void notifyObservers() {
+		// TODO Auto-generated method stub
+		super.notifyObservers();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.util.Observable#notifyObservers(java.lang.Object)
+	 */
+	@Override
+	public void notifyObservers(Object data) {
+		// TODO Auto-generated method stub
+		super.notifyObservers(data);
+	}
+
+	// Extend Model
+	public CrossesModel Crosses() {
+		if (mCrosses == null) {
+			synchronized (CrossesModel.class) {
+				if (mCrosses == null) {
+					mCrosses = new CrossesModel(this);
+				}
+			}
 		}
-		this.mUserId = userId;
+		return mCrosses;
 	}
 
-	/**
-	 * @return the username
-	 */
-	public String getUsername() {
-		return this.mUsername;
-	}
-
-	/**
-	 * @param username
-	 *            the username to set
-	 */
-	public void setUsername(String username) {
-		if (!this.mUsername.equalsIgnoreCase(username)) {
-			SharedPreferences sp = getDefaultSharedPreference();
-			SharedPreferences.Editor editor = sp.edit();
-			editor.putString(MODEL_PREF_KEY_USERNAME, username);
-			editor.commit();
+	public ConversationModel Conversations() {
+		if (mConversation == null) {
+			synchronized (ConversationModel.class) {
+				if (mConversation == null) {
+					mConversation = new ConversationModel(this);
+				}
+			}
 		}
-		this.mUsername = username;
+		return mConversation;
 	}
 
-	/**
-	 * @return the provider
-	 */
-	public String getProvider() {
-		return mProvider;
-	}
-
-	/**
-	 * @param provider
-	 *            the provider to set
-	 */
-	public void setProvider(String provider) {
-		if (!this.mProvider.equalsIgnoreCase(provider)) {
-			SharedPreferences sp = getDefaultSharedPreference();
-			SharedPreferences.Editor editor = sp.edit();
-			editor.putString(MODEL_PREF_KEY_PROVIDER, provider);
-			editor.commit();
+	public MeModel Me() {
+		if (mMe == null) {
+			synchronized (MeModel.class) {
+				if (mMe == null) {
+					mMe = new MeModel(this);
+				}
+			}
 		}
-		this.mProvider = provider;
+		return mMe;
 	}
-
-	/**
-	 * @return the deviceToken
-	 */
-	public String getDeviceToken() {
-		return this.mDeviceToken;
+	
+	public DatabaseHelper getHelper() {
+		if (mDBHelper == null) {
+			mDBHelper = OpenHelperManager.getHelper(getAppContext(),
+					DatabaseHelper.class);
+		}
+		return mDBHelper;
 	}
-
-	/**
-	 * @param deviceToken
-	 *            the deviceToken to set
-	 */
-	public void setDeviceToken(String deviceToken) {
-		this.mDeviceToken = deviceToken;
+	
+	public void releaseHelper(){
+		if (mDBHelper != null) {
+			OpenHelperManager.releaseHelper();
+			mDBHelper = null;
+		}
 	}
+	
 
-	/**
-	 * @return the deviceTokenReg
-	 */
-	public String getDeviceTokenReg() {
-		return this.mDeviceTokenReg;
-	}
+	public String generateUDID() {
+		// try use ANDROID_ID
+		String Android_Id = Secure.getString(mAppContext.getContentResolver(),
+				Secure.ANDROID_ID);
 
-	/**
-	 * @param deviceTokenReg
-	 *            the deviceTokenReg to set
-	 */
-	public void setDeviceTokenReg(String deviceTokenReg) {
-		this.mDeviceTokenReg = deviceTokenReg;
-	}
+		// For 2.2 (Froyo) bug, use other way:getDeviceId
+		// http://blog.csdn.net/zhjp4295216/article/details/5769564
+		if (Build.VERSION.SDK_INT == Build.VERSION_CODES.FROYO
+				&& "9774D56D682E549C".equalsIgnoreCase(Android_Id)) {
+			final TelephonyManager tm = (TelephonyManager) mAppContext
+					.getSystemService(Context.TELEPHONY_SERVICE);
+			final String tmDevice = tm.getDeviceId(); // IMEI for GSM, MEID for
+														// CDMA
+			Android_Id = String.format("2.2_%s", tmDevice);
+		}
 
-	/**
-	 * @return the lastUpdateTime
-	 */
-	public String getLastUpdateTime() {
-		return this.mLastUpdateTime;
-	}
+		// For emulator (except 2.2/Froyo)
+		if ("google_sdk".equals(Build.PRODUCT) || "sdk".equals(Build.PRODUCT)
+				|| "generic".equals(Build.BRAND)) {
+			StringBuilder sb = new StringBuilder("emu_");
+			Random r = new Random();
+			while (sb.length() < 16) {
+				sb.append(r.nextInt(10000));
+			}
+			Android_Id = sb.toString();
+		}
 
-	/**
-	 * @param lastUpdateTime
-	 *            the lastUpdateTime to set
-	 */
-	public void setLastUpdateTime(String lastUpdateTime) {
-		this.mLastUpdateTime = lastUpdateTime;
-	}
-
-	/**
-	 * @return the myUsers
-	 */
-	public String getMyUsers() {
-		return this.mMyUsers;
-	}
-
-	/**
-	 * @param myUsers
-	 *            the myUsers to set
-	 */
-	public void setMyUsers(String myUsers) {
-		this.mMyUsers = myUsers;
-	}
-
-	/**
-	 * @return the myIdentites
-	 */
-	public String getMyIdentites() {
-		return this.mMyIdentites;
-	}
-
-	/**
-	 * @param myIdentites
-	 *            the myIdentites to set
-	 */
-	public void setMyIdentites(String myIdentites) {
-		this.mMyIdentites = myIdentites;
+		return Android_Id;
 	}
 
 	public String getDeviceString() {
-		String androidId = Settings.System.getString(
-				mAppContext.getContentResolver(), Settings.Secure.ANDROID_ID);
-		return String.format("%s_%s", Build.MODEL, androidId);
+		return String.format("%s_%s", getDeviceName(), getDeviceId());
 	}
 
-	public void addCrosses(List<Cross> xs) {
-		if (xs != null && !xs.isEmpty()) {
-			List<Long> update = new ArrayList<Long>();
-			for (Cross x : xs) {
-				if (x != null) {
-					if (mCross.containsKey(x.getId())) {
-						// update cross?
-					} else {
-						mCross.put(x.getId(), x);
-						update.add(x.getId());
-					}
-				}
-			}
-			if (update.size() > 0) {
-				setChanged();
-				Bundle b = new Bundle();
-				b.putInt(OBSERVER_FIELD_TYPE, ACTION_TYPE_UPDATE_CROSSES);
-				long[] value = new long[update.size()];
-				for (int i = 0; i < value.length; i++) {
-					value[i] = update.get(i);
-				}
-
-				b.putLongArray("update", value);
-				notifyObservers(b);
-			}
-		}
+	public String getDeviceName() {
+		return Build.MODEL;
 	}
 
-	public void clearCrosses() {
-		mCross.clear();
-		setChanged();
-		Bundle b = new Bundle();
-		b.putInt(OBSERVER_FIELD_TYPE, ACTION_TYPE_UPDATE_CROSSES);
-		notifyObservers(b);
-	}
-
-	public Collection<Cross> getCrosses() {
-		return mCross.values();
+	public String getDeviceId() {
+		return Settings.System.getString(mAppContext.getContentResolver(),
+				Settings.Secure.ANDROID_ID);
 	}
 	
-	public Cross getCrossById(long id){
-		return mCross.get(id);
-	}
+	
+
 }

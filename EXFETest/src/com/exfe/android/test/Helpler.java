@@ -6,7 +6,7 @@ import org.apache.http.util.EncodingUtils;
 
 import android.test.InstrumentationTestCase;
 
-public class Tool {
+public class Helpler {
 
 	
 	// 从resources中的raw 文件夹中获取文件并读取数据

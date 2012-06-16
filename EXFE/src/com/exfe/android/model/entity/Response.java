@@ -1,5 +1,7 @@
 package com.exfe.android.model.entity;
 
+import java.util.HashMap;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -11,13 +13,17 @@ public class Response {
 	private String mErrorType;
 	private String mErrorDetail;
 	private JSONObject mResponse;
+	private HashMap<String, String> mConfig;
+	private HashMap<String, String> mPayload;
 
 	public Response() {
 		init();
 	}
 
-	public Response(String response) {
+	public Response(String response, HashMap<String, String> config, HashMap<String, String> payload) {
 
+		mConfig = config;
+		mPayload = payload;
 		if (!TextUtils.isEmpty(response)) {
 			JSONObject json;
 			try {
@@ -46,8 +52,8 @@ public class Response {
 			JSONObject meta = json.getJSONObject("meta");
 
 			mCode = meta.getInt("code");
-			mErrorType = json.optString("errorType", "");
-			mErrorDetail = json.optString("errorDetail", "");
+			mErrorType = meta.optString("errorType", "");
+			mErrorDetail = meta.optString("errorDetail", "");
 			// v1
 			if (json.has("error")) {
 				mErrorDetail = json.optString("error", "");
@@ -115,5 +121,33 @@ public class Response {
 	 */
 	public void setResponse(JSONObject response) {
 		this.mResponse = response;
+	}
+
+	/**
+	 * @return the config
+	 */
+	public HashMap<String, String> getConfig() {
+		return mConfig;
+	}
+
+	/**
+	 * @param config the config to set
+	 */
+	public void setConfig(HashMap<String, String> config) {
+		this.mConfig = config;
+	}
+
+	/**
+	 * @return the payload
+	 */
+	public HashMap<String, String> getPayload() {
+		return mPayload;
+	}
+
+	/**
+	 * @param payload the payload to set
+	 */
+	public void setPayload(HashMap<String, String> payload) {
+		this.mPayload = payload;
 	}
 }

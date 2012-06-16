@@ -1,22 +1,51 @@
 package com.exfe.android.model.entity;
 
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.util.Date;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.text.TextUtils;
+
+import com.exfe.android.Const;
+import com.exfe.android.db.DatabaseHelper;
+import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
+@DatabaseTable(tableName = "identities")
 public class Identity extends Entity {
 
+	@DatabaseField(id = true, columnName = "_ID")
 	private long mId;
-	private String mName;
-	private String mNickname;
-	private String mBio;
-	private String mProvider;
-	private long mConnectedUserId;
-	private String mExternalId;
-	private String mExternalUsername;
-	private String mAvatarFilename;
-	private String mAvatarUpdatedAt;
-	private String mCreatedAt;
-	private String mUpdatedAt;
+	@DatabaseField
+	private String name;
+	@DatabaseField
+	private String nickname;
+	@DatabaseField
+	private String bio;
+	@DatabaseField
+	private String provider;
+	@DatabaseField
+	private long connected_user_id;
+	@DatabaseField
+	private String external_id;
+	@DatabaseField
+	private String external_username;
+	@DatabaseField
+	private String avatar_filename;
+	@DatabaseField
+	private String avatar_updated_at;
+	@DatabaseField
+	private Date created_at;
+	@DatabaseField(version = true)
+	private Date updated_at;
+
+	public Identity() {
+		mType = EntityFactory.TYPE_IDENTITY;
+	}
 
 	public Identity(JSONObject json) {
 		parseJSON(json);
@@ -28,42 +57,65 @@ public class Identity extends Entity {
 		mType = EntityFactory.TYPE_IDENTITY;
 		if (json != null) {
 			mId = json.optLong("id", 0);
-			mName = json.optString("name", "");
-			mNickname = json.optString("nickname", "");
-			mBio = json.optString("bio", "");
-			mProvider = json.optString("provider", "");
-			mConnectedUserId = json.optLong("connected_user_id", 0);
-			mExternalId = json.optString("external_id", "");
-			mExternalUsername = json.optString("external_username", "");
-			mAvatarFilename = json.optString("avatar_filename", "");
-			mAvatarUpdatedAt = json.optString("avatar_updated_at", "");
-			mCreatedAt = json.optString("created_at", "");
-			if (!json.isNull("updated_at")) {
-				mUpdatedAt = json.optString("updated_at", null);
-			} else {
-				mUpdatedAt = null;
+			name = json.optString("name", "");
+			nickname = json.optString("nickname", "");
+			bio = json.optString("bio", "");
+			provider = json.optString("provider", "");
+			connected_user_id = json.optLong("connected_user_id", 0);
+			external_id = json.optString("external_id", "");
+			external_username = json.optString("external_username", "");
+			avatar_filename = json.optString("avatar_filename", "");
+			avatar_updated_at = json.optString("avatar_updated_at", "");
+
+			try {
+				created_at = Const.STD_DATE_FORMAT.parse(json.optString(
+						"created_at", ""));
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+			if (!json.isNull("updated_at")) {
+				try {
+					String update = json.optString("updated_at", "");
+					if (!TextUtils.isEmpty(update)) {
+						updated_at = Const.STD_DATE_FORMAT.parse(update);
+					} else {
+						updated_at = null;
+					}
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			if (updated_at == null) {
+				updated_at = created_at;
+			}
+
 		}
 	}
 
-	public JSONObject toJSON() {
-		JSONObject json = super.toJSON();
+	public JSONObject toJSON(boolean deep) {
+		JSONObject json = super.toJSON(deep);
 		try {
 			json.put("id", mId);
-			json.put("name", mName);
-			json.put("nickname", mNickname);
-			json.put("bio", mBio);
-			json.put("provider", mProvider);
-			json.put("connected_user_id", mConnectedUserId);
-			json.put("external_id", mExternalId);
-			json.put("external_username", mExternalUsername);
-			json.put("avatar_filename", mAvatarFilename);
-			json.put("avatar_updated_at", mAvatarUpdatedAt);
-			json.put("created_at", mCreatedAt);
-			if (mUpdatedAt == null) {
-				json.put("updated_at", "");
+			json.put("name", name);
+			json.put("nickname", nickname);
+			json.put("bio", bio);
+			json.put("provider", provider);
+			json.put("connected_user_id", connected_user_id);
+			json.put("external_id", external_id);
+			json.put("external_username", external_username);
+			json.put("avatar_filename", avatar_filename);
+			json.put("avatar_updated_at", avatar_updated_at);
+			if (created_at == null) {
+				json.put("created_at", null);
 			} else {
-				json.put("updated_at", mUpdatedAt);
+				json.put("created_at", Const.STD_DATE_FORMAT.format(created_at));
+			}
+			if (updated_at == null) {
+				json.put("updated_at", null);
+			} else {
+				json.put("updated_at", Const.STD_DATE_FORMAT.format(updated_at));
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -72,8 +124,24 @@ public class Identity extends Entity {
 		return json;
 	}
 
-	public Identity() {
-		this(null);
+	public void saveToDao(DatabaseHelper dbhelper) {
+		try {
+			Dao<Identity, Long> dao = dbhelper.getCachedDao(getClass());
+			dao.createOrUpdate(this);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void loadFromDao(DatabaseHelper dbhelper) {
+		try {
+			Dao<Identity, Long> dao = dbhelper.getCachedDao(getClass());
+			dao.refresh(this);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -95,7 +163,7 @@ public class Identity extends Entity {
 	 * @return the name
 	 */
 	public String getName() {
-		return this.mName;
+		return this.name;
 	}
 
 	/**
@@ -103,14 +171,14 @@ public class Identity extends Entity {
 	 *            the name to set
 	 */
 	public void setName(String name) {
-		this.mName = name;
+		this.name = name;
 	}
 
 	/**
 	 * @return the nickname
 	 */
 	public String getNickname() {
-		return this.mNickname;
+		return this.nickname;
 	}
 
 	/**
@@ -118,14 +186,14 @@ public class Identity extends Entity {
 	 *            the nickname to set
 	 */
 	public void setNickname(String nickname) {
-		this.mNickname = nickname;
+		this.nickname = nickname;
 	}
 
 	/**
 	 * @return the bio
 	 */
 	public String getBio() {
-		return this.mBio;
+		return this.bio;
 	}
 
 	/**
@@ -133,14 +201,14 @@ public class Identity extends Entity {
 	 *            the bio to set
 	 */
 	public void setBio(String bio) {
-		this.mBio = bio;
+		this.bio = bio;
 	}
 
 	/**
 	 * @return the provider
 	 */
 	public String getProvider() {
-		return this.mProvider;
+		return this.provider;
 	}
 
 	/**
@@ -148,14 +216,14 @@ public class Identity extends Entity {
 	 *            the provider to set
 	 */
 	public void setProvider(String provider) {
-		this.mProvider = provider;
+		this.provider = provider;
 	}
 
 	/**
 	 * @return the connectedUserId
 	 */
 	public long getConnectedUserId() {
-		return this.mConnectedUserId;
+		return this.connected_user_id;
 	}
 
 	/**
@@ -163,14 +231,14 @@ public class Identity extends Entity {
 	 *            the connectedUserId to set
 	 */
 	public void setConnectedUserId(long connectedUserId) {
-		this.mConnectedUserId = connectedUserId;
+		this.connected_user_id = connectedUserId;
 	}
 
 	/**
 	 * @return the externalId
 	 */
 	public String getExternalId() {
-		return this.mExternalId;
+		return this.external_id;
 	}
 
 	/**
@@ -178,14 +246,14 @@ public class Identity extends Entity {
 	 *            the externalId to set
 	 */
 	public void setExternalId(String externalId) {
-		this.mExternalId = externalId;
+		this.external_id = externalId;
 	}
 
 	/**
 	 * @return the externalUsername
 	 */
 	public String getExternalUsername() {
-		return this.mExternalUsername;
+		return this.external_username;
 	}
 
 	/**
@@ -193,14 +261,14 @@ public class Identity extends Entity {
 	 *            the externalUsername to set
 	 */
 	public void setExternalUsername(String externalUsername) {
-		this.mExternalUsername = externalUsername;
+		this.external_username = externalUsername;
 	}
 
 	/**
 	 * @return the avatarFilename
 	 */
 	public String getAvatarFilename() {
-		return this.mAvatarFilename;
+		return this.avatar_filename;
 	}
 
 	/**
@@ -208,14 +276,14 @@ public class Identity extends Entity {
 	 *            the avatarFilename to set
 	 */
 	public void setAvatarFilename(String avatarFilename) {
-		this.mAvatarFilename = avatarFilename;
+		this.avatar_filename = avatarFilename;
 	}
 
 	/**
 	 * @return the avatarUpdatedAt
 	 */
 	public String getAvatarUpdatedAt() {
-		return this.mAvatarUpdatedAt;
+		return this.avatar_updated_at;
 	}
 
 	/**
@@ -223,37 +291,41 @@ public class Identity extends Entity {
 	 *            the avatarUpdatedAt to set
 	 */
 	public void setAvatarUpdatedAt(String avatarUpdatedAt) {
-		this.mAvatarUpdatedAt = avatarUpdatedAt;
+		this.avatar_updated_at = avatarUpdatedAt;
 	}
 
 	/**
 	 * @return the createdAt
 	 */
-	public String getCreatedAt() {
-		return this.mCreatedAt;
+	public Date getCreatedAt() {
+		return this.created_at;
 	}
 
 	/**
 	 * @param createdAt
 	 *            the createdAt to set
 	 */
-	public void setCreatedAt(String createdAt) {
-		this.mCreatedAt = createdAt;
+	public void setCreatedAt(Date createdAt) {
+		this.created_at = createdAt;
 	}
 
 	/**
 	 * @return the updatedAt
 	 */
-	public String getUpdatedAt() {
-		return this.mUpdatedAt;
+	public Date getUpdatedAt() {
+		return this.updated_at;
 	}
 
 	/**
 	 * @param updatedAt
 	 *            the updatedAt to set
 	 */
-	public void setUpdatedAt(String updatedAt) {
-		this.mUpdatedAt = updatedAt;
+	public void setUpdatedAt(Date updatedAt) {
+		this.updated_at = updatedAt;
 	}
-
+	
+	public boolean isDeviceToken(){
+		return (Const.PROVIDER_IOS.equalsIgnoreCase(getProvider())
+		|| Const.PROVIDER_ANDROID.equalsIgnoreCase(getProvider()));
+	}
 }

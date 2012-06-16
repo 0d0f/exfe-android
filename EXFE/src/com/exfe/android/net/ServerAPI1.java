@@ -33,6 +33,7 @@ import org.apache.http.util.EntityUtils;
 
 import android.text.TextUtils;
 
+import com.exfe.android.BuildConfig;
 import com.exfe.android.Const;
 import com.exfe.android.debug.Log;
 import com.exfe.android.model.Model;
@@ -43,10 +44,10 @@ public class ServerAPI1 {
 	public static final String lineSeparator = System
 			.getProperty("line.separator");
 
-	public static String OVERIDE_PROTOCAL = "http";
-	public static String OVERIDE_DOMAIN = "api.0d0f.com";
-	public static String OVERIDE_PORT = null;
-	public static String OVERIDE_PATHROOT = "/v1";
+	public static String OVERIDE_PROTOCAL = BuildConfig.DEBUG?"http":null;
+	public static String OVERIDE_DOMAIN = BuildConfig.DEBUG?"api.0d0f.com":null;
+	public static String OVERIDE_PORT = BuildConfig.DEBUG?null:null;
+	public static String OVERIDE_PATHROOT = BuildConfig.DEBUG?"/v1":null;
 
 	private static final String FIELD_API_NAME = "API-Name";
 	private static final String FIELD_CONTECT_TYPE = "Content-Type";
@@ -59,14 +60,14 @@ public class ServerAPI1 {
 	private String mAppKey;
 
 	public ServerAPI1(Model model) {
-		this(model, Const.getDefaultURL(OVERIDE_PROTOCAL, OVERIDE_DOMAIN,
+		this(model, Const.getDefaultAPIURL(OVERIDE_PROTOCAL, OVERIDE_DOMAIN,
 				OVERIDE_PORT, OVERIDE_PATHROOT));
 	}
 
 	public ServerAPI1(Model model, URL apiRoot) {
 		mModel = model;
-		mUsername = model.getUsername();
-		mAppKey = model.getToken();
+		mUsername = model.Me().getUsername();
+		mAppKey = model.Me().getToken();
 		mServerApiRoot = apiRoot;
 	}
 
@@ -121,7 +122,6 @@ public class ServerAPI1 {
 					query_builder.append(URLEncoder.encode(entry.getValue(),
 							"UTF-8"));
 				} catch (UnsupportedEncodingException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -154,10 +154,8 @@ public class ServerAPI1 {
 			result = sb.toString();
 			Log.d(TAG, "Response String: %s", result);
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			if (urlConnection != null) {
@@ -168,7 +166,6 @@ public class ServerAPI1 {
 					in.close();
 				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -203,7 +200,6 @@ public class ServerAPI1 {
 					query_builder.append(URLEncoder.encode(entry.getValue(),
 							"UTF-8"));
 				} catch (UnsupportedEncodingException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -243,10 +239,8 @@ public class ServerAPI1 {
 			result = sb.toString();
 			Log.d(TAG, "Response String: %s", result);
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			if (urlConnection != null) {
@@ -257,7 +251,6 @@ public class ServerAPI1 {
 					in.close();
 				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -278,7 +271,7 @@ public class ServerAPI1 {
 	}
 
 	public String getProfile() {
-		String result = getProfile(mModel.getUserId());
+		String result = getProfile(mModel.Me().getUserId());
 		return result;
 	}
 
@@ -395,7 +388,7 @@ public class ServerAPI1 {
 		try {
 			config.put(FIELD_HTTP_TYPE, "POST");
 			config.put(FIELD_API_NAME, String.format("x/%d/posts?token=%s",
-					mModel.getUserId(), URLEncoder.encode(mAppKey, "UTF-8")));
+					mModel.Me().getUserId(), URLEncoder.encode(mAppKey, "UTF-8")));
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -417,10 +410,17 @@ public class ServerAPI1 {
 		return request(config, query);
 	}
 
-	// for iOS push only?
-	public boolean regDeviceToken(String token) {
+	public String regDeviceToken(String deviceToken, String deviceName) {
+		HashMap<String, String> config = new HashMap<String, String>();
+		HashMap<String, String> query = new HashMap<String, String>();
+		config.put(FIELD_HTTP_TYPE, "POST");
+		config.put(FIELD_API_NAME, String.format("users/%d/regdevicetoken?token=%s",
+				mModel.Me().getUserId(), URLEncoder.encode(mAppKey)));
 
-		return false;
+		query.put("devicetoken", deviceToken);
+		query.put("provider", Const.PROVIDER_ANDROID);
+		query.put("devicename", deviceName);
+		return request(config, query);
 	}
 
 	public String disconnectDeviceToken(String deviceToken) {
@@ -431,7 +431,7 @@ public class ServerAPI1 {
 		HashMap<String, String> query = new HashMap<String, String>();
 		config.put(FIELD_HTTP_TYPE, "POST");
 		config.put(FIELD_API_NAME, String.format("users/%d/posts?token=%s",
-				mModel.getUserId(), URLEncoder.encode(mAppKey)));
+				mModel.Me().getUserId(), URLEncoder.encode(mAppKey)));
 
 		query.put("device_token", deviceToken);
 		return request(config, query);
