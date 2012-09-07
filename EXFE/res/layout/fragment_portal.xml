@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/portal_bg"
+    android:orientation="vertical" >
+
+    <ViewFlipper
+        android:id="@+id/x_title_and_definition"
+        android:layout_width="match_parent"
+        android:layout_height="94dp"
+        android:flipInterval="6000" >
+
+        <TextView
+            android:id="@+id/x_exfe_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:gravity="center"
+            android:lines="2"
+            android:text="EXFE  [’ɛksfi]\nA utility for hanging out with friends."
+            android:textColor="@color/gray_8"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/x_cross_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:gravity="center"
+            android:lines="2"
+            android:text="·X·\nA gathering of people for any intent."
+            android:textColor="@color/gray_8"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/x_rsvp_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:gravity="center"
+            android:lines="2"
+            android:text="No more endless calls,\nemails, messages off-the-point."
+            android:textColor="@color/gray_8"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/x_safe_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:gravity="center"
+            android:lines="2"
+            android:text="Private,\nattendee access only."
+            android:textColor="@color/gray_8"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/x_handy_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:gravity="center"
+            android:lines="2"
+            android:text="Connected,\nwith tools &amp; apps you preferred."
+            android:textColor="@color/gray_8"
+            android:textSize="18sp" />
+    </ViewFlipper>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_gravity="center"
+        android:layout_weight="1" >
+
+        <AbsoluteLayout
+            android:id="@+id/x_button_layer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center" >
+
+            <TextView
+                android:id="@+id/x_cross_button"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_x="1dp"
+                android:layout_y="1dp"
+                android:background="@drawable/portal_circle_bg"
+                android:gravity="center"
+                android:text="·X·"
+                android:textColor="#FF3A6EA5"
+                android:textSize="19sp"
+                android:visibility="invisible" />
+
+            <TextView
+                android:id="@+id/x_rsvp_button"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_x="1dp"
+                android:layout_y="1dp"
+                android:background="@drawable/portal_circle_bg"
+                android:gravity="center"
+                android:text="Rsvp"
+                android:textColor="#FF143354"
+                android:textSize="11sp"
+                android:textStyle="italic"
+                android:visibility="invisible" />
+
+            <TextView
+                android:id="@+id/x_safe_button"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_x="1dp"
+                android:layout_y="1dp"
+                android:background="@drawable/portal_circle_bg"
+                android:gravity="center"
+                android:text="Safe"
+                android:textColor="#FF143354"
+                android:textSize="14sp"
+                android:textStyle="italic"
+                android:visibility="invisible" />
+
+            <TextView
+                android:id="@+id/x_handy_button"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_x="1dp"
+                android:layout_y="1dp"
+                android:background="@drawable/portal_circle_bg"
+                android:gravity="center"
+                android:text="Handy"
+                android:textColor="#FF143354"
+                android:textSize="10sp"
+                android:textStyle="italic"
+                android:visibility="invisible" />
+        </AbsoluteLayout>
+
+        <ImageView
+            android:id="@+id/x"
+            android:layout_width="182dp"
+            android:layout_height="182dp"
+            android:layout_gravity="center"
+            android:src="@drawable/exfe_170" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/portal_action_bar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/btn_sign_in"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="3"
+            android:gravity="center"
+            android:text="@string/start_with_email"
+            android:textSize="16sp" >
+        </Button>
+
+        <ImageButton
+            android:id="@+id/btn_login_way_1"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:visibility="invisible" />
+
+        <ImageButton
+            android:id="@+id/btn_login_way_2"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:scaleType="fitCenter"
+            android:src="@drawable/twitter" />
+
+        <Button
+            android:id="@+id/btn_login_way_more"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:text="…"
+            android:visibility="invisible" />
+    </LinearLayout>
+
+</LinearLayout>

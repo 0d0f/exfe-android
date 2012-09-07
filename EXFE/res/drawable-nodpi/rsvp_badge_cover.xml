@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<level-list xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:drawable="@drawable/rsvp_pending_badge"
+        android:maxLevel="0"/>
+    <item
+        android:drawable="@drawable/rsvp_accept_badge"
+        android:maxLevel="1"/>
+    <item
+        android:drawable="@drawable/rsvp_unavailable_badge"
+        android:maxLevel="2"/>
+    <item
+        android:drawable="@drawable/rsvp_interested_badge"
+        android:maxLevel="3"/>
+   <!--  <item
+        android:drawable="@drawable/rsvp_pending_badge"
+        android:minLevel="4"/> -->
+
+</level-list>

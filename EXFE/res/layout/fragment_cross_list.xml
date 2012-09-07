@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/nav_bar_height"
+        android:background="@drawable/navbar" >
+
+        <ImageView
+            android:id="@+id/user_avatar"
+            android:layout_width="@dimen/small_avatar_width"
+            android:layout_height="@dimen/small_avatar_height"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="@dimen/base_margin"
+            android:contentDescription="User avator"
+            android:src="@drawable/default_avatar"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/user_name_and_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="@dimen/base_margin"
+            android:layout_weight="1"
+            android:gravity="left"
+            android:hint="(Someone Exfee)"
+            android:textSize="@dimen/nav_title_text_size"
+            android:textColor="@color/gray_233"
+            android:textStyle="bold" 
+            android:shadowColor="@android:color/black"
+            android:shadowDy="-1"/>
+
+        <ImageButton
+            android:id="@+id/btn_gather"
+            android:layout_width="@dimen/nav_btn_width"
+            android:layout_height="@dimen/nav_btn_height"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="@dimen/base_small_margin"
+            android:contentDescription="User profile button"
+            android:visibility="invisible"/>
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/list_crosses"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@drawable/list_cross_bg"
+        android:cacheColorHint="@android:color/transparent"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="0dp" >
+    </ListView>
+
+</LinearLayout>

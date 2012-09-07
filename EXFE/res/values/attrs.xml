@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="RoundedCornerImageView">
+
+        <!-- Corner radius -->
+        <attr name="cornerRadius" format="dimension" />
+    </declare-styleable>
+
+    
+    <declare-styleable name="DoubleTextView">
+
+        <!-- Corner radius -->
+        <attr name="altText" format="string" />
+    </declare-styleable>
+</resources>

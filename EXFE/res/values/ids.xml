@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <item name="field_attached" type="id"/>
+    <item name="field_time_out" type="id"/>
+
+</resources>

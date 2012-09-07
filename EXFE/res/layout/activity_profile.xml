@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/profile_bg"
+    android:orientation="vertical" >
+
+    <FrameLayout
+        android:id="@+id/nav_bar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/nav_bar_height"
+        android:background="@drawable/navbar" >
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/profile"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@color/bav_bar_title"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btn_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left|center_vertical"
+            android:layout_marginLeft="@dimen/base_small_margin"
+            android:background="@drawable/btn_dark_bg"
+            android:gravity="center"
+            android:minWidth="50dp"
+            android:text="@string/close"
+            android:textColor="@color/gray_8"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/user_head"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_margin="4dp"
+        android:layout_marginTop="16dp" >
+
+        <ImageView
+            android:id="@+id/user_avatar"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:contentDescription="user avatar"
+            android:src="@android:drawable/sym_def_app_icon" />
+
+        <ViewSwitcher
+            android:id="@+id/user_name_root"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/user_name"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="left|center_vertical"
+                android:maxLines="2"
+                android:shadowColor="@color/black"
+                android:shadowDx="0"
+                android:shadowDy="-2"
+                android:shadowRadius="1"
+                android:textColor="@color/white"
+                android:textSize="20sp" />
+
+            <EditText
+                android:id="@+id/user_name_input"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="left|center_vertical"
+                android:imeOptions="actionDone"
+                android:maxLines="2"
+                android:textSize="20sp" />
+        </ViewSwitcher>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/user_cross_count"
+        android:layout_width="wrap_content"
+        android:layout_height="26dp"
+        android:layout_gravity="right|center"
+        android:layout_marginLeft="@dimen/base_margin"
+        android:layout_marginRight="@dimen/base_margin"
+        android:textColor="@color/gray_7"
+        android:textSize="12sp" />
+
+    <ListView
+        android:id="@+id/user_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_weight="1"
+        android:cacheColorHint="@color/list_item_background"
+        android:divider="@color/list_divider"
+        android:dividerHeight="0dp" >
+    </ListView>
+
+</LinearLayout>

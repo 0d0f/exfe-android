@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<level-list xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:drawable="@drawable/exfee_frame_other"
+        android:maxLevel="0"/>
+    <item
+        android:drawable="@drawable/exfee_frame_mates"
+        android:maxLevel="9999"/>
+    <item
+        android:drawable="@drawable/exfee_frame_host"
+        android:maxLevel="10000"/>
+
+</level-list>
