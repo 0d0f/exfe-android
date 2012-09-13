@@ -12,10 +12,12 @@ import android.widget.TextView;
 import com.exfe.android.Activity;
 import com.exfe.android.R;
 import com.exfe.android.model.entity.Cross;
+import com.flurry.android.FlurryAgent;
 
 public class CrossDetailActivity extends Activity implements Observer {
 
 	public static final String FIELD_CROSS_ID = "cross_id";
+	public static final String FIELD_CROSS_SIDE = "cross_side";
 
 	private long mCrossId = 0;
 	private boolean mSideA = true;
@@ -29,6 +31,7 @@ public class CrossDetailActivity extends Activity implements Observer {
 
 		Intent it = getIntent();
 		mCrossId = it.getLongExtra(FIELD_CROSS_ID, 0L);
+		mSideA = it.getBooleanExtra(FIELD_CROSS_SIDE, true);
 
 		View v = findViewById(R.id.nav_btn_back);
 		if (v != null) {
@@ -44,12 +47,12 @@ public class CrossDetailActivity extends Activity implements Observer {
 		if (v != null && mCrossId != 0) {
 			TextView tv = (TextView) v;
 			Cross x = mModel.Crosses().getCrossById(mCrossId);
-			if (x != null){
+			if (x != null) {
 				tv.setText(x.getTitle());
 			}
 		}
 
-		showFragment();
+		showFragment(mSideA);
 
 	}
 
@@ -64,15 +67,15 @@ public class CrossDetailActivity extends Activity implements Observer {
 
 	}
 
-	protected void showFragment() {
+	protected void showFragment(boolean sideA) {
 		Fragment fragment = null;
 
-		if (mSideA) {
-			mSideA = false;
+		if (sideA) {
 			fragment = new CrossDetailFragment();
+			FlurryAgent.logEvent("Fragment_detail");
 		} else {
-			mSideA = true;
 			fragment = new CrossConversationFragment();
+			FlurryAgent.logEvent("Fragment_conversation");
 		}
 
 		Bundle args = new Bundle();
@@ -97,7 +100,8 @@ public class CrossDetailActivity extends Activity implements Observer {
 				finish();
 				break;
 			case R.id.nav_btn_action:
-				showFragment();
+				showFragment(mSideA);
+				mSideA = !mSideA;
 				break;
 			default:
 				break;

@@ -3,20 +3,20 @@ package com.exfe.android.model;
 import java.sql.SQLException;
 import java.util.Date;
 
+import org.apache.http.HttpStatus;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.exfe.android.Const;
-import com.exfe.android.PrefKeys;
-import com.exfe.android.model.entity.Cross;
-import com.exfe.android.model.entity.EntityFactory;
-import com.exfe.android.model.entity.User;
-import com.exfe.android.task.GetProfileTask;
-import com.j256.ormlite.dao.Dao;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
+
+import com.exfe.android.PrefKeys;
+import com.exfe.android.model.entity.EntityFactory;
+import com.exfe.android.model.entity.Provider;
+import com.exfe.android.model.entity.Response;
+import com.exfe.android.model.entity.User;
+import com.j256.ormlite.dao.Dao;
 
 public class MeModel {
 
@@ -30,26 +30,14 @@ public class MeModel {
 	private String mProvider = null;
 	private String mExternalId = null;
 
-	private String mDeviceToken = null;
-	private boolean mDeviceIsReg = false;
-
 	public MeModel(Model m) {
 		mRoot = m;
 		SharedPreferences sp = mRoot.getDefaultSharedPreference();
 		mToken = sp.getString(PrefKeys.ME_TOKEN, "");
-		mUserId = sp.getLong(PrefKeys.ME_USER_ID, 0);
+		mUserId = sp.getLong(PrefKeys.ME_USER_ID, 0L);
 		mUsername = sp.getString(PrefKeys.ME_USERNAME, "");
-		mProvider = sp.getString(PrefKeys.ME_PROVIDER, "");
+		mProvider = sp.getString(PrefKeys.ME_PROVIDER, Provider.STR_UNKNOWN);
 		mExternalId = sp.getString(PrefKeys.ME_EXTERNAL_ID, "");
-
-		mDeviceToken = sp.getString(PrefKeys.ME_DEVICE_TOKEN, "");
-		mDeviceIsReg = sp.getBoolean(PrefKeys.ME_DEVICE_REGISTED, false);
-
-		// reg device
-		if (TextUtils.isEmpty(mDeviceToken)) {
-			setDeviceToken(mRoot.generateUDID());
-			setDeviceIsReg(false);
-		}
 	}
 
 	private Dao<User, Long> getDao() {
@@ -162,48 +150,6 @@ public class MeModel {
 	}
 
 	/**
-	 * @return the deviceToken
-	 */
-	public String getDeviceToken() {
-		return this.mDeviceToken;
-	}
-
-	/**
-	 * @param deviceToken
-	 *            the deviceToken to set
-	 */
-	public void setDeviceToken(String deviceToken) {
-		if (!this.mDeviceToken.equalsIgnoreCase(deviceToken)) {
-			SharedPreferences sp = mRoot.getDefaultSharedPreference();
-			SharedPreferences.Editor editor = sp.edit();
-			editor.putString(PrefKeys.ME_DEVICE_TOKEN, deviceToken);
-			editor.commit();
-		}
-		this.mDeviceToken = deviceToken;
-	}
-
-	/**
-	 * @return the deviceIsReg
-	 */
-	public boolean isDeviceIsReg() {
-		return this.mDeviceIsReg;
-	}
-
-	/**
-	 * @param deviceIsReg
-	 *            the deviceIsReg to set
-	 */
-	public void setDeviceIsReg(boolean deviceIsReg) {
-		if (this.mDeviceIsReg != deviceIsReg) {
-			SharedPreferences sp = mRoot.getDefaultSharedPreference();
-			SharedPreferences.Editor editor = sp.edit();
-			editor.putBoolean(PrefKeys.ME_DEVICE_REGISTED, deviceIsReg);
-			editor.commit();
-		}
-		this.mDeviceIsReg = deviceIsReg;
-	}
-
-	/**
 	 * @return the profile
 	 */
 	public User getProfile() {
@@ -228,27 +174,70 @@ public class MeModel {
 	public void setProfile(User profile) {
 		try {
 			if (profile != null) {
-				profile.saveToDao(mRoot.getHelper());
-				getDao().createOrUpdate(profile);
-				mRoot.setChanged();
-				Bundle data = new Bundle();
-				data.putInt(Model.OBSERVER_FIELD_TYPE,
-						ACTION_TYPE_UPDATE_MY_PROFILE);
-				mRoot.notifyObservers(data);
+
+				User current = mRoot.Me().getProfile();
+				if (profile.getLatestModify().getTime() > current
+						.getLatestModify().getTime()) {
+					profile.saveToDao(mRoot.getHelper());
+					getDao().createOrUpdate(profile);
+					setUserId(profile.getId());
+					
+					mRoot.setChanged();
+					Bundle data = new Bundle();
+					data.putInt(Model.OBSERVER_FIELD_TYPE,
+							ACTION_TYPE_UPDATE_MY_PROFILE);
+					mRoot.notifyObservers(data);
+				}
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
+
 	private Date lastProfileQuery;
-	public void fetchProfile(){
-		//Date now = new Date();
-		//if (lastProfileQuery == null || (now.getTime() - lastProfileQuery.getTime()) > Const.HALF_HOUR){
-		//	lastProfileQuery = now;
-		//	
-		//}
-		new GetProfileTask(mRoot).execute();
+
+	public void fetchProfile() {
+		// Date now = new Date();
+		// if (lastProfileQuery == null || (now.getTime() -
+		// lastProfileQuery.getTime()) > Const.HALF_HOUR){
+		// lastProfileQuery = now;
+		//
+		// }
+
+		Runnable run = new Runnable() {
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				Response result = mRoot.getServer().getMyProfile();
+				if (result != null) {
+					try {
+						int code = result.getCode();
+						switch (code) {
+						case HttpStatus.SC_OK:
+
+							JSONObject resp = result.getResponse();
+							JSONObject myself = resp.getJSONObject("user");
+							User user = (User) EntityFactory.create(myself);
+
+							mRoot.Me().setProfile(user);
+
+							break;
+						case HttpStatus.SC_NOT_FOUND:
+							break;
+						default:
+							break;
+						}
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+		};
+		Thread th = new Thread(run);
+		th.start();
+
 	}
 }

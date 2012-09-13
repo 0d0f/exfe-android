@@ -40,7 +40,7 @@ public class Identity extends Entity {
 	private String avatar_updated_at;
 	@DatabaseField
 	private Date created_at;
-	@DatabaseField(version = true)
+	@DatabaseField
 	private Date updated_at;
 
 	public Identity() {
@@ -68,7 +68,7 @@ public class Identity extends Entity {
 			avatar_updated_at = json.optString("avatar_updated_at", "");
 
 			try {
-				created_at = Const.STD_DATE_FORMAT.parse(json.optString(
+				created_at = Const.UTC_DATE_TIME_FORMAT.parse(json.optString(
 						"created_at", ""));
 			} catch (ParseException e) {
 				// TODO Auto-generated catch block
@@ -78,7 +78,7 @@ public class Identity extends Entity {
 				try {
 					String update = json.optString("updated_at", "");
 					if (!TextUtils.isEmpty(update)) {
-						updated_at = Const.STD_DATE_FORMAT.parse(update);
+						updated_at = Const.UTC_DATE_TIME_FORMAT.parse(update);
 					} else {
 						updated_at = null;
 					}
@@ -110,12 +110,12 @@ public class Identity extends Entity {
 			if (created_at == null) {
 				json.put("created_at", null);
 			} else {
-				json.put("created_at", Const.STD_DATE_FORMAT.format(created_at));
+				json.put("created_at", Const.UTC_DATE_TIME_FORMAT.format(created_at));
 			}
 			if (updated_at == null) {
 				json.put("updated_at", null);
 			} else {
-				json.put("updated_at", Const.STD_DATE_FORMAT.format(updated_at));
+				json.put("updated_at", Const.UTC_DATE_TIME_FORMAT.format(updated_at));
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -325,7 +325,7 @@ public class Identity extends Entity {
 	}
 	
 	public boolean isDeviceToken(){
-		return (Const.PROVIDER_IOS.equalsIgnoreCase(getProvider())
-		|| Const.PROVIDER_ANDROID.equalsIgnoreCase(getProvider()));
+		int provider = Provider.getValue(getProvider());
+		return provider < Provider.UNKNOWN;
 	}
 }

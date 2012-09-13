@@ -164,6 +164,10 @@ public class ImageResizer extends ImageWorker {
      */
     public static int calculateInSampleSize(BitmapFactory.Options options,
             int reqWidth, int reqHeight) {
+    	
+    	if (reqWidth == -1 || reqHeight == -1){
+    		return 1;
+    	}
         // Raw height and width of image
         final int height = options.outHeight;
         final int width = options.outWidth;

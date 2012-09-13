@@ -34,15 +34,17 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
-import org.json.JSONException;
 
-import com.exfe.android.BuildConfig;
+import android.os.Build;
+
 import com.exfe.android.Const;
 import com.exfe.android.debug.Log;
 import com.exfe.android.model.Model;
 import com.exfe.android.model.entity.Cross;
 import com.exfe.android.model.entity.Exfee;
+import com.exfe.android.model.entity.Identity;
 import com.exfe.android.model.entity.Post;
+import com.exfe.android.model.entity.Provider;
 import com.exfe.android.model.entity.Response;
 import com.exfe.android.model.entity.Rsvp;
 import com.exfe.android.util.Tool;
@@ -52,11 +54,12 @@ public class ServerAPI2 {
 	// public static final String lineSeparator =
 	// System.getProperty("line.separator");
 
-	public static String OVERIDE_PROTOCAL = BuildConfig.DEBUG ? "http" : null;
-	public static String OVERIDE_DOMAIN = BuildConfig.DEBUG ? "api.0d0f.com"
+	public static String OVERIDE_PROTOCAL = Const.override_domain ? "http"
 			: null;
-	public static String OVERIDE_PORT = BuildConfig.DEBUG ? null : null;
-	public static String OVERIDE_PATHROOT = BuildConfig.DEBUG ? null : null;
+	public static String OVERIDE_DOMAIN = Const.override_domain ? "api.0d0f.com"
+			: null;
+	public static String OVERIDE_PORT = Const.override_domain ? null : null;
+	public static String OVERIDE_PATHROOT = Const.override_domain ? null : null;
 
 	private static final String FIELD_API_NAME = "API-Name";
 	private static final String FIELD_CONTECT_TYPE = "Content-Type";
@@ -89,7 +92,7 @@ public class ServerAPI2 {
 		return mServerApiRoot;
 	}
 
-	public Response request(HashMap<String, String> config,
+	protected Response request(HashMap<String, String> config,
 			HashMap<String, String> payload) {
 		if (config == null) {
 			config = new LinkedHashMap<String, String>();
@@ -108,7 +111,7 @@ public class ServerAPI2 {
 		}
 	}
 
-	public static void appendQuery(StringBuilder query_builder, String key,
+	protected static void appendQuery(StringBuilder query_builder, String key,
 			String value) {
 		if (query_builder.length() > 0) {
 			query_builder.append("&");
@@ -124,7 +127,7 @@ public class ServerAPI2 {
 		}
 	}
 
-	public static void appendBody(StringBuilder query_builder, String key,
+	protected static void appendBody(StringBuilder query_builder, String key,
 			String value) {
 		if (query_builder.length() > 0) {
 			query_builder.append("&");
@@ -135,8 +138,10 @@ public class ServerAPI2 {
 					URLEncoder.encode("=", "UTF-8"));
 			String v = value.replace("&", URLEncoder.encode("&", "UTF-8"))
 					.replace("=", URLEncoder.encode("=", "UTF-8"));
-			query_builder.append(k);
-			query_builder.append("=");
+			if (k.length() > 0) {
+				query_builder.append(k);
+				query_builder.append("=");
+			}
 			query_builder.append(v);
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
@@ -144,7 +149,7 @@ public class ServerAPI2 {
 
 	}
 
-	public Response sendHttpGetRequest(HashMap<String, String> config,
+	protected Response sendHttpGetRequest(HashMap<String, String> config,
 			HashMap<String, String> payload) {
 		String result = "";
 		String api_name = "";
@@ -224,17 +229,17 @@ public class ServerAPI2 {
 		return new Response(result, config, payload);
 	}
 
-	public String sendHttpClientPost(HashMap<String, String> config,
+	protected String sendHttpClientPost(HashMap<String, String> config,
 			HashMap<String, String> payload) {
 		String result = "";
 		String api_name = "";
-		String type = "application/x-www-form-urlencoded;charset=utf-8";
+		// String type = "application/x-www-form-urlencoded;charset=utf-8";
 
 		for (Entry<String, String> entry : config.entrySet()) {
 			if (FIELD_API_NAME.equalsIgnoreCase(entry.getKey())) {
 				api_name = entry.getValue();
 			} else if (FIELD_CONTECT_TYPE.equalsIgnoreCase(entry.getKey())) {
-				type = entry.getValue();
+				// type = entry.getValue();
 			}
 		}
 
@@ -269,7 +274,7 @@ public class ServerAPI2 {
 		return result;
 	}
 
-	public Response sendHttpPostRequest(HashMap<String, String> config,
+	protected Response sendHttpPostRequest(HashMap<String, String> config,
 			HashMap<String, String> payload) {
 		String result = "";
 		String api_name = "";
@@ -314,17 +319,18 @@ public class ServerAPI2 {
 			urlConnection = (HttpURLConnection) url.openConnection();
 			urlConnection.setDoOutput(true); // use POST
 			urlConnection.setDoInput(true);
-			urlConnection.setFixedLengthStreamingMode(body_builder.length());
+			byte[] bytes = body_builder.toString().getBytes();
+			urlConnection.setFixedLengthStreamingMode(bytes.length);
 			urlConnection.setRequestProperty("Content-Type", type);
 			urlConnection.setRequestProperty("Content-Length",
-					String.valueOf(body_builder.length()));
+					String.valueOf(bytes.length));
 
 			urlConnection.connect();
 			out = new BufferedOutputStream(urlConnection.getOutputStream());
-			out.write(body_builder.toString().getBytes());
+			out.write(bytes);
 			out.flush();
 
-			Log.d(TAG, "Response Code: %d", urlConnection.getResponseCode());
+			// Log.d(TAG, "Response Code: %d", urlConnection.getResponseCode());
 			in = new BufferedReader(new InputStreamReader(
 					urlConnection.getInputStream()));
 			StringBuilder sb = new StringBuilder();
@@ -367,7 +373,7 @@ public class ServerAPI2 {
 		config.put(FIELD_HTTP_TYPE, "POST");
 		config.put(FIELD_API_NAME, "users/signin");
 		if (externalId != null) {
-			payload.put("external_id", externalId);
+			payload.put("external_username", externalId);
 		}
 		if (provider != null) {
 			payload.put("provider", provider);
@@ -378,7 +384,28 @@ public class ServerAPI2 {
 		return request(config, payload);
 	}
 
-	public Response signOut(String deviceToken) {
+	public Response setUpNewUser(String externalId, String provider,
+			String password, String username) {
+		HashMap<String, String> config = new LinkedHashMap<String, String>();
+		HashMap<String, String> payload = new LinkedHashMap<String, String>();
+		config.put(FIELD_HTTP_TYPE, "POST");
+		config.put(FIELD_API_NAME, "users/signin");
+		if (externalId != null) {
+			payload.put("external_username", externalId);
+		}
+		if (provider != null) {
+			payload.put("provider", provider);
+		}
+		if (password != null) {
+			payload.put("password", password);
+		}
+		if (password != null) {
+			payload.put("name", username);
+		}
+		return request(config, payload);
+	}
+
+	public Response signOut(String deviceToken, String udid) {
 		HashMap<String, String> config = new LinkedHashMap<String, String>();
 		HashMap<String, String> payload = new LinkedHashMap<String, String>();
 		config.put(FIELD_HTTP_TYPE, "POST");
@@ -387,14 +414,19 @@ public class ServerAPI2 {
 		if (deviceToken != null) {
 			payload.put("device_token", deviceToken);
 		}
+		if (udid != null) {
+			payload.put("udid", udid);//mModel.getDeviceId()
+		}
+		payload.put("os_name", Provider.STR_ANDROID);
+
 		return request(config, payload);
 	}
 
-	public Response getCrosses() {
+	public Response getMyCrosses() {
 		return getCrossesByUser(mUserId, null);
 	}
 
-	public Response getCrossesUpdatedAfter(Date d) {
+	public Response getNewCrossesAfter(Date d) {
 		return getCrossesByUser(mUserId, d);
 	}
 
@@ -428,7 +460,7 @@ public class ServerAPI2 {
 		config.put(FIELD_HTTP_TYPE, "POST");
 		config.put(FIELD_TOKEN, mAppKey);
 		config.put(FIELD_API_NAME, "users/addidentity");
-		payload.put("external_id", externalId);
+		payload.put("external_username", externalId);
 		payload.put("provider", provider);
 		payload.put("password", password);
 		return request(config, payload);
@@ -440,7 +472,7 @@ public class ServerAPI2 {
 		config.put(FIELD_HTTP_TYPE, "POST");
 		config.put(FIELD_TOKEN, mAppKey);
 		config.put(FIELD_API_NAME, "users/deleteidentity");
-		payload.put("external_id", externalId);
+		payload.put("external_username", externalId);
 		payload.put("password", password);
 		return request(config, payload);
 	}
@@ -451,7 +483,7 @@ public class ServerAPI2 {
 		config.put(FIELD_HTTP_TYPE, "POST");
 		config.put(FIELD_TOKEN, mAppKey);
 		config.put(FIELD_API_NAME, "users/setdeefaultidentity");
-		payload.put("external_id", externalId);
+		payload.put("external_username", externalId);
 		payload.put("password", password);
 		return request(config, payload);
 	}
@@ -486,7 +518,7 @@ public class ServerAPI2 {
 		return request(config, payload);
 	}
 
-	public Response getProfile() {
+	public Response getMyProfile() {
 		return getProfile(mUserId);
 	}
 
@@ -495,7 +527,7 @@ public class ServerAPI2 {
 		HashMap<String, String> payload = new LinkedHashMap<String, String>();
 		config.put(FIELD_HTTP_TYPE, "GET");
 		config.put(FIELD_TOKEN, mAppKey);
-		config.put(FIELD_API_NAME, String.format("users/%s", userId));
+		config.put(FIELD_API_NAME, String.format("users/%d", userId));
 		return request(config, payload);
 	}
 
@@ -510,6 +542,10 @@ public class ServerAPI2 {
 		return request(config, payload);
 	}
 
+	public Response editExfee(Identity myIdentity, Exfee exfee) {
+		return editExfee(myIdentity.getId(), exfee);
+	}
+
 	public Response editExfee(long identityId, Exfee exfee) {
 		HashMap<String, String> config = new LinkedHashMap<String, String>();
 		HashMap<String, String> payload = new LinkedHashMap<String, String>();
@@ -522,7 +558,7 @@ public class ServerAPI2 {
 		return request(config, payload);
 	}
 
-	public Response udpateRSVP(long exfeeId, List<Rsvp> rsvps) {
+	public Response updateRSVP(long exfeeId, List<Rsvp> rsvps) {
 		HashMap<String, String> config = new LinkedHashMap<String, String>();
 		HashMap<String, String> payload = new LinkedHashMap<String, String>();
 		config.put(FIELD_HTTP_TYPE, "POST");
@@ -562,7 +598,7 @@ public class ServerAPI2 {
 		config.put(FIELD_TOKEN, mAppKey);
 		config.put(FIELD_API_NAME,
 				String.format("conversation/%d/add", exfee_id));
-		payload.put("post", post.toJSON(false).toString());
+		payload.put("", post.toJSON(false).toString());
 		return request(config, payload);
 	}
 
@@ -581,7 +617,48 @@ public class ServerAPI2 {
 		return request(config, payload);
 	}
 
-	void printResponse(HttpResponse response) {
+	public Response regDevice(String udid, String pushToken, String name) {
+		HashMap<String, String> config = new HashMap<String, String>();
+		HashMap<String, String> payload = new HashMap<String, String>();
+		config.put(FIELD_HTTP_TYPE, "POST");
+		config.put(FIELD_TOKEN, mAppKey);
+		config.put(FIELD_API_NAME, String.format("users/%d/regdevice", mUserId));
+		payload.put("udid", udid);
+		payload.put("push_token", pushToken);
+		payload.put("os_name", Provider.STR_ANDROID);
+		if (name != null) {
+			payload.put("name", name.replace(' ', '_'));
+		}
+		payload.put("brand", Build.BRAND.replace(' ', '_'));
+		payload.put("model", Build.MODEL.replace(' ', '_'));
+		payload.put("os_version", Build.VERSION.RELEASE);
+		return request(config, payload);
+	}
+
+	public Response updateUser(String name) {
+		HashMap<String, String> config = new HashMap<String, String>();
+		HashMap<String, String> payload = new HashMap<String, String>();
+		config.put(FIELD_HTTP_TYPE, "POST");
+		config.put(FIELD_TOKEN, mAppKey);
+		config.put(FIELD_API_NAME, "users/update");
+		payload.put("name", name);
+		return request(config, payload);
+	}
+
+	public Response getRegistrationFlag(String external_username,
+			String provider) {
+
+		HashMap<String, String> config = new HashMap<String, String>();
+		HashMap<String, String> payload = new HashMap<String, String>();
+		config.put(FIELD_HTTP_TYPE, "GET");
+		config.put(FIELD_TOKEN, mAppKey);
+		config.put(FIELD_API_NAME, "users/getRegistrationFlag");
+		payload.put("external_username", external_username);
+		payload.put("provider", provider);
+		return request(config, payload);
+	}
+
+	protected void printResponse(HttpResponse response) {
 		Log.d(TAG, "HTTP code: %d", response.getStatusLine().getStatusCode());
 		Log.v(TAG, "HTTP heads:");
 		for (Header head : response.getAllHeaders()) {

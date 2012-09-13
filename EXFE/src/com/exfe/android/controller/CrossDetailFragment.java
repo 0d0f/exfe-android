@@ -13,7 +13,6 @@ import org.json.JSONObject;
 
 import android.content.res.Resources;
 import android.graphics.PixelFormat;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Html;
@@ -280,7 +279,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 	private void fillAvatars(Cross cross) {
 		TableLayout group = (TableLayout) getActivity().findViewById(
 				R.id.x_exfee);
-		group.removeAllViews();
+		// group.removeAllViews();
 
 		TableRow row = null;
 		LayoutInflater inflater = getActivity().getLayoutInflater();
@@ -296,6 +295,9 @@ public class CrossDetailFragment extends Fragment implements Observer {
 				int ri = i / column;
 				if (group.getChildCount() > ri) {
 					row = (TableRow) group.getChildAt(ri);
+					if (row.getVisibility() != View.VISIBLE) {
+						row.setVisibility(View.VISIBLE);
+					}
 				} else {
 					row = new TableRow(group.getContext());
 
@@ -311,6 +313,9 @@ public class CrossDetailFragment extends Fragment implements Observer {
 			int ci = i % column;
 			if (row.getChildCount() > ci) {
 				vg = row.getChildAt(ci);
+				if (vg.getVisibility() != View.VISIBLE) {
+					vg.setVisibility(View.VISIBLE);
+				}
 			} else {
 				vg = inflater.inflate(R.layout.comp_avatar, row, false);
 				vg.setOnClickListener(mAvatarClickListener);
@@ -358,6 +363,14 @@ public class CrossDetailFragment extends Fragment implements Observer {
 			// last item. need new line
 			if (i % column == 0) {
 				row = null;
+			}
+		}
+
+		int ri = i / column + 1;
+		while (ri < group.getChildCount()) {
+			View r = group.getChildAt(ri);
+			if (r.getVisibility() != View.GONE) {
+				r.setVisibility(View.GONE);
 			}
 		}
 	}

@@ -13,6 +13,7 @@ public class Widget extends Entity {
 	private long mId = NO_ID;
 	private String mCategory;
 	private long mWidgetId;
+	private JSONObject mJson;
 	
 	public Widget() {
 		// TODO Auto-generated constructor stub
@@ -30,10 +31,21 @@ public class Widget extends Entity {
 		
 		mCategory = json.optString("type");
 		mWidgetId = json.optLong("widget_id", Entity.NO_ID);
+		mJson = json;
 	}
 	
 	
 	public JSONObject toJSON(boolean deep) {
+		
+		JSONObject json = null;
+		try {
+			json = new JSONObject(mJson.toString());
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		/*
 		JSONObject json = super.toJSON(deep);
 		try {
 			json.put("widget_id", mWidgetId);
@@ -41,7 +53,7 @@ public class Widget extends Entity {
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-
+		 */
 		return json;
 	}
 	
@@ -86,6 +98,10 @@ public class Widget extends Entity {
 	 */
 	public void setCategory(String category) {
 		this.mCategory = category;
+	}
+	
+	public JSONObject getJson(){
+		return mJson;
 	}
 	
 	@Override

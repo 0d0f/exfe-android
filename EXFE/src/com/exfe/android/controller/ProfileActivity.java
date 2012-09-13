@@ -1,6 +1,5 @@
 package com.exfe.android.controller;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
@@ -20,7 +19,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.Html;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
@@ -45,7 +43,6 @@ import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
 import com.exfe.android.Activity;
-import com.exfe.android.Const;
 import com.exfe.android.R;
 import com.exfe.android.debug.Log;
 import com.exfe.android.model.MeModel;
@@ -57,6 +54,7 @@ import com.exfe.android.model.entity.Response;
 import com.exfe.android.model.entity.User;
 import com.exfe.android.util.ImageCache;
 import com.exfe.android.view.SeperatedBaseAdapter;
+import com.flurry.android.FlurryAgent;
 
 public class ProfileActivity extends Activity implements Observer {
 
@@ -250,14 +248,14 @@ public class ProfileActivity extends Activity implements Observer {
 
 		@Override
 		public void onClick(final View v) {
-			final String deviceToken = mModel.Me().getDeviceToken();
+			final String deviceToken = mModel.Device().getPushToken();
 			final String appKey = mModel.Me().getToken();
 			mModel.Me().setToken("");
 			mModel.Me().setUserId(0L);
 			mModel.Me().setProvider("");
 			mModel.Me().setExternalId("");
 			mModel.Me().setUsername("");
-			mModel.Me().setDeviceToken("");
+			mModel.Device().setPushToken("");
 			mModel.Crosses().clearCrosses();
 			mModel.Crosses().setLastUpdateQuery(null);
 			mModel.Me().setProfile(null);
@@ -265,7 +263,7 @@ public class ProfileActivity extends Activity implements Observer {
 			Runnable run = new Runnable() {
 
 				public void run() {
-
+					FlurryAgent.logEvent("sign_out");
 					Response resp = mModel.getServer().signOut(appKey,
 							deviceToken);
 					if (resp.getCode() == HttpStatus.SC_OK) {

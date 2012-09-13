@@ -226,10 +226,11 @@ public class TwitterLoginFragment extends Fragment implements Observer {
 					String external_id = uri.getQueryParameter("external_id");
 
 					mModel.Me().setUsername(name);
-					mModel.Me().setProvider("twitter");
+					mModel.Me().setProvider(Provider.STR_TWITTER);
 					mModel.Me().setToken(token);
 					mModel.Me().setUserId(Long.valueOf(userid));
 					mModel.Me().setExternalId(external_id);
+					
 					mModel.Me().fetchProfile();
 
 					if (mCallBack != null) {

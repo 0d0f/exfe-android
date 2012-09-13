@@ -37,7 +37,10 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 			Class<?>[] clzs = { Cross.class, Identity.class, Invitation.class,
 					Exfee.class, User.class, Post.class};
 			for (Class<?> c : clzs) {
-				daoCache.put(c, getDao(c));
+				TableUtils.createTableIfNotExists(getConnectionSource(), c);
+				Dao dao = getDao(c);
+				dao.setAutoCommit(true);
+				daoCache.put(c, dao);
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -104,6 +107,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 		if (dao == null) {
 			TableUtils.createTableIfNotExists(getConnectionSource(), clz);
 			dao = getDao(clz);
+			dao.setAutoCommit(true);
 			daoCache.put(clz, dao);
 		}
 		return dao;

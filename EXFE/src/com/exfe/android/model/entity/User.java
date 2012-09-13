@@ -2,6 +2,7 @@ package com.exfe.android.model.entity;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -239,5 +240,24 @@ public class User extends Entity {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	public Date getLatestModify() {
+		long latest = 0;
+		Date data = null;
+		Date result = null;
+
+		if (identities != null) {
+			for (Identity ident : identities) {
+				if (ident != null) {
+					data = ident.getUpdatedAt();
+					if (latest < data.getTime()) {
+						latest = data.getTime();
+						result = data;
+					}
+				}
+			}
+		}
+		return result;
 	}
 }

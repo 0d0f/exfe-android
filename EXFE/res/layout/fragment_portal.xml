@@ -148,7 +148,10 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_gravity="bottom"
-        android:orientation="horizontal" >
+        android:background="@drawable/sign_in_bar_bg"
+        android:orientation="horizontal"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp" >
 
         <Button
             android:id="@+id/btn_sign_in"
@@ -156,6 +159,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_weight="3"
+            android:background="@drawable/signinbar_btn_bg"
             android:gravity="center"
             android:text="@string/start_with_email"
             android:textSize="16sp" >
@@ -166,6 +170,9 @@
             android:layout_width="0dp"
             android:layout_height="fill_parent"
             android:layout_weight="1"
+            android:background="@drawable/nav_btn_bg"
+            android:scaleType="fitCenter"
+            android:src="@drawable/identity_facebook_32"
             android:visibility="invisible" />
 
         <ImageButton
@@ -173,15 +180,18 @@
             android:layout_width="0dp"
             android:layout_height="fill_parent"
             android:layout_weight="1"
+            android:background="@drawable/nav_btn_bg"
             android:scaleType="fitCenter"
-            android:src="@drawable/twitter" />
+            android:src="@drawable/identity_twitter_32" />
 
-        <Button
+        <ImageButton
             android:id="@+id/btn_login_way_more"
             android:layout_width="0dp"
             android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:text="…"
+            android:background="@drawable/nav_btn_bg"
+            android:scaleType="fitCenter"
+            android:src="@drawable/identity_more_32"
             android:visibility="invisible" />
     </LinearLayout>
 

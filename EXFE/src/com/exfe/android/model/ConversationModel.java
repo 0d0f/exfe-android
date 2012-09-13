@@ -3,6 +3,7 @@ package com.exfe.android.model;
 import java.lang.ref.WeakReference;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -18,16 +19,12 @@ import android.os.Bundle;
 
 import com.exfe.android.R;
 import com.exfe.android.controller.CrossDetailActivity;
-import com.exfe.android.model.entity.Cross;
 import com.exfe.android.model.entity.Entity;
 import com.exfe.android.model.entity.EntityFactory;
 import com.exfe.android.model.entity.Exfee;
 import com.exfe.android.model.entity.Post;
 import com.exfe.android.model.entity.Response;
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.stmt.PreparedQuery;
-import com.j256.ormlite.stmt.PreparedUpdate;
-import com.j256.ormlite.stmt.QueryBuilder;
 
 public class ConversationModel {
 
@@ -88,7 +85,7 @@ public class ConversationModel {
 					}
 				}
 			}
-			if (exfee_id == Entity.NO_ID) {
+			if (exfee_id != Entity.NO_ID) {
 				mRoot.setChanged();
 				Bundle data = new Bundle();
 				data.putInt(Model.OBSERVER_FIELD_TYPE,
@@ -251,9 +248,10 @@ public class ConversationModel {
 							"Fail to post %s.", result.getContent());
 					Intent notificationIntent = new Intent(context,
 							CrossDetailActivity.class);
-					notificationIntent.putExtra(CrossDetailActivity.FIELD_CROSS_ID, result.getExfeeId());
-					notificationIntent.putExtra(CrossDetailActivity.FIELD_SHOW_CONVERSATION, true);
-					
+					notificationIntent.putExtra(
+							CrossDetailActivity.FIELD_CROSS_ID,
+							result.getExfeeId());
+
 					PendingIntent contentIntent = PendingIntent.getActivity(
 							context, 0, notificationIntent, 0);
 

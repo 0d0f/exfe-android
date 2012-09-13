@@ -12,6 +12,7 @@ import com.exfe.android.Fragment;
 import com.exfe.android.R;
 import com.exfe.android.debug.Log;
 import com.exfe.android.model.entity.Provider;
+import com.flurry.android.FlurryAgent;
 
 public class LandingActivity extends Activity implements Observer,
 		Fragment.ActivityCallBack {
@@ -61,6 +62,12 @@ public class LandingActivity extends Activity implements Observer,
 	}
 
 	@Override
+	protected void onStop()
+	{
+		super.onStop();		
+	}
+	
+	@Override
 	protected void onDestroy() {
 		mModel.deleteObserver(this);
 		super.onDestroy();
@@ -78,10 +85,12 @@ public class LandingActivity extends Activity implements Observer,
 		
 		if (Provider.STR_EMAIL.equalsIgnoreCase(provider)) {
 			fragment = new LoginFragment();
+			FlurryAgent.logEvent("Fragment_normal_login");
 			Bundle args = new Bundle();
 			fragment.setArguments(args);
 		} else if (Provider.STR_TWITTER.equalsIgnoreCase(provider)) {
 			fragment = new TwitterLoginFragment();
+			FlurryAgent.logEvent("Fragment_twitter_login");
 			Bundle args = new Bundle();
 			fragment.setArguments(args);
 		} else {
@@ -89,10 +98,12 @@ public class LandingActivity extends Activity implements Observer,
 			if (mModel.Me().getUserId() != 0) {
 				Log.d(TAG, "Jump to Cross");
 				fragment = new CrossListFragment();
+				FlurryAgent.logEvent("Fragment_cross_list");
 				Bundle args = new Bundle();
 				fragment.setArguments(args);
 			} else {
 				fragment = new PortalFragment();
+				FlurryAgent.logEvent("Fragment_portal");
 				Bundle args = new Bundle();
 				fragment.setArguments(args);
 			}

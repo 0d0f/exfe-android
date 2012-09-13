@@ -2,6 +2,7 @@ package com.exfe.android.model.entity;
 
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.util.Comparator;
 import java.util.Date;
 
 import org.json.JSONArray;
@@ -16,10 +17,10 @@ import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "posts")
 public class Post extends Entity {
-	
+
 	public static final String POSTABLE_ID_FIELD_NAME = "postable_id";
 	public static final String POSTABLE_TYPE_FIELD_NAME = "postable_type";
-	
+
 	public static final String POSTABLE_TYPE_EXFEE = "exfee";
 
 	@DatabaseField(id = true, columnName = "_ID")
@@ -49,16 +50,17 @@ public class Post extends Entity {
 	public void parseJSON(JSONObject json) {
 		super.parseJSON(json);
 		mType = EntityFactory.TYPE_POST;
-		
+
 		mId = Long.parseLong(json.optString("id", "0"));
 		try {
-			created_at = Const.STD_DATE_FORMAT.parse(json.optString(
+			created_at = Const.UTC_DATE_TIME_FORMAT.parse(json.optString(
 					"created_at", ""));
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		by_identity = (Identity) EntityFactory.create(json.optJSONObject("by_identity"));
+		by_identity = (Identity) EntityFactory.create(json
+				.optJSONObject("by_identity"));
 		/*
 		 * mRelative = new ArrayList<Entity>(); JSONArray relatives =
 		 * json.optJSONArray("relative"); if (relatives != null){ for(int i = 0;
@@ -67,7 +69,7 @@ public class Post extends Entity {
 		 * e = EntityFactory.create(r); if (e != null){ mRelative.add(e); } } }
 		 * }
 		 */
-		
+
 		via = json.optString("via");
 		content = json.optString("content");
 
@@ -79,9 +81,9 @@ public class Post extends Entity {
 	public JSONObject toJSON(boolean deep) {
 		JSONObject json = super.toJSON(deep);
 		try {
-			
+
 			if (deep) {
-				json.put("created_at", Const.STD_DATE_FORMAT.format(created_at));
+				json.put("created_at", Const.UTC_DATE_TIME_FORMAT.format(created_at));
 			}
 
 			if (deep) {
@@ -93,7 +95,7 @@ public class Post extends Entity {
 			// mRelative
 			JSONArray rels = new JSONArray();
 			json.put("relative", rels);
-			
+
 			json.put("content", content);
 			json.put("via", via);
 
@@ -108,7 +110,7 @@ public class Post extends Entity {
 
 		return json;
 	}
-	
+
 	public void saveToDao(DatabaseHelper dbhelper) {
 		try {
 			Dao<Post, Long> dao = dbhelper.getCachedDao(getClass());
@@ -134,7 +136,7 @@ public class Post extends Entity {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * @return the id
 	 */
@@ -179,7 +181,7 @@ public class Post extends Entity {
 	public void setByIdentitiy(Identity byIdentity) {
 		this.by_identity = byIdentity;
 	}
-	
+
 	/**
 	 * @return the content
 	 */
@@ -203,7 +205,8 @@ public class Post extends Entity {
 	}
 
 	/**
-	 * @param via the via to set
+	 * @param via
+	 *            the via to set
 	 */
 	public void setVia(String via) {
 		this.via = via;
@@ -232,16 +235,41 @@ public class Post extends Entity {
 	public long getPostableId() {
 		return this.postable_id;
 	}
-	
+
 	public void setPostableId(long postableId) {
 		this.postable_id = postableId;
 	}
-	
+
 	public String getPostableType() {
 		return this.postable_type;
 	}
-	
+
 	public void setPostableType(String postableType) {
 		this.postable_type = postableType;
 	}
+
+	public static final Comparator<Post> sCreateTimeComparator = new Comparator<Post>() {
+
+		@Override
+		public int compare(Post lhs, Post rhs) {
+			if (lhs != null && rhs != null) {
+				if (lhs.getCreatedAt().getTime() == rhs.getCreatedAt().getTime()) {
+					return 0;
+				} else if (lhs.getCreatedAt().getTime() < rhs.getCreatedAt()
+						.getTime()) {
+					return -1;
+				} else {
+					return 1;
+				}
+			} else {
+				if (lhs == rhs) {
+					return 0;
+				} else if (lhs == null) {
+					return -1;
+				} else {
+					return 1;
+				}
+			}
+		}
+	};
 }

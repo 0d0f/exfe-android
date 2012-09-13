@@ -11,6 +11,7 @@ import android.text.TextUtils;
 
 import com.exfe.android.Const;
 import com.exfe.android.db.DatabaseHelper;
+import com.exfe.android.debug.Log;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
@@ -30,14 +31,17 @@ public class Invitation extends Entity {
 	private String via;
 	@DatabaseField
 	private Date created_at;
-	@DatabaseField(version = true)
+	@DatabaseField
 	private Date updated_at;
 	@DatabaseField
 	private boolean host;
+	@DatabaseField
+	private int mates;
 	@DatabaseField(canBeNull = false, foreign = true)
 	private Exfee exfee;
 
 	public Invitation() {
+		mType = EntityFactory.TYPE_INVITATION;
 	}
 
 	public Invitation(JSONObject json) {
@@ -54,27 +58,26 @@ public class Invitation extends Entity {
 				.optJSONObject("identity"));
 		by_identity = (Identity) EntityFactory.create(json
 				.optJSONObject("by_identity"));
-		rsvp_status = Rsvp.getRsvpStatusValue(json.optString("rsvp_status", ""));
+		rsvp_status = Rsvp
+				.getRsvpStatusValue(json.optString("rsvp_status", ""));
 		via = json.optString("via", "");
 		host = json.optBoolean("host", false);
-		
+		mates = json.optInt("mates", 0);
 		try {
-			created_at = Const.STD_DATE_FORMAT.parse(json.optString(
+			created_at = Const.UTC_DATE_TIME_FORMAT.parse(json.optString(
 					"created_at", ""));
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		if (!json.isNull("updated_at")) {
 			try {
 				String update = json.optString("updated_at", "");
 				if (!TextUtils.isEmpty(update)) {
-					updated_at = Const.STD_DATE_FORMAT.parse(update);
+					updated_at = Const.UTC_DATE_TIME_FORMAT.parse(update);
 				} else {
 					updated_at = null;
 				}
 			} catch (ParseException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -92,11 +95,12 @@ public class Invitation extends Entity {
 			json.put("rsvp_status", Rsvp.getRsvpStatusString(rsvp_status));
 			json.put("via", via);
 			json.put("host", host);
-			json.put("created_at", Const.STD_DATE_FORMAT.format(created_at));
+			json.put("mates", mates);
+			json.put("created_at", Const.UTC_DATE_TIME_FORMAT.format(created_at));
 			if (updated_at == null) {
-				json.put("updated_at", Const.STD_DATE_FORMAT.format(created_at));
+				json.put("updated_at", Const.UTC_DATE_TIME_FORMAT.format(created_at));
 			} else {
-				json.put("updated_at", Const.STD_DATE_FORMAT.format(updated_at));
+				json.put("updated_at", Const.UTC_DATE_TIME_FORMAT.format(updated_at));
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -117,7 +121,6 @@ public class Invitation extends Entity {
 				this.by_identity.saveToDao(dbhelper);
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -130,7 +133,6 @@ public class Invitation extends Entity {
 			this.identity.loadFromDao(dbhelper);
 			this.by_identity.loadFromDao(dbhelper);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -194,20 +196,35 @@ public class Invitation extends Entity {
 	public void setRsvpStatus(int rsvpStatus) {
 		this.rsvp_status = rsvpStatus;
 	}
-	
+
 	/**
 	 * @return the host
 	 */
-	public boolean isHost(){
+	public boolean isHost() {
 		return this.host;
 	}
-	
+
 	/**
 	 * @param isHost
 	 *            the host to set
 	 */
-	public void setHost(boolean isHost){
+	public void setHost(boolean isHost) {
 		this.host = isHost;
+	}
+
+	/**
+	 * @return the mates
+	 */
+	public int getMates() {
+		return this.mates;
+	}
+
+	/**
+	 * @param mates
+	 *            the mates to set
+	 */
+	public void setMates(int mates) {
+		this.mates = mates;
 	}
 
 	/**
@@ -269,8 +286,8 @@ public class Invitation extends Entity {
 	public void setExfee(Exfee exfee) {
 		this.exfee = exfee;
 	}
-	
-	public Rsvp getRsvpObject(){
+
+	public Rsvp getRsvpObject() {
 		Rsvp result = new Rsvp();
 		result.setIdentity(getIdentity());
 		result.setRsvpStatus(getRsvpStatus());

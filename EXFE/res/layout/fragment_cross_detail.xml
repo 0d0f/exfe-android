@@ -212,7 +212,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp"
-                android:ellipsize="end"
+                android:ellipsize="none"
                 android:maxHeight="300dp"
                 android:textColor="@color/cross_minor_text_color"
                 android:textSize="13sp" />

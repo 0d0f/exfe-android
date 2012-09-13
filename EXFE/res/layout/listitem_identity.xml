@@ -2,48 +2,68 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/list_identity_root"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/list_item_height"
+    android:layout_height="48dp"
     android:background="@color/list_item_background"
-    android:orientation="horizontal" >
+    android:orientation="horizontal"
+    android:paddingLeft="4dp"
+    android:paddingRight="4dp" >
 
     <ImageView
         android:id="@+id/identity_icon"
-        android:layout_width="@dimen/list_avatar_width"
-        android:layout_height="@dimen/list_avatar_height"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:layout_gravity="center_vertical"
-        android:layout_marginBottom="@dimen/base_split_margin"
-        android:layout_marginLeft="@dimen/base_margin"
-        android:layout_marginRight="@dimen/base_margin"
-        android:layout_marginTop="@dimen/base_split_margin"
         android:background="@android:color/white"
         android:contentDescription="user icon"
-        android:src="@drawable/ic_launcher" 
-        android:scaleType="fitCenter"/>
+        android:scaleType="fitCenter"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:src="@drawable/ic_launcher" />
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="4dp"
+        
+        android:layout_marginTop="4dp"
+        android:layout_weight="1"
         android:orientation="vertical" >
 
         <TextView
             android:id="@+id/identity_main"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:hint="External username"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="@color/black" />
+            android:gravity="bottom"
+            android:shadowColor="@color/white"
+            android:shadowDx="0"
+            android:shadowDy="2"
+            android:shadowRadius="1"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/identity_alt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:hint="External identity"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="@color/black" />
+            android:layout_gravity="top"
+            android:shadowColor="@color/white"
+            android:shadowDx="0"
+            android:shadowDy="2"
+            android:shadowRadius="1"
+            android:textColor="@color/gray_3"
+            android:textSize="12sp"
+            android:textStyle="italic" />
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/identity_type_icon"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/identity_icon_18_grey"/>
 
 </LinearLayout>

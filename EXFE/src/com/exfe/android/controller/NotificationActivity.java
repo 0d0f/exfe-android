@@ -3,19 +3,13 @@ package com.exfe.android.controller;
 import java.util.Observable;
 import java.util.Observer;
 
-import com.exfe.android.Activity;
-import com.exfe.android.R;
-import com.exfe.android.R.id;
-import com.exfe.android.R.layout;
-
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+
+import com.exfe.android.Activity;
+import com.exfe.android.R;
 
 public class NotificationActivity extends Activity implements Observer {
 	

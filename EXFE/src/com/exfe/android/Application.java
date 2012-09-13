@@ -45,11 +45,11 @@ public class Application extends android.app.Application {
 		Log.v(TAG, "onLowMemory");
 	}
 
-	@Override
-	public void onTrimMemory(int level) {
-		super.onTrimMemory(level);
-		Log.v(TAG, "onTrimMemory level: %d", level);
-	}
+//	@Override
+//	public void onTrimMemory(int level) {
+//		super.onTrimMemory(level);
+//		Log.v(TAG, "onTrimMemory level: %d", level);
+//	}
 
 	public Model getModel() {
 		return mModel;

@@ -11,39 +11,67 @@ import android.text.TextUtils;
 
 public class Const {
 
-	public static final String username = "stonyw@gmail.com";
-	public static final String pwd = "123123";
-	public static final boolean debug_login_auto_fill = BuildConfig.DEBUG ? true
-			: false;
+	public static final boolean override_domain = BuildConfig.DEBUG;
 
+	public static final String FLURRY_APP_ID = "4B9VJPB4DC7VPTTCS3G6";
+	public static final String PUSH_PROJECT_ID = override_domain ? "313001677673"
+			: "905549742932";
 	public static final String PUSH_SERVER_ACCOUNT = "stony@exfe.com";
-	public static final String C2DM_FIELD_APP = "app";
-	public static final String C2DM_FIELD_SENDER = "sender";
-	public static final String PROVIDER_EMAIL = "email";
-	public static final String PROVIDER_ANDROID = "Android";
-	public static final String PROVIDER_IOS = "iOSAPN";
 
-	public static final DateFormat STD_DATE_FORMAT = new SimpleDateFormat(
-			"yyyy-MM-dd HH:mm:ss", Locale.US);;
+	public static final String GCM_FIELD_APP = "app";
+	public static final String GCM_FIELD_SENDER = "sender";
+
+	public static final DateFormat UTC_DATE_TIME_FORMAT = new SimpleDateFormat(
+			"yyyy-MM-dd HH:mm:ss", Locale.US);
+	public static final DateFormat UTC_DATE_FORMAT = new SimpleDateFormat(
+			"yyyy-MM-dd", Locale.US);
+	public static final DateFormat UTC_MONTH_FORMAT = new SimpleDateFormat(
+			"MMM", Locale.US);
+	public static final DateFormat UTC_DAY_FORMAT = new SimpleDateFormat("dd",
+			Locale.US);
+	public static final DateFormat UTC_Time_MMHH_FORMAT = new SimpleDateFormat(
+			"mm:hh", Locale.US);
 	static {
-		STD_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+		TimeZone tz = TimeZone.getTimeZone("UTC");
+		UTC_DATE_TIME_FORMAT.setTimeZone(tz);
+		UTC_DATE_FORMAT.setTimeZone(tz);
+		UTC_MONTH_FORMAT.setTimeZone(tz);
+		UTC_DAY_FORMAT.setTimeZone(tz);
+		UTC_Time_MMHH_FORMAT.setTimeZone(tz);
 	}
+
+	public static final DateFormat LOCAL_DATE_FORMAT = new SimpleDateFormat(
+			"MMM dd, yyyy", Locale.US);
+	public static final DateFormat LOCAL_TIME_FORMAT = new SimpleDateFormat(
+			"hh:mm a", Locale.US);
+	public static final DateFormat LOCAL_TIME_DATE_FORMAT = new SimpleDateFormat(
+			"hh:mm a, MMM dd", Locale.US);
 
 	public static final String EMPTY = "";
 
-	public static final String TWITTER_OAUTH_PAGE = "https://api.twitter.com/oauth/authenticate?oauth_token=";
+	// public static final String TWITTER_OAUTH_PAGE =
+	// "https://api.twitter.com/oauth/authenticate?oauth_token=";
 
 	public static final String DEFAULT_API_PROTOCAL = "https";
-	public static final String DEFAULT_API_SERVER_DOMAIN = "api.exfe.com";
+	public static final String DEFAULT_API_SERVER_DOMAIN = "www.exfe.com";
 	public static final String DEFAULT_API_SERVER_PORT = "";
 	public static final String DEFAULT_API_SERVER_ROOT_PATH = "/v2";
 
+	public static final String DEFAULT_IMG_DEFAULT_URL = Const.override_domain ? "http://img.dev.0d0f.com/web/80_80_%s"
+			: "http://img.exfe.com/web/80_80_%s";
+	public static final String DEFAULT_IMG_POOL_URL = Const.override_domain ? "http://img.dev.0d0f.com/%c/%c/80_80_%s"
+			: "http://img.exfe.com/%c/%c/80_80_%s";
+
+	public static final String DEFAULT_IMG_WIDGET_URL = Const.override_domain ? "http://dev.0d0f.com/static/img/xbg"
+			: "http://exfe.com/static/img/xbg";
+
 	public static final String DEFAULT_OAUTH_PROTOCAL = "http";
-	public static final String DEFAULT_OAUTH_SERVER_DOMAIN = BuildConfig.DEBUG ? "dev.0d0f.com"
+	public static final String DEFAULT_OAUTH_SERVER_DOMAIN = Const.override_domain ? "dev.0d0f.com"
 			: "exfe.com";
 	public static final String DEFAULT_OAUTH_SERVER_PORT = "";
 	public static final String DEFAULT_OAUTH_SERVER_ROOT_PATH = "/oAuth";
 	public static final long HALF_HOUR = 30 * 60 * 1000;
+	public static final String ACCOUNT_TYPE_GOOGLE = "com.google";
 
 	public static URL getDefaultAPIURL(String protocal, String domain,
 			String port, String pathRoot) {
@@ -102,6 +130,10 @@ public class Const {
 		return String.format("%s://%s%s/%s", DEFAULT_OAUTH_PROTOCAL,
 				DEFAULT_OAUTH_SERVER_DOMAIN, DEFAULT_OAUTH_SERVER_ROOT_PATH,
 				entry);
+	}
+
+	public static String getWidgetImgURL(String imgName) {
+		return String.format("%s/%s", DEFAULT_IMG_WIDGET_URL, imgName);
 	}
 
 }

@@ -6,11 +6,17 @@
         <!-- Corner radius -->
         <attr name="cornerRadius" format="dimension" />
     </declare-styleable>
-
-    
     <declare-styleable name="DoubleTextView">
 
         <!-- Corner radius -->
         <attr name="altText" format="string" />
     </declare-styleable>
+    
+    
+    <declare-styleable name="ShapeClipDrawable">
+        <attr name="clipOrientation" format="integer" />
+        <attr name="gravity" format="integer" />
+        <attr name="drawable" format="reference|color" />
+    </declare-styleable>
+
 </resources>

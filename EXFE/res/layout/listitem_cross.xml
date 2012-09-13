@@ -1,65 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:exfe="http://schemas.android.com/apk/res/com.exfe.android"
     android:id="@+id/list_cross_root"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:minHeight="@dimen/list_item_height"
-    android:orientation="horizontal"
-    android:padding="@dimen/list_commom_margin" >
-
-    <ImageView
-        android:id="@+id/cross_host_avatar"
-        android:layout_width="@dimen/list_avatar_width"
-        android:layout_height="@dimen/list_avatar_height"
-        android:layout_gravity="center_vertical"
-        android:contentDescription="@string/image_hint_avatar"
-        android:src="@drawable/ic_launcher" />
+    android:layout_height="@dimen/list_card_height" >
 
     <LinearLayout
+        android:id="@+id/list_cross_card"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginLeft="@dimen/list_commom_margin"
+        android:background="@drawable/cell_content"
         android:orientation="vertical" >
-
-        <CheckedTextView
-            android:id="@+id/cross_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="3"
-            android:checkMark="@null"
-            android:gravity="center_vertical"
-            android:hint="@string/text_hint_title"
-            android:textColor="@color/hightlight"
-            android:textSize="@dimen/list_main_text_size" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:orientation="horizontal" >
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/cell_title"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/list_commom_padding"
+            android:paddingRight="@dimen/list_commom_padding" >
 
             <CheckedTextView
-                android:id="@+id/cross_place"
+                android:id="@+id/cross_title"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="@dimen/list_commom_margin"
+                android:layout_weight="1"
+                android:checkMark="@null"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:hint="@string/text_hint_title"
+                android:singleLine="true"
+                android:textColor="@color/gray_69"
+                android:textSize="@dimen/list_main_text_size" />
+
+            <com.exfe.android.view.SeperateTextView
+                android:id="@+id/cross_exfee"
+                android:layout_width="@dimen/list_title_height"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/cell_responded_area"
+                android:gravity="center"
+                android:textColor="@color/list_item_exfee_count"
+                android:textSize="@dimen/list_alternative_text_size" />
+        </LinearLayout>
+
+        <CheckedTextView
+            android:id="@+id/cross_place"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginLeft="@dimen/list_commom_padding"
+            android:layout_marginRight="@dimen/list_commom_padding"
+            android:layout_weight="1"
+            android:checkMark="@null"
+            android:drawableLeft="@drawable/location_icon"
+            android:drawablePadding="@dimen/base_small_margin"
+            android:ellipsize="end"
+            android:gravity="left|center_vertical"
+            android:hint="@string/text_hint_place"
+            android:paddingLeft="@dimen/base_small_margin"
+            android:paddingRight="@dimen/base_small_margin"
+            android:singleLine="true"
+            android:textColor="@color/gray_69"
+            android:textSize="@dimen/list_alternative_text_size" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="@dimen/list_commom_margin"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/list_commom_padding"
+            android:paddingRight="@dimen/list_commom_padding" >
+
+            <com.exfe.android.view.TwoLineTextView
+                android:id="@+id/cross_time_mmmdd"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="@dimen/list_commom_margin"
+                android:layout_marginRight="@dimen/list_commom_margin"
+                android:background="@drawable/time_badge"
+                android:textColor="@color/gray_100"
+                android:textSize="@dimen/list_alternative_text_size"
+                android:textStyle="bold" />
+
+            <CheckedTextView
+                android:id="@+id/cross_time"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:checkMark="@null"
-                android:hint="@string/text_hint_place"
-                android:textColor="@color/hightlight"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textColor="@color/gray_69"
                 android:textSize="@dimen/list_alternative_text_size" />
 
-            <CheckedTextView
-                android:id="@+id/cross_time"
+            <TextView
+                android:id="@+id/cross_message_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:checkMark="@null"
-                android:hint="@string/text_hint_time"
-                android:textColor="@color/hightlight"
+                android:layout_marginLeft="@dimen/list_commom_margin"
+                android:layout_marginRight="@dimen/list_commom_margin"
+                android:background="@drawable/conversation_badge_empty"
+                android:gravity="center"
+                android:paddingBottom="4dp"
+                android:paddingLeft="2dp"
+                android:paddingRight="10dp"
+                android:paddingTop="2dp"
+                android:textColor="@color/blue"
                 android:textSize="@dimen/list_alternative_text_size" />
         </LinearLayout>
     </LinearLayout>
 
-</LinearLayout>
+    <View
+        android:id="@+id/abc"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/card_mask"
+        android:clickable="false" />
+
+</FrameLayout>

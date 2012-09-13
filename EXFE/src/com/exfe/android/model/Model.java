@@ -7,14 +7,12 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.os.Looper;
+import android.os.Handler;
 import android.provider.Settings;
-import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 
 import com.exfe.android.Application;
 import com.exfe.android.db.DatabaseHelper;
-import com.exfe.android.net.ServerAPI1;
 import com.exfe.android.net.ServerAPI2;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
@@ -29,12 +27,15 @@ public class Model extends Observable {
 	public static final int ACTION_TYPE_CROSSES_BASE = 200;
 	public static final int ACTION_TYPE_CONVERSATION_BASE = 300;
 	public static final int ACTION_TYPE_ME_BASE = 400;
-	
-	public Looper mLooper = Looper.getMainLooper();
+
+	// public Looper mLooper = Looper.getMainLooper();
+	public Handler mHandler = new Handler();
 
 	private CrossesModel mCrosses = null;
 	private MeModel mMe = null;
+	private DeviceModel mDevice = null;
 	private ConversationModel mConversation = null;
+	private CacheModel mImageCache = null;
 	private Application mAppContext = null;
 	private DatabaseHelper mDBHelper = null;
 
@@ -49,9 +50,10 @@ public class Model extends Observable {
 	}
 
 	// Server API v1
-	public ServerAPI1 getServerv1() {
-		return new ServerAPI1(this);
-	}
+	// @Deprecated
+	// public ServerAPI1 getServerv1() {
+	// return new ServerAPI1(this);
+	// }
 
 	// Server API v2
 	public ServerAPI2 getServer() {
@@ -62,9 +64,10 @@ public class Model extends Observable {
 		return getAppContext().getSharedPreferences("model",
 				Context.MODE_PRIVATE);
 	}
-	
-	public NotificationManager getNotificationManager(){
-		NotificationManager mNotificationManager = (NotificationManager) getAppContext().getSystemService(Context.NOTIFICATION_SERVICE);
+
+	public NotificationManager getNotificationManager() {
+		NotificationManager mNotificationManager = (NotificationManager) getAppContext()
+				.getSystemService(Context.NOTIFICATION_SERVICE);
 		return mNotificationManager;
 	}
 
@@ -153,6 +156,28 @@ public class Model extends Observable {
 		return mMe;
 	}
 	
+	public DeviceModel Device() {
+		if (mDevice == null) {
+			synchronized (DeviceModel.class) {
+				if (mDevice == null) {
+					mDevice = new DeviceModel(this);
+				}
+			}
+		}
+		return mDevice;
+	}
+
+	public CacheModel ImageCache() {
+		if (mImageCache == null) {
+			synchronized (CacheModel.class) {
+				if (mImageCache == null) {
+					mImageCache = new CacheModel(this);
+				}
+			}
+		}
+		return mImageCache;
+	}
+
 	public DatabaseHelper getHelper() {
 		if (mDBHelper == null) {
 			mDBHelper = OpenHelperManager.getHelper(getAppContext(),
@@ -160,19 +185,18 @@ public class Model extends Observable {
 		}
 		return mDBHelper;
 	}
-	
-	public void releaseHelper(){
+
+	public void releaseHelper() {
 		if (mDBHelper != null) {
 			OpenHelperManager.releaseHelper();
 			mDBHelper = null;
 		}
 	}
-	
 
 	public String generateUDID() {
 		// try use ANDROID_ID
-		String Android_Id = Secure.getString(mAppContext.getContentResolver(),
-				Secure.ANDROID_ID);
+		String Android_Id = Settings.Secure.getString(mAppContext.getContentResolver(),
+				Settings.Secure.ANDROID_ID);
 
 		// For 2.2 (Froyo) bug, use other way:getDeviceId
 		// http://blog.csdn.net/zhjp4295216/article/details/5769564
@@ -199,19 +223,13 @@ public class Model extends Observable {
 		return Android_Id;
 	}
 
-	public String getDeviceString() {
-		return String.format("%s_%s", getDeviceName(), getDeviceId());
-	}
-
 	public String getDeviceName() {
 		return Build.MODEL;
 	}
 
 	public String getDeviceId() {
-		return Settings.System.getString(mAppContext.getContentResolver(),
+		return Settings.Secure.getString(mAppContext.getContentResolver(),
 				Settings.Secure.ANDROID_ID);
 	}
-	
-	
 
 }

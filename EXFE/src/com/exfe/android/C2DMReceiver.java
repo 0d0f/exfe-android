@@ -1,22 +1,21 @@
 package com.exfe.android;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.apache.http.HttpStatus;
 
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.graphics.Color;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.exfe.android.controller.CrossDetailActivity;
-import com.exfe.android.controller.PortalActivity;
+import com.exfe.android.controller.LandingActivity;
 import com.exfe.android.model.Model;
-import com.exfe.android.util.Tool;
+import com.exfe.android.model.entity.Response;
 
 public class C2DMReceiver extends BroadcastReceiver {
 
@@ -42,13 +41,14 @@ public class C2DMReceiver extends BroadcastReceiver {
 
 	private void handleRegistration(Context context, Intent intent) {
 		// These strings are sent back by google
-		String regId = intent.getStringExtra("registration_id");
+		final String regId = intent.getStringExtra("registration_id");
 		String error = intent.getStringExtra("error");
 		String unregistered = intent.getStringExtra("unregistered");
 
-		Model mModel = ((Application) context.getApplicationContext())
+		final Model mModel = ((Application) context.getApplicationContext())
 				.getModel();
 		if (error != null) {
+			// http://developer.android.com/intl/zh-CN/guide/google/gcm/adv.html#retry
 			// If there is an error, then we log the error
 			Log.e(TAG, String.format("Received error: %s\n", error));
 			if (error.equals("ACCOUNT MISSING")) {
@@ -67,127 +67,88 @@ public class C2DMReceiver extends BroadcastReceiver {
 			Log.d(TAG, String.format("Unregistered: %s\n", unregistered));
 			Toast.makeText(context, "Unregistered: " + unregistered,
 					Toast.LENGTH_LONG).show();
-			// TODO: send POST to web server to unregister device from sending
-			// list
-			String deviceToken = mModel.Me().getDeviceToken();
-			// mModel.getServer().signOut(deviceToken);
-			// mModel.getServerv1().disconnectDeviceToken(deviceToken);
-			// Clear the shared prefs
-			mModel.Me().setDeviceToken("");
-			mModel.Me().setDeviceIsReg(false);
-			// Update our Home Activity
-			// updateHome(context);
 
+			//String deviceToken = mModel.Device().getPushToken();
+			// Clear the shared prefs
+			mModel.Device().setPushToken("");
+			mModel.Device().setReg(false);
 		} else if (regId != null) {
 			// You will get a regId if nothing goes wrong and you tried to
 			// register a device
 			Log.d(TAG, String.format("Got regId: %s", regId));
 			// TODO send regID to server in ANOTHER THREAD
-			new RegDeviceTokenTask(mModel).execute(regId);
+			Runnable run = new Runnable() {
 
-			// Update our Home Activity
-			// updateHome(context);
+				@Override
+				public void run() {
+					int retry = 0;
+					int code = HttpStatus.SC_CONTINUE;
+					mModel.Device().setPushToken(regId);
+					mModel.Device().setReg(false);
+					while (code != HttpStatus.SC_OK && retry < 3) {
+						Response result = mModel.getServer().regDevice(
+								mModel.getDeviceId(), regId,
+								mModel.getDeviceName());
+						code = result.getCode();
+						retry++;
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					if (code == HttpStatus.SC_OK) {
+						mModel.Device().setReg(true);
+						return;
+					}
+				}
+			};
+			new Thread(run).start();
 		}
 	}
 
 	private void handleData(Context context, Intent intent) {
 		String app_name = (String) context.getText(R.string.app_name);
-		String message = intent.getStringExtra("message");
-		long cid = intent.getLongExtra("cid", 0L);
-
-		// Use the Notification manager to send notification
-		NotificationManager notificationManager = (NotificationManager) context
-				.getSystemService(Context.NOTIFICATION_SERVICE);
-		// Create a notification using android stat_notify_chat icon.
-		Notification notification = new Notification(
-				android.R.drawable.stat_notify_chat, app_name + ": " + message,
-				0);
+		String message = intent.getStringExtra("message");// text
+		String cross_id = intent.getStringExtra("cid");
+		long cid = 0L;
+		if (cross_id != null) {
+			cid = Long.parseLong(cross_id);
+		}
 
 		// Create a pending intent to call the HomeActivity when the
 		// notification is clicked
 		Intent notifyIntent = null;
 		if (cid > 0) {
 			String type = intent.getStringExtra("t"); // ciur
-			notifyIntent = new Intent(context, CrossDetailActivity.class);
-			notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_ID, cid);
-			if (type.equals("c")){
-				// show conversation
-				notifyIntent.putExtra(CrossDetailActivity.FIELD_SHOW_CONVERSATION, true);
+			if (type.equals("c")) {
+				notifyIntent = new Intent(context, CrossDetailActivity.class);
+				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_ID, cid);
+				notifyIntent
+						.putExtra(CrossDetailActivity.FIELD_CROSS_ID, false);
+			} else {
+				notifyIntent = new Intent(context, CrossDetailActivity.class);
+				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_ID, cid);
+				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_ID, true);
 			}
 		}
-		
-		if (notifyIntent == null){
-			notifyIntent = new Intent(context, PortalActivity.class);
-		}
 
+		if (notifyIntent == null) {
+			notifyIntent = new Intent(context, LandingActivity.class);
+		}
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, -1,
-				notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT); //
-		notification.when = System.currentTimeMillis();
-		notification.flags |= Notification.FLAG_AUTO_CANCEL;
-		// Set the notification and register the pending intent to it
-		notification.setLatestEventInfo(context, app_name, message,
-				pendingIntent); //
+				notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-		// Trigger the notification
-		notificationManager.notify(0, notification);
-	}
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(
+				context);
+		
+		builder.setContentTitle(app_name).setContentText(message)
+				.setAutoCancel(true).setContentIntent(pendingIntent)
+				.setSmallIcon(R.drawable.notification_icon).setLights(Color.rgb(0xDD, 0xEA, 0xF9), 500, 500);
 
-	class RegDeviceTokenTask extends AsyncTask<String, Integer, String> {
-
-		private Model mModel;
-		private String mDeviceToken;
-
-		RegDeviceTokenTask(Model m) {
-			mModel = m;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.os.AsyncTask#onPreExecute()
-		 */
-		@Override
-		protected void onPreExecute() {
-			mModel.Me().setDeviceIsReg(false);
-		}
-
-		@Override
-		protected String doInBackground(String... params) {
-			mDeviceToken = params[0];
-			// return mModel.getServerv1().regDeviceToken(mDeviceToken,
-			// mModel.getDeviceString());
-			// TODO need a new api to accept android push token.
-			return null;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
-		 */
-		@Override
-		protected void onPostExecute(String result) {
-			if (Tool.isJson(result)) {
-				try {
-					JSONObject response = new JSONObject(result);
-					JSONObject meta = response.getJSONObject("meta");
-					int code = meta.optInt("code");
-					if (code == 200) {
-						mModel.Me().setDeviceToken(mDeviceToken);
-						mModel.Me().setDeviceIsReg(true);
-						return;
-					}
-
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
-			}
-
-			// fail to add token try again?
-			return;
-		}
-
+		NotificationManager notificationManager = (NotificationManager) context
+				.getSystemService(Context.NOTIFICATION_SERVICE);
+		notificationManager.notify((int) cid, builder.build());
 	}
 }

@@ -123,6 +123,8 @@ public abstract class Entity {
 	
 	public abstract void loadFromDao(DatabaseHelper dbhelper);
 	
+	//public abstract <T extends Entity> T applyValues(T target);
+	
 	public static final Comparator<Entity> sIdComparator = new Comparator<Entity>() {
 
 		@Override

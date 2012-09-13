@@ -6,17 +6,22 @@
     <dimen name="small_avatar_height">30dp</dimen>
     <dimen name="nav_btn_width">30dp</dimen>
     <dimen name="nav_btn_height">30dp</dimen>
-    <dimen name="nav_bar_height">45dp</dimen>
+    <dimen name="nav_bar_height">47dp</dimen>
     <dimen name="avatar_width">60dp</dimen>
     <dimen name="avatar_height">60dp</dimen>
     <dimen name="list_item_height">60sp</dimen>
-    <dimen name="list_commom_margin">8dp</dimen>
+    <dimen name="list_commom_padding">5dp</dimen>
+    <dimen name="list_commom_margin">5dp</dimen>
     <dimen name="base_large_margin">16dp</dimen>
     <dimen name="base_margin">10dp</dimen>
-    <dimen name="base_small_margin">6dp</dimen>
-    <dimen name="base_smaill_margin">5dp</dimen>
+    <dimen name="base_small_margin">5dp</dimen>
     <dimen name="base_split_margin">2dp</dimen>
     <dimen name="list_divider_hight">1dp</dimen>
     
+    
+    <dimen name="list_title_height">32dp</dimen>
+    <dimen name="list_card_height">106dp</dimen>
     <dimen name="btn_base_height">40dp</dimen>
+    
+    
 </resources>

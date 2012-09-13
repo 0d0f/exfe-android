@@ -13,16 +13,14 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Observable;
 
-import com.exfe.android.exception.ExfeException;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Path;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.text.TextUtils;
+
+import com.exfe.android.Const;
+import com.exfe.android.exception.ExfeException;
 
 public class ImageCache extends Observable {
 
@@ -93,10 +91,10 @@ public class ImageCache extends Observable {
 			return fileName;
 		}
 		if ("default.png".equalsIgnoreCase(fileName)) {
-			return String.format("http://img.exfe.com/web/80_80_%s", fileName);
+			return String.format(Const.DEFAULT_IMG_DEFAULT_URL, fileName);
 		}
 
-		return String.format("http://img.exfe.com/%c/%c/80_80_%s",
+		return String.format(Const.DEFAULT_IMG_POOL_URL,
 				fileName.charAt(0), fileName.charAt(1), fileName);
 	}
 	

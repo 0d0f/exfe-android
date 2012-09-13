@@ -12,10 +12,8 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Environment;
 
-import com.exfe.android.BuildConfig;
-
 public class Log {
-	public static boolean DEBUG = BuildConfig.DEBUG;
+	public static boolean DEBUG = true;// BuildConfig.DEBUG;
 
 	public static void v(Class<?> tag, String msg, Object... args) {
 		v(tag.getSimpleName(), msg, args);
@@ -337,7 +335,7 @@ public class Log {
 			} catch (IOException e) {
 				Log.w("ExternalStorage", e, "Error writing %s", file);
 			}
-		}else{
+		} else {
 			Log.w("ExternalStorage", "No External Storage or not ready.");
 		}
 	}

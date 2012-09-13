@@ -37,6 +37,7 @@ import com.exfe.android.BuildConfig;
 import com.exfe.android.Const;
 import com.exfe.android.debug.Log;
 import com.exfe.android.model.Model;
+import com.exfe.android.model.entity.Provider;
 
 public class ServerAPI1 {
 
@@ -44,10 +45,10 @@ public class ServerAPI1 {
 	public static final String lineSeparator = System
 			.getProperty("line.separator");
 
-	public static String OVERIDE_PROTOCAL = BuildConfig.DEBUG?"http":null;
-	public static String OVERIDE_DOMAIN = BuildConfig.DEBUG?"api.0d0f.com":null;
-	public static String OVERIDE_PORT = BuildConfig.DEBUG?null:null;
-	public static String OVERIDE_PATHROOT = BuildConfig.DEBUG?"/v1":null;
+	public static String OVERIDE_PROTOCAL = Const.override_domain?"http":null;
+	public static String OVERIDE_DOMAIN = Const.override_domain?"api.0d0f.com":null;
+	public static String OVERIDE_PORT = Const.override_domain?null:null;
+	public static String OVERIDE_PATHROOT = Const.override_domain?"/v1":null;
 
 	private static final String FIELD_API_NAME = "API-Name";
 	private static final String FIELD_CONTECT_TYPE = "Content-Type";
@@ -293,9 +294,9 @@ public class ServerAPI1 {
 		 * NSString *lastUpdateTime=[dbu getLastCommentUpdateTimeWith:crossid];
 		 */
 
-		// FIXME device identity id from preference.
+		
 		String identity_id = "EWQGEFEAFDSA";
-		// FIXME load from db
+		
 		String last_update_time = "2012:12:20";
 		return getPosts(crossid, identity_id, last_update_time);
 	}
@@ -315,9 +316,7 @@ public class ServerAPI1 {
 	}
 
 	public String getUserEvents() {
-		// FIXME need get the user id from somewhere
 		int user_id = 0;
-		// FIXME load from db
 		String last_update_time = "2012:12:20";
 		return getUserEvents(user_id, last_update_time);
 	}
@@ -345,11 +344,8 @@ public class ServerAPI1 {
 		 * if(lastUpdateTime==nil)
 		 * 		lastUpdateTime=@"0000-00-00 00:00:00";
 		 */
-		// FIXME need get the user id from somewhere
 		int user_id = 0;
-		// FIXME device identity id from preference.
 		String identity_id = "EWQGEFEAFDSA";
-		// FIXME load from preference
 		String last_update_time = "2012:12:20";
 		if (TextUtils.isEmpty(last_update_time)) {
 			last_update_time = "0000-00-00 00:00:00";
@@ -410,6 +406,7 @@ public class ServerAPI1 {
 		return request(config, query);
 	}
 
+	@Deprecated
 	public String regDeviceToken(String deviceToken, String deviceName) {
 		HashMap<String, String> config = new HashMap<String, String>();
 		HashMap<String, String> query = new HashMap<String, String>();
@@ -418,11 +415,12 @@ public class ServerAPI1 {
 				mModel.Me().getUserId(), URLEncoder.encode(mAppKey)));
 
 		query.put("devicetoken", deviceToken);
-		query.put("provider", Const.PROVIDER_ANDROID);
+		query.put("provider", Provider.STR_ANDROID);
 		query.put("devicename", deviceName);
 		return request(config, query);
 	}
 
+	@Deprecated
 	public String disconnectDeviceToken(String deviceToken) {
 		if (TextUtils.isEmpty(deviceToken)) {
 			return "";

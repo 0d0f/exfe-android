@@ -15,21 +15,21 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.ContactsContract;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.method.PasswordTransformationMethod;
 import android.text.style.ForegroundColorSpan;
-import android.text.style.RelativeSizeSpan;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,6 +41,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.bitmapfun.util.ImageFetcher;
 import com.example.android.bitmapfun.util.ImageWorker;
@@ -53,6 +54,7 @@ import com.exfe.android.model.entity.Identity;
 import com.exfe.android.model.entity.Provider;
 import com.exfe.android.model.entity.Response;
 import com.exfe.android.util.Tool;
+import com.flurry.android.FlurryAgent;
 
 public class LoginFragment extends Fragment implements Observer {
 
@@ -60,6 +62,15 @@ public class LoginFragment extends Fragment implements Observer {
 
 	public static final int UI_MODE_SIGN_IN = 0;
 	public static final int UI_MODE_SIGN_UP = 1;
+
+	public static final int REG_QUERY_NONE = 0;
+	public static final int REG_QUERY_QUERYING = 1;
+	public static final int REG_QUERY_QUERY_POST = 2;
+	public static final int REG_QUERY_QUERIED = 3;
+	public static final int REG_QUERY_QUERIED_SIGN_IN = 4;
+	public static final int REG_QUERY_QUERIED_SIGN_UP = 5;
+
+	private Handler mHandler = new Handler();
 
 	private Fragment.ActivityCallBack mCallBack;
 	private ImageWorker mImageWorker = null;
@@ -71,15 +82,14 @@ public class LoginFragment extends Fragment implements Observer {
 	private View btnSignIn = null;
 	private View btnSetupNew = null;
 	private View btnForgetPwd = null;
-	private View btnShowPwd = null;
+	private ImageView btnShowPwd = null;
 	private View groupUserName = null;
 	private ProgressBar pbIndicator = null;
-	private TextView tvHint = null;
 	private ImageView ivAvatar = null;
 
 	private String mKeyword = null;
-	private String mRegFlag = null;
 	private int mUiMode = UI_MODE_SIGN_IN;
+	private int mQueryStatus = REG_QUERY_NONE;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -184,8 +194,9 @@ public class LoginFragment extends Fragment implements Observer {
 
 		v = view.findViewById(R.id.show_password);
 		if (v != null) {
-			btnShowPwd = v;
+			btnShowPwd = (ImageView) v;
 			btnShowPwd.setOnClickListener(clickListener);
+			btnShowPwd.setImageLevel(0);
 		}
 
 		v = view.findViewById(R.id.indicator);
@@ -193,16 +204,12 @@ public class LoginFragment extends Fragment implements Observer {
 			pbIndicator = (ProgressBar) v;
 		}
 
-		v = view.findViewById(R.id.label_hint);
-		if (v != null) {
-			tvHint = (TextView) v;
-		}
-
 		v = view.findViewById(R.id.input_indentity_avatar);
 		if (v != null) {
 			ivAvatar = (ImageView) v;
 		}
 
+		mQueryStatus = REG_QUERY_NONE;
 		setUiMode(UI_MODE_SIGN_IN);
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
@@ -236,67 +243,12 @@ public class LoginFragment extends Fragment implements Observer {
 
 			if (!hasFocus) {
 				final TextView tv = (TextView) v;
-				final String external_name = tv.getText().toString();
+				final String external_name = tv.getText().toString().trim();
 
-				Runnable run = new Runnable() {
-
-					@Override
-					public void run() {
-						mRegFlag = "";
-						Response resp = getModel().getServer()
-								.getRegistrationFlag(external_name,
-										Provider.STR_EMAIL);
-						if (resp.getCode() == HttpStatus.SC_OK) {
-							mRegFlag = resp.getResponse().optString(
-									"registration_flag");
-
-							if ("SIGN_IN".equalsIgnoreCase(mRegFlag)) {
-								final Identity ident = (Identity) EntityFactory
-										.create(resp.getResponse()
-												.optJSONObject("identity"));
-								if (ident != null) {
-									try {
-										getModel().getHelper().getIdentityDao()
-												.update(ident);
-									} catch (SQLException e) {
-										// TODO Auto-generated catch block
-										e.printStackTrace();
-									}
-									tv.post(new Runnable() {
-
-										@Override
-										public void run() {
-											setUiMode(UI_MODE_SIGN_IN);
-
-											mImageWorker.loadImage(
-													ident.getAvatarFilename(),
-													ivAvatar);
-										}
-									});
-								}
-							} else if ("SIGN_UP".equalsIgnoreCase(mRegFlag)) {
-								tv.post(new Runnable() {
-
-									@Override
-									public void run() {
-										setUiMode(UI_MODE_SIGN_UP);
-										// mImageWorker.loadImage(num,
-										// ivAvatar);
-									}
-								});
-
-							}
-						}
-					}
-				};
-				new Thread(run).start();
+				checkAvailable(external_name);
 			} else {
-
-				getActivity()
-						.getWindow()
-						.setSoftInputMode(
-								WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-
+				getActivity().getWindow().setSoftInputMode(
+						WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 			}
 		}
 	};
@@ -411,6 +363,7 @@ public class LoginFragment extends Fragment implements Observer {
 	public void onResume() {
 		// TODO Auto-generated method stub
 		super.onResume();
+
 	}
 
 	@Override
@@ -460,9 +413,15 @@ public class LoginFragment extends Fragment implements Observer {
 		if (etPassword != null) {
 			if (show) {
 				etPassword.setTransformationMethod(null);
+				if (btnShowPwd != null) {
+					btnShowPwd.setImageLevel(1);
+				}
 			} else {
 				etPassword
 						.setTransformationMethod(new PasswordTransformationMethod());
+				if (btnShowPwd != null) {
+					btnShowPwd.setImageLevel(0);
+				}
 			}
 			if (etPassword.hasFocus()) {
 				etPassword.setSelection(etPassword.getText().length());
@@ -474,10 +433,9 @@ public class LoginFragment extends Fragment implements Observer {
 		return mUiMode;
 	}
 
-	private CharSequence highligntKeyword(int textid) {
-		CharSequence text = Tool.highlightKeyword(
-				getResources().getString(textid), mKeyword,
-				new ForegroundColorSpan(Color.rgb(0x72, 0x97, 0xBF)));
+	private CharSequence highligntKeyword(Resources res, int textid) {
+		CharSequence text = Tool.highlightKeyword(res.getString(textid),
+				mKeyword, new ForegroundColorSpan(Color.rgb(0x72, 0x97, 0xBF)));
 		return text;
 	}
 
@@ -500,8 +458,8 @@ public class LoginFragment extends Fragment implements Observer {
 				btnForgetPwd.setVisibility(View.GONE);
 			}
 			if (etPassword != null) {
-				etPassword
-						.setHint(highligntKeyword(R.string.set_exfe_password));
+				etPassword.setHint(highligntKeyword(etPassword.getResources(),
+						R.string.set_exfe_password));
 			}
 		} else {
 			if (groupUserName != null) {
@@ -516,8 +474,8 @@ public class LoginFragment extends Fragment implements Observer {
 			}
 
 			if (etPassword != null) {
-				etPassword
-						.setHint(highligntKeyword(R.string.enter_exfe_password));
+				etPassword.setHint(highligntKeyword(etPassword.getResources(),
+						R.string.enter_exfe_password));
 			}
 			if (btnSetupNew != null) {
 				btnSetupNew.setVisibility(View.GONE);
@@ -533,6 +491,85 @@ public class LoginFragment extends Fragment implements Observer {
 			}
 
 		}
+	}
+
+	protected void checkAvailable(final String external_name) {
+		Runnable run = new Runnable() {
+
+			@Override
+			public void run() {
+				if (mQueryStatus != REG_QUERY_QUERY_POST) {
+					mQueryStatus = REG_QUERY_QUERYING;
+				}
+
+				Response resp = getModel().getServer().getRegistrationFlag(
+						external_name, Provider.STR_EMAIL);
+
+				final int status = mQueryStatus;
+				mQueryStatus = REG_QUERY_QUERIED;
+				int code = resp.getCode();
+				switch (code) {
+				case HttpStatus.SC_OK:
+					String regFlag = resp.getResponse().optString(
+							"registration_flag");
+
+					if ("SIGN_IN".equalsIgnoreCase(regFlag)) {
+						mQueryStatus = REG_QUERY_QUERIED_SIGN_IN;
+						final Identity ident = (Identity) EntityFactory
+								.create(resp.getResponse().optJSONObject(
+										"identity"));
+						if (ident != null) {
+							try {
+								getModel().getHelper().getIdentityDao()
+										.update(ident);
+							} catch (SQLException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							mHandler.post(new Runnable() {
+
+								@Override
+								public void run() {
+
+									setUiMode(UI_MODE_SIGN_IN);
+									ivAvatar.setVisibility(View.VISIBLE);
+									mImageWorker.loadImage(
+											ident.getAvatarFilename(), ivAvatar);
+									if (status == REG_QUERY_QUERY_POST) {
+										loginProcess(etIdentity.getText()
+												.toString().trim(),
+												Provider.STR_EMAIL, etPassword
+														.getText().toString(),
+												null);
+									}
+								}
+							});
+						}
+					} else if ("SIGN_UP".equalsIgnoreCase(regFlag)) {
+						mQueryStatus = REG_QUERY_QUERIED_SIGN_UP;
+						mHandler.post(new Runnable() {
+
+							@Override
+							public void run() {
+								setUiMode(UI_MODE_SIGN_UP);
+								// mImageWorker.loadImage(num,
+								// ivAvatar);
+								if (status == REG_QUERY_QUERY_POST) {
+									// TODO perform sign up
+								}
+							}
+						});
+
+					}
+					break;
+				default:
+					;
+
+				}
+			}
+		};
+		ivAvatar.setVisibility(View.INVISIBLE);
+		new Thread(run).start();
 	}
 
 	private EditText.OnEditorActionListener editorAction = new EditText.OnEditorActionListener() {
@@ -559,15 +596,36 @@ public class LoginFragment extends Fragment implements Observer {
 			int id = v.getId();
 			switch (id) {
 			case R.id.btn_sign_in:
-				if (!TextUtils.isEmpty(etPassword.getText())
-						&& !TextUtils.isEmpty(mRegFlag)) {
-					InputMethodManager imm = (InputMethodManager) getActivity()
-							.getSystemService(Context.INPUT_METHOD_SERVICE);
-					imm.hideSoftInputFromWindow(etPassword.getWindowToken(), 0);
+			case R.id.btn_setup_new:
+				if (TextUtils.isEmpty(etPassword.getText())) {
+					Toast t = Toast.makeText(getActivity(),
+							R.string.please_input_password, Toast.LENGTH_LONG);
+					t.setGravity(Gravity.CENTER, 0, 0);
+					t.show();
+				} else if (id == R.id.btn_setup_new
+						&& TextUtils.isEmpty(etUsername.getText())) {
+					Toast t = Toast.makeText(getActivity(),
+							R.string.please_input_your_name, Toast.LENGTH_LONG);
+					t.setGravity(Gravity.CENTER, 0, 0);
+					t.show();
+				} else {
+					if (mQueryStatus >= REG_QUERY_QUERIED) {
+						InputMethodManager imm = (InputMethodManager) getActivity()
+								.getSystemService(Context.INPUT_METHOD_SERVICE);
+						imm.hideSoftInputFromWindow(
+								etPassword.getWindowToken(), 0);
 
-					new doLoginTask().execute(etIdentity.getText().toString()
-							.trim(), Provider.STR_EMAIL, etPassword.getText()
-							.toString());
+						String name = (id == R.id.btn_setup_new) ? etUsername
+								.getText().toString().trim() : null;
+						loginProcess(etIdentity.getText().toString().trim(),
+								Provider.STR_EMAIL, etPassword.getText()
+										.toString(), name);
+					} else if (mQueryStatus == REG_QUERY_NONE) {
+						mQueryStatus = REG_QUERY_QUERY_POST;// need auto trigger
+						checkAvailable(etIdentity.getText().toString().trim());
+					} else if (mQueryStatus == REG_QUERY_QUERYING) {
+						mQueryStatus = REG_QUERY_QUERY_POST;// need auto trigger
+					}
 				}
 				break;
 			case R.id.btn_login_way_1:
@@ -581,21 +639,6 @@ public class LoginFragment extends Fragment implements Observer {
 					mCallBack.onSwitch(LoginFragment.this, param);
 				}
 				break;
-			case R.id.btn_setup_new:
-				if (!TextUtils.isEmpty(etPassword.getText())
-						&& !TextUtils.isEmpty(mRegFlag)) {
-					InputMethodManager imm = (InputMethodManager) getActivity()
-							.getSystemService(Context.INPUT_METHOD_SERVICE);
-					imm.hideSoftInputFromWindow(etPassword.getWindowToken(), 0);
-
-					new doLoginTask()
-							.execute(etIdentity.getText().toString().trim(),
-									Provider.STR_EMAIL, etPassword.getText()
-											.toString(), etUsername.getText()
-											.toString().trim());
-				}
-
-				break;
 			case R.id.forget_password:
 				break;
 			case R.id.show_password:
@@ -607,107 +650,82 @@ public class LoginFragment extends Fragment implements Observer {
 		}
 	};
 
-	private class doLoginTask extends AsyncTask<String, Integer, Response> {
+	protected void loginProcess(final String external_id,
+			final String provider, final String password, final String name) {
 
-		String external_id = null;
-		String password = null;
-		String provider = null;
-		String name = null;
+		Runnable run = new Runnable() {
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.os.AsyncTask#onPreExecute()
-		 */
-		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-			btnSignIn.setEnabled(false);
-			btnSetupNew.setEnabled(false);
-			pbIndicator.setVisibility(View.VISIBLE);
-			tvHint.setText("");
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.os.AsyncTask#doInBackground(Params[])
-		 */
-		@Override
-		protected Response doInBackground(String... params) {
-			external_id = params[0];
-			provider = params[1];
-			password = params[2];
-
-			if (params.length == 3) {
-				return mModel.getServer().signIn(external_id, provider,
-						password);
-			} else {
-				name = params[3];
-				return mModel.getServer().setUpNewUser(external_id, provider,
-						password, name);
-			}
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
-		 */
-		@Override
-		protected void onPostExecute(Response result) {
-			super.onPostExecute(result);
-			if (result != null) {
-				int code;
-				code = result.getCode();
-				switch (code) {
-				case HttpStatus.SC_OK:
-					JSONObject resp = result.getResponse();
-					String token = resp.optString("token");
-					long user_id = resp.optLong("user_id");
-
-					mModel.Me().setUsername(external_id);
-					mModel.Me().setProvider(provider);
-					mModel.Me().setToken(token);
-					mModel.Me().setUserId(user_id);
-					mModel.Me().fetchProfile();
-					mModel.Me().setExternalId("");
-
-					((Activity) getActivity()).registGCM();
-
-					if (mCallBack != null) {
-						Bundle param = new Bundle();
-						param.putInt(LandingActivity.FIELD_ACTION,
-								LandingActivity.ACTIVITY_RESULT_CROSS);
-						mCallBack.onSwitch(LoginFragment.this, param);
-					}
-					break;
-				case HttpStatus.SC_NOT_FOUND:
-					tvHint.setText(R.string.login_sign_in_fail_hint);
-					break;
-				default:
-					break;
+			@Override
+			public void run() {
+				Response result = null;
+				if (TextUtils.isEmpty(name)) {
+					FlurryAgent.logEvent("sign_in");
+					result = mModel.getServer().signIn(external_id, provider,
+							password);
+				} else {
+					FlurryAgent.logEvent("sign_up");
+					result = mModel.getServer().setUpNewUser(external_id,
+							provider, password, name);
 				}
 
+				// reset UI;
+				mHandler.post(new Runnable() {
+
+					@Override
+					public void run() {
+						pbIndicator.setVisibility(View.GONE);
+						btnSignIn.setEnabled(true);
+						btnSetupNew.setEnabled(true);
+					}
+				});
+
+				if (result != null) {
+					int code;
+					code = result.getCode();
+					switch (code) {
+					case HttpStatus.SC_OK:
+						JSONObject resp = result.getResponse();
+						String token = resp.optString("token");
+						long user_id = resp.optLong("user_id");
+
+						mModel.Me().setUsername(external_id);
+						mModel.Me().setProvider(provider);
+						mModel.Me().setToken(token);
+						mModel.Me().setUserId(user_id);
+						mModel.Me().setExternalId(external_id);
+						
+						mModel.Me().fetchProfile();
+
+						((Activity) getActivity()).registGCM();
+
+						if (mCallBack != null) {
+							Bundle param = new Bundle();
+							param.putInt(LandingActivity.FIELD_ACTION,
+									LandingActivity.ACTIVITY_RESULT_CROSS);
+							mCallBack.onSwitch(LoginFragment.this, param);
+						}
+						break;
+					case HttpStatus.SC_FORBIDDEN:
+						mHandler.post(new Runnable() {
+
+							@Override
+							public void run() {
+								Toast t = Toast
+										.makeText(
+												getActivity(),
+												R.string.identity_and_password_dont_match,
+												Toast.LENGTH_SHORT);
+								t.setGravity(Gravity.CENTER, 0, 0);
+								t.show();
+							}
+						});
+						break;
+					default:
+						break;
+					}
+				}
 			}
-			pbIndicator.setVisibility(View.GONE);
-			btnSignIn.setEnabled(true);
-			btnSetupNew.setEnabled(true);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.os.AsyncTask#onCancelled()
-		 */
-		@Override
-		protected void onCancelled() {
-			super.onCancelled();
-			pbIndicator.setVisibility(View.GONE);
-			btnSignIn.setEnabled(true);
-			btnSetupNew.setEnabled(true);
-		}
-
+		};
+		new Thread(run).start();
 	}
-
 }

@@ -1,82 +1,172 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
-    <string name="hello">Hello World, CrossActivity!</string>
-    <string name="app_name">EXFE</string>
-    <string name="login_identity">Identity:</string>
-    <string name="login_password">Password:</string>
-    <string name="login_sign_in">Sign In</string>
+    <!-- localized string -->
     <string name="close">Close</string>
     <string name="back">Back</string>
     <string name="home">Home</string>
     <string name="comment">Comment</string>
     <string name="send">Send</string>
     <string name="profile">Profile</string>
-    <string name="login_sign_in_fail_hint">Incorrect identity or password</string>
-    <string name="sign_me_in">Sign me in …</string>
+    <string name="start_with_email">Start with email</string>
     <string name="create_new_account">Create new account</string>
-    <string name="exfe_and_x_definition">&lt;div>&lt;font color="#1175A5">EXFE&lt;/font>[ˈɛksfi]&lt;br>is an utilit for hanging out with friends.&lt;br>Stop calling up every one RSVP, losing in endless emails and messages off the point.&lt;/div>&lt;div align="right">&lt;font color="#1175A5">X&lt;/font>[krɔs]&lt;br>is a gathering of people, on purpose or not.&lt;br>All &lt;font size="40pt" color="#1175A5">X&lt;/font> are private by default, accessible to only attendees.&lt;/div></string>
-    <string name="sign_in_with_twitter">Sign in with Twitter</string>
+    <string name="twitter_authorization">Twitter Authorization</string>
     <string name="change_password">Change password</string>
     <string name="sign_out">Sign out</string>
     <string name="notification">Notification</string>
-	<string name="x_attended">&lt;font color="#1175A5">&lt;big>%d&lt;/big> x&lt;/font> attended</string>
- 	<string name="add_identity">Add identity</string>
-	<string name="someone_exfee">%s Exfee</string>
-	
+    <string name="add_identity">Add identity</string>
+    <string name="welcome_to_exfe">Welcome to EXFE</string>
+    <string name="enter_your_email">Enter your email</string>
+    <string name="set_a_recognizable_name">Set a recognizable name</string>
+    <string name="set_up_new_account">Set up new account</string>
+    <string name="enter_exfe_password">Enter EXFE Password</string>
+    <string name="set_exfe_password">Set EXFE Password</string>
+    <string name="accepted">Accepted</string>
+    <string name="interested">Iterested</string>
+    <string name="declined">Declined</string>
+    <string name="removed">Removed</string>
+    <string name="pending">Pending</string>
+    <string name="unavailable">Unavailable</string>
+    <string name="im_in">I\'m in</string>
+    <string name="no_response">No response</string>
+    <string name="host">Host</string>
+    <string name="mates">Mates</string>
+    <string name="cancel">Cancel</string>
+    <string name="identity_and_password_dont_match">"Identity and password don't match."</string>
+    <string name="please_input_password">Please input password.</string>
+    <string name="please_input_your_name">Please input your name.</string>
+    <!-- format string -->
+    <string name="x_attended">%d ·X·\n attended</string>
+    <string name="start_with_xxx">Start with %s</string>
+    <string name="two_sentences">%1$s.%2$s.</string>
+    <string name="one_sentence">%1$s.</string>
+    <string name="xxx_by_xxx">%1$s by %2$s.</string>
+
+    <plurals name="rsvp_with_mates">
+        <item quantity="one">%1$s &lt;font color="#ffffff">with&lt;/font> %2$d &lt;font color="#ffffff">mate.&lt;/font></item>
+        <item quantity="other">%1$s &lt;font color="#ffffff">with&lt;/font> %2$d &lt;font color="#ffffff">mates.&lt;/font></item>
+    </plurals>
+
+    <!-- function string -->
+    <string name="app_name">EXFE</string>
+    <string name="key_word_exfee">EXFE</string>
     <string name="image_hint_avatar">avatar</string>
     <string name="text_hint_title">Title</string>
     <string name="text_hint_place">Place</string>
     <string name="text_hint_time">Time</string>
-    <string name="text_hint_crosses_attended">N x attended</string>
-    
+    <string name="login_identity">Identity:</string>
+    <string name="login_password">Password:</string>
+    <string name="login_sign_in">Sign In</string>
+
     <plurals name="seconds_ago">
-        <item quantity="one">One second ago.</item>
-        <item quantity="other">%d seconds ago.</item>
+        <item quantity="one">1 second ago</item>
+        <item quantity="other">%d seconds ago</item>
     </plurals>
     <plurals name="seconds_later">
-        <item quantity="one">One second later.</item>
-        <item quantity="other">%d seconds later.</item>
+        <item quantity="one">1 second later</item>
+        <item quantity="other">%d seconds later</item>
     </plurals>
     <plurals name="minutes_ago">
-        <item quantity="one">One minute ago.</item>
-        <item quantity="other">%d minutes ago.</item>
+        <item quantity="one">1 minute ago</item>
+        <item quantity="other">%d minutes ago</item>
     </plurals>
     <plurals name="minutes_later">
-        <item quantity="one">One minute later.</item>
-        <item quantity="other">%d minutes later.</item>
+        <item quantity="one">1 minute later</item>
+        <item quantity="other">%d minutes later</item>
     </plurals>
     <plurals name="hours_ago">
-        <item quantity="one">One hour ago.</item>
-        <item quantity="other">%d hours ago.</item>
+        <item quantity="one">1 hour ago</item>
+        <item quantity="other">%d hours ago</item>
     </plurals>
     <plurals name="hours_later">
-        <item quantity="one">One hour later.</item>
-        <item quantity="other">%d hours later.</item>
+        <item quantity="one">1 hour later</item>
+        <item quantity="other">%d hours later</item>
     </plurals>
     <plurals name="days_ago">
-        <item quantity="one">One day ago.</item>
-        <item quantity="other">%d days ago.</item>
+        <item quantity="one">1 day ago</item>
+        <item quantity="other">%d days ago</item>
     </plurals>
     <plurals name="days_later">
-        <item quantity="one">One day later.</item>
-        <item quantity="other">%d days later.</item>
+        <item quantity="one">1 day later</item>
+        <item quantity="other">%d days later</item>
     </plurals>
     <plurals name="months_ago">
-        <item quantity="one">One month ago.</item>
-        <item quantity="other">%d months ago.</item>
+        <item quantity="one">1 month ago</item>
+        <item quantity="other">%d months ago</item>
     </plurals>
     <plurals name="months_later">
-        <item quantity="one">One month later.</item>
-        <item quantity="other">%d months later.</item>
+        <item quantity="one">1 month later</item>
+        <item quantity="other">%d months later</item>
     </plurals>
     <plurals name="years_ago">
-        <item quantity="one">One year ago.</item>
-        <item quantity="other">%d years ago.</item>
+        <item quantity="one">1 year ago</item>
+        <item quantity="other">%d years ago</item>
     </plurals>
     <plurals name="years_later">
-        <item quantity="one">One year later.</item>
-        <item quantity="other">%d years later.</item>
+        <item quantity="one">1 year later</item>
+        <item quantity="other">%d years later</item>
     </plurals>
+    <plurals name="in_minutes">
+        <item quantity="one">In %d minute</item>
+        <item quantity="other">In %d minutes</item>
+    </plurals>
+    <plurals name="in_hours">
+        <item quantity="one">In %d hour</item>
+        <item quantity="other">In %d hours</item>
+    </plurals>
+    <plurals name="in_days">
+        <item quantity="one">In %d day</item>
+        <item quantity="other">In %d days</item>
+    </plurals>
+    <plurals name="in_months">
+        <item quantity="one">In %d month</item>
+        <item quantity="other">In %d months</item>
+    </plurals>
+    <plurals name="in_years">
+        <item quantity="one">In %d year</item>
+        <item quantity="other">In %d years</item>
+    </plurals>
+    <plurals name="n_years">
+        <item quantity="one">%d year</item>
+        <item quantity="other">%d years</item>
+    </plurals>
+    <plurals name="n_months">
+        <item formatted="false" quantity="one">%d month</item>
+        <item formatted="false" quantity="other">%d months</item>
+    </plurals>
+    <plurals name="n_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="n_hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <plurals name="n_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="n_seconds">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
+
+    <string name="in_years_months" formatted="false">In %1$s and %2$s</string>
+    <string name="years_months_ago" formatted="false">%1$s and %2$s ago</string>
+    <string name="in_xxx" formatted="false">In %1$s</string>
+    <string name="xxx_ago" formatted="false">%1$s ago</string>
+    <string name="in_xxx_and_xxx" formatted="false">In %1$s and %2$s</string>
+    <string name="xxx_and_xxx_ago" formatted="false">%1$s and %2$s ago</string>
+    <string name="in_xxx_xxx_and_xxx" formatted="false">In %1$s %2$s and %3$s</string>
+    <string name="xxx_xxx_and_xxx_ago" formatted="false">%1$s %2$s and %3$s ago</string>
+    <string name="next_xxx" formatted="false">Next %1$s</string>
+    <string name="last_xxx" formatted="false">Last %1$s</string>
+    <string name="now">Now</string>
+    <string name="just_now">Just now</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="the_day_before_yesterday">The day before yesterday</string>
+    <string name="the_day_after_tomorrow">The day after tomorrow</string>
 
 </resources>

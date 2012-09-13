@@ -10,13 +10,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.view.View;
-
 import com.exfe.android.Const;
 import com.exfe.android.db.DatabaseHelper;
 import com.exfe.android.db.EntityPersister;
 import com.exfe.android.db.JSONArrayPersister;
 import com.exfe.android.db.JSONObjectPersister;
+import com.exfe.android.db.WidgetArrayPersister;
 import com.exfe.android.debug.Log;
 import com.exfe.android.util.Tool;
 import com.j256.ormlite.dao.Dao;
@@ -32,7 +31,7 @@ public class Cross extends Entity {
 	private JSONArray relative;
 	@DatabaseField
 	private Date created_at;
-	@DatabaseField(version = true)
+	@DatabaseField
 	private Date updated_at;
 	@DatabaseField(foreign = true)
 	private Identity by_identity;
@@ -40,6 +39,8 @@ public class Cross extends Entity {
 	private String title;
 	@DatabaseField
 	private String description;
+	@DatabaseField
+	private int mConversationCount;
 	@DatabaseField(persisterClass = EntityPersister.class)
 	private CrossTime time;
 	@DatabaseField(persisterClass = EntityPersister.class)
@@ -48,7 +49,7 @@ public class Cross extends Entity {
 	private JSONObject attribute;
 	@DatabaseField(foreign = true)
 	private Exfee exfee;
-	// @ForeignCollectionField(eager = false)
+	@DatabaseField(persisterClass = WidgetArrayPersister.class)
 	private Collection<Widget> widgets;
 	@DatabaseField(persisterClass = JSONObjectPersister.class)
 	private JSONObject updated;
@@ -68,14 +69,14 @@ public class Cross extends Entity {
 		mType = EntityFactory.TYPE_CROSS;
 		mId = json.optLong("id", NO_ID);
 		try {
-			created_at = Const.STD_DATE_FORMAT.parse(json.optString(
+			created_at = Const.UTC_DATE_TIME_FORMAT.parse(json.optString(
 					"created_at", ""));
 		} catch (ParseException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		try {
-			updated_at = Const.STD_DATE_FORMAT.parse(json.optString(
+			updated_at = Const.UTC_DATE_TIME_FORMAT.parse(json.optString(
 					"updated_at", ""));
 		} catch (ParseException e1) {
 			// TODO Auto-generated catch block
@@ -94,7 +95,8 @@ public class Cross extends Entity {
 		description = json.optString("description");
 		time = (CrossTime) EntityFactory.create(json.optJSONObject("time"));
 		place = (Place) EntityFactory.create(json.optJSONObject("place"));
-
+		mConversationCount = json.optInt("conversation_count");
+		
 		JSONObject attrMap = json.optJSONObject("attribute");
 		if (attrMap != null) {
 			attribute = attrMap;
@@ -123,8 +125,8 @@ public class Cross extends Entity {
 			json.put("id", mId);
 
 			if (deep) {
-				json.put("created_at", created_at);
-				json.put("updated_at", updated_at);
+				json.put("created_at", Const.UTC_DATE_TIME_FORMAT.format(created_at));
+				json.put("updated_at", Const.UTC_DATE_TIME_FORMAT.format(updated_at));
 			}
 
 			if (by_identity != null) {
@@ -146,6 +148,7 @@ public class Cross extends Entity {
 			json.put("place", place.toJSON());
 			json.put("exfee", exfee.toJSON());
 			json.put("attribute", attribute);
+			json.put("conversation_count", mConversationCount);
 
 			JSONArray array = new JSONArray();
 			for (Entity e : widgets) {
@@ -340,6 +343,22 @@ public class Cross extends Entity {
 		}
 	}
 
+	
+	
+	/**
+	 * @return the conversationCount
+	 */
+	public int getConversationCount() {
+		return this.mConversationCount;
+	}
+
+	/**
+	 * @param conversationCount the conversationCount to set
+	 */
+	public void setConversationCount(int conversationCount) {
+		this.mConversationCount = conversationCount;
+	}
+
 	/**
 	 * @return the exfeeId
 	 */
@@ -430,13 +449,13 @@ public class Cross extends Entity {
 		JSONObject update = getUpdated();
 		if (update != null) {
 			Date updated_at;
-			long identity_id;
+			//long identity_id;
 			Date lastCall;
 			if (update.has(name)) {
 				JSONObject json = update.optJSONObject(name);
 				updated_at = Tool.parseDate(json, "updated_at");
 				if (updated_at != null) {
-					identity_id = json.optLong("identity_id");
+					//identity_id = json.optLong("identity_id");
 					lastCall = this.last_view_at;
 
 					if (lastCall == null
@@ -509,5 +528,18 @@ public class Cross extends Entity {
 		Log.d(TAG, "Cross (%d), %s: %s", getId(), getTitle(), diff);
 		return diff;
 	}
+	
+
+//	@Override
+//	public <T extends Entity> T applyValues(T target) {
+//		// TODO Auto-generated method stub
+//		Cross t = (Cross)target;
+//		t.setRelative(getRelative());
+//		t.setCreatedAt(getCreatedAt());
+//		t.setUpdateAt(getUpdateAt());
+//		//t.set
+//		
+//		return target;
+//	}
 
 }

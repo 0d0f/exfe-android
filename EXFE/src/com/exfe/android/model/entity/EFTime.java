@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.res.Resources;
+import android.text.TextUtils;
 
 import com.exfe.android.R;
 import com.exfe.android.db.DatabaseHelper;
@@ -20,10 +21,14 @@ import com.j256.ormlite.dao.Dao;
 
 public class EFTime extends Entity {
 
-	public static final DateFormat sfmt = new SimpleDateFormat(
+	public static final DateFormat sfmt_dt = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ssZ", Locale.US);
-	static{
-		sfmt.setTimeZone(TimeZone.getTimeZone("UTC"));
+	public static final DateFormat sfmt_d = new SimpleDateFormat("yyyy-MM-ddZ",
+			Locale.US);
+	public static final DateFormat sfmt_t = new SimpleDateFormat("HH:mm:ssZ",
+			Locale.US);
+	static {
+		sfmt_dt.setTimeZone(TimeZone.getTimeZone("UTC"));
 	}
 
 	private long mId = NO_ID;
@@ -166,10 +171,25 @@ public class EFTime extends Entity {
 	}
 
 	public String getRelativeStringFromNow(Resources res) {
-		String datetimestr = String.format("%sT%s%s", mDate, mTime, mTimezone);
+		boolean hasTime = !TextUtils.isEmpty(mTime);
+		boolean hasDate = !TextUtils.isEmpty(mDate);
+
 		try {
-			Date target = sfmt.parse(datetimestr);
-			return Tool.getRelativeStringFromNow(target, res);
+			if (hasTime && hasDate) {
+				String datetimestr = String.format("%sT%s%s", mDate, mTime,
+						mTimezone);
+				Date target = sfmt_dt.parse(datetimestr);
+				return Tool.getRelativeStringFromNow(target, res);
+			}
+			if (hasDate){
+				String datetimestr = String.format("%s%s", mDate,
+						mTimezone);
+				Date target = sfmt_d.parse(datetimestr);
+				return Tool.getRelativeStringFromNow(target, res);
+			}
+			if (hasTime){
+				//??
+			}
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -190,6 +210,6 @@ public class EFTime extends Entity {
 	@Override
 	public void loadFromDao(DatabaseHelper dbhelper) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

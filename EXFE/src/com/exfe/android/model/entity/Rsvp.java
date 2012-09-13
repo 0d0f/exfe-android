@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.exfe.android.R;
 import com.exfe.android.db.DatabaseHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.table.DatabaseTable;
@@ -61,6 +62,29 @@ public class Rsvp extends Entity {
 		case NORESPONSE:
 		default:
 			return STR_NORESPONSE;
+		}
+	}
+	
+	public static int getRsvpStatusResourceId(int rsvp) {
+		switch (rsvp) {
+		case ACCEPTED:
+			return R.string.accepted;
+			// break;
+		case INTERESTED:
+			return R.string.interested;
+			// break;
+		case DECLINED:
+			return R.string.declined;
+			// break;
+		case REMOVED:
+			return R.string.removed;
+			// break;
+		case NOTIFICATION:
+			return R.string.notification;
+			// break;
+		case NORESPONSE:
+		default:
+			return R.string.no_response;
 		}
 	}
 	

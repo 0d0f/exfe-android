@@ -1,15 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
     <color name="red">#FFFF0000</color>
     <color name="green">#FF00FF00</color>
     <color name="blue">#FF0000FF</color>
+    <color name="gray_1">#FF191919</color>
+    <color name="gray_2">#FF333333</color>
+    <color name="gray_3">#FF4C4C4C</color>
+    <color name="gray_4">#FF7F7F7F</color>
+    <color name="gray_5">#FFB2B2B2</color>
+    <color name="gray_6">#FFCCCCCC</color>
+    <color name="gray_7">#FFE6E6E6</color>
+    <color name="gray_8">#FFFAFAFA</color>
+    <color name="blue_0">#FF3A6EA5</color>
     
-    <color name="nav_bar_background">#FFE0E0E0</color>
-    <color name="bav_bar_title">#FF3A3A3A</color>
+    <color name="gray_69">#FF454545</color>
+    <color name="gray_100">#FF646464</color>
+    <color name="gray_233">#FFE9E9E9</color>
+
+    <color name="bav_bar_title">@color/gray_8</color>
     <color name="body_background">#FFF0F0F0</color>
     <color name="list_item_background">#FFF0F0F0</color>
     <color name="list_divider">#FFC9C9C9</color>
     <color name="btn_text">#FF303030</color>
     <color name="cross_text_hightlight">#FF1E6295</color>
+    <color name="list_item_exfee_count">#FF62849F</color>
+    <color name="cross_important_text_color">@color/blue_0</color>
+    <color name="cross_minor_text_color">@color/gray_1</color>
+    <color name="x_attend">#FFCCE4FF</color>
+
 </resources>

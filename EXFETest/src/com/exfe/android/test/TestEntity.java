@@ -1,8 +1,12 @@
 package com.exfe.android.test;
 
 import java.lang.reflect.Field;
+import java.sql.SQLException;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -10,9 +14,11 @@ import java.util.regex.Pattern;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import android.content.res.Resources;
 import android.test.ActivityInstrumentationTestCase2;
+import android.text.TextUtils;
 
-import com.exfe.android.controller.CrossActivity;
+import com.exfe.android.controller.LandingActivity;
 import com.exfe.android.debug.Log;
 import com.exfe.android.model.Model;
 import com.exfe.android.model.entity.Cross;
@@ -20,6 +26,7 @@ import com.exfe.android.model.entity.CrossTime;
 import com.exfe.android.model.entity.EFTime;
 import com.exfe.android.model.entity.Entity;
 import com.exfe.android.model.entity.EntityFactory;
+import com.exfe.android.model.entity.Invitation;
 import com.exfe.android.model.entity.Response;
 import com.exfe.android.model.entity.User;
 import com.exfe.android.util.Tool;
@@ -28,17 +35,18 @@ import com.exfe.android.util.Tool;
  * @author stony
  * 
  */
-public class TestEntity extends ActivityInstrumentationTestCase2<CrossActivity> {
+public class TestEntity extends
+		ActivityInstrumentationTestCase2<LandingActivity> {
 	public static final String TAG = TestEntity.class.getSimpleName();
 
 	private Model mModel = null;
-	private CrossActivity mActivity = null;
+	private LandingActivity mActivity = null;
 
 	/**
 	 * @param name
 	 */
 	public TestEntity() {
-		super(CrossActivity.class);
+		super(LandingActivity.class);
 		Log.d(TAG, "init of TestServer");
 
 	}
@@ -315,6 +323,86 @@ public class TestEntity extends ActivityInstrumentationTestCase2<CrossActivity> 
 				c.getLongLocalTimeSring("-08:00 PST", null));
 	}
 
+	@SuppressWarnings("deprecation")
+	public final void testToolXRelativeTime() {
+
+		Calendar base = new GregorianCalendar(2012, 8 - 1, 13, 14, 0, 0);
+		Tool.NOW = base.getTime();
+		Resources res = mActivity.getResources();
+
+		assertEquals("29 days ago", Tool.getXRelativeString(
+				new GregorianCalendar(2012, 7 - 1, 15, 16, 10, 0).getTime(),
+				res));
+		assertEquals("The day before yesterday",
+				Tool.getXRelativeString(new GregorianCalendar(2012, 8 - 1, 11,
+						0, 10, 0).getTime(), res));
+		assertEquals("Yesterday",
+				Tool.getXRelativeString(new GregorianCalendar(2012, 8 - 1, 12,
+						0, 10, 0).getTime(), res));
+		assertEquals("Yesterday",
+				Tool.getXRelativeString(new GregorianCalendar(2012, 8 - 1, 12,
+						15, 0, 0).getTime(), res));
+		assertEquals("14 hours ago",
+				Tool.getXRelativeString(new GregorianCalendar(2012, 8 - 1, 13,
+						0, 10, 0).getTime(), res));
+		assertEquals("2 hours ago", Tool.getXRelativeString(
+				new GregorianCalendar(2012, 8 - 1, 13, 12, 10, 0).getTime(),
+				res));
+		assertEquals("1 hour ago", Tool.getXRelativeString(
+				new GregorianCalendar(2012, 8 - 1, 13, 12, 50, 0).getTime(),
+				res));
+		assertEquals("Just now", Tool.getXRelativeString(new GregorianCalendar(
+				2012, 8 - 1, 13, 13, 10, 0).getTime(), res));
+		assertEquals("Now", Tool.getXRelativeString(new GregorianCalendar(2012,
+				8 - 1, 13, 13, 50, 0).getTime(), res));
+		assertEquals("Now", Tool.getXRelativeString(new GregorianCalendar(2012,
+				8 - 1, 13, 14, 0, 0).getTime(), res));
+		assertEquals("In 20 minutes", Tool.getXRelativeString(
+				new GregorianCalendar(2012, 8 - 1, 13, 14, 20, 0).getTime(),
+				res));
+		assertEquals("In 1 hour", Tool.getXRelativeString(
+				new GregorianCalendar(2012, 8 - 1, 13, 15, 30, 0).getTime(),
+				res));
+		assertEquals("In 2 hours", Tool.getXRelativeString(
+				new GregorianCalendar(2012, 8 - 1, 13, 15, 50, 0).getTime(),
+				res));
+		assertEquals("Today", Tool.getXRelativeString(new GregorianCalendar(
+				2012, 8 - 1, 13, 23, 50, 0).getTime(), new GregorianCalendar(
+				2012, 8 - 1, 13, 4, 0, 0).getTime(), res));
+		assertEquals("Tomorrow", Tool.getXRelativeString(new GregorianCalendar(
+				2012, 8 - 1, 14, 4, 10, 0).getTime(), res));
+		assertEquals("The day after tomorrow",
+				Tool.getXRelativeString(new GregorianCalendar(2012, 8 - 1, 15,
+						0, 10, 0).getTime(), res));
+		assertEquals("Thursday", Tool.getXRelativeString(new GregorianCalendar(
+				2012, 8 - 1, 16, 14, 0, 0).getTime(), res));
+		assertEquals("Next Sunday",
+				Tool.getXRelativeString(new GregorianCalendar(2012, 8 - 1, 19,
+						14, 0, 0).getTime(), res));
+		assertEquals("Next Monday",
+				Tool.getXRelativeString(new GregorianCalendar(2012, 8 - 1, 20,
+						12, 0, 0).getTime(), res));
+		assertEquals("Next Saturday",
+				Tool.getXRelativeString(new GregorianCalendar(2012, 8 - 1, 25,
+						12, 0, 0).getTime(), res));
+		assertEquals("In 15 days", Tool.getXRelativeString(
+				new GregorianCalendar(2012, 8 - 1, 28, 1, 0, 0).getTime(), res));
+		assertEquals("In 1 month", Tool.getXRelativeString(
+				new GregorianCalendar(2012, 9 - 1, 13, 1, 0, 0).getTime(), res));
+		assertEquals("In 2 months",
+				Tool.getXRelativeString(new GregorianCalendar(2012, 10 - 1, 12,
+						1, 0, 0).getTime(), res));
+		assertEquals("In 11 months", Tool.getXRelativeString(
+				new GregorianCalendar(2013, 8 - 1, 1, 1, 0, 0).getTime(), res));
+		assertEquals("In 1 year", Tool.getXRelativeString(
+				new GregorianCalendar(2013, 8 - 1, 13, 1, 0, 0).getTime(), res));
+		assertEquals("In 1 year and 1 month", Tool.getXRelativeString(
+				new GregorianCalendar(2013, 9 - 1, 12, 1, 0, 0).getTime(), res));
+		assertEquals("In 1 year and 2 months",
+				Tool.getXRelativeString(new GregorianCalendar(2013, 10 - 1, 12,
+						1, 0, 0).getTime(), res));
+	}
+
 	public final void testEntityParseJSON() {
 		Entity e = new Cross();
 		assertNotNull("abc", e.toJSON());
@@ -331,6 +419,7 @@ public class TestEntity extends ActivityInstrumentationTestCase2<CrossActivity> 
 		}
 		Log.d(TAG, "=====%s Start=====", clz.getName());
 
+		@SuppressWarnings("rawtypes")
 		Class s = clz.getSuperclass();
 		if (!clz.equals(Entity.class)) {
 			printInfo(e, s);
@@ -367,5 +456,57 @@ public class TestEntity extends ActivityInstrumentationTestCase2<CrossActivity> 
 		assertEquals(true, Pattern.matches(".*\\}$", data));
 		assertEquals(true, Pattern.matches("\\{.*\\}$", data));
 		assertEquals(true, Pattern.matches("^\\{.*\\}$", data));
+	}
+
+	public final void testModifyCross() {
+		assertFalse("Missing token", TextUtils.isEmpty(mModel.Me().getToken()));
+
+		Collection<Cross> list = mModel.Crosses().getCrosses();
+		Iterator<Cross> it = list.iterator();
+		assertTrue(it.hasNext());
+		Cross cross = it.next();
+		cross.loadFromDao(mModel.getHelper());
+		Collection<Invitation> invs = cross.getExfee().getInvitations();
+		Iterator<Invitation> it2 = invs.iterator();
+		assertTrue(it.hasNext());
+		Invitation inv = null;
+		while (it2.hasNext()) {
+			Invitation i = it2.next();
+			if (i.isHost() != true) {
+				inv = i;
+				break;
+			}
+		}
+		assertNotNull(inv);
+		
+
+		
+		try {
+			Invitation invNew = inv.cloneSelf();
+			int oldMates = inv.getMates();
+			inv.setMates(oldMates + 2);
+			mModel.getHelper().getInvitationDao().update(inv);
+			Invitation invSaved1 = mModel.getHelper().getInvitationDao()
+					.queryForId(inv.getId());
+			assertEquals(oldMates + 2, invSaved1.getMates());
+			
+			invNew.setMates(oldMates + 1);
+			Date d = invNew.getUpdateAt();
+			d.setTime(d.getTime() + 10 * 60 * 1000);
+			invNew.setUpdateAt(d);
+			invNew.setExfee(cross.getExfee());
+			assertEquals(oldMates + 1, invNew.getMates());
+			int ret = mModel.getHelper().getInvitationDao().update(invNew);
+			// invNew.saveToDao(mModel.getHelper());
+			
+			Invitation invSaved2 = mModel.getHelper().getInvitationDao()
+					.queryForId(invNew.getId());
+			assertEquals(oldMates + 1, invSaved2.getMates());
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			assertFalse(e.getMessage(), true);
+		}
+
 	}
 }
