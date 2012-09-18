@@ -403,6 +403,12 @@ public class Tool {
 		return current == target;
 	}
 
+	public static Bitmap getRoundedCornerBitmap(Bitmap input,
+			float cornerRadius, int w, int h) {
+		return getRoundedCornerBitmap(input, cornerRadius, w, h, false, false, false,
+				false);
+	}
+
 	/**
 	 * Create rounded corner bitmap from original bitmap.
 	 * <p>

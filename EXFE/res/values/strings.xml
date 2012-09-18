@@ -35,17 +35,8 @@
     <string name="identity_and_password_dont_match">"Identity and password don't match."</string>
     <string name="please_input_password">Please input password.</string>
     <string name="please_input_your_name">Please input your name.</string>
-    <!-- format string -->
-    <string name="x_attended">%d ·X·\n attended</string>
-    <string name="start_with_xxx">Start with %s</string>
-    <string name="two_sentences">%1$s.%2$s.</string>
-    <string name="one_sentence">%1$s.</string>
-    <string name="xxx_by_xxx">%1$s by %2$s.</string>
-
-    <plurals name="rsvp_with_mates">
-        <item quantity="one">%1$s &lt;font color="#ffffff">with&lt;/font> %2$d &lt;font color="#ffffff">mate.&lt;/font></item>
-        <item quantity="other">%1$s &lt;font color="#ffffff">with&lt;/font> %2$d &lt;font color="#ffffff">mates.&lt;/font></item>
-    </plurals>
+    <string name="add_comments">Add comments</string>
+    <string name="sign_in">Sign In</string>
 
     <!-- function string -->
     <string name="app_name">EXFE</string>
@@ -54,9 +45,19 @@
     <string name="text_hint_title">Title</string>
     <string name="text_hint_place">Place</string>
     <string name="text_hint_time">Time</string>
-    <string name="login_identity">Identity:</string>
-    <string name="login_password">Password:</string>
-    <string name="login_sign_in">Sign In</string>
+
+    <!-- format string -->
+
+    <plurals name="rsvp_with_mates">
+        <item quantity="one">%1$s &lt;font color="#ffffff">with&lt;/font> %2$d &lt;font color="#ffffff">mate.&lt;/font></item>
+        <item quantity="other">%1$s &lt;font color="#ffffff">with&lt;/font> %2$d &lt;font color="#ffffff">mates.&lt;/font></item>
+    </plurals>
+
+    <string name="x_attended">%d ·X·\n attended</string>
+    <string name="start_with_xxx">Start with %s</string>
+    <string name="two_sentences">%1$s.%2$s.</string>
+    <string name="one_sentence">%1$s.</string>
+    <string name="xxx_by_xxx">%1$s by %2$s.</string>
 
     <plurals name="seconds_ago">
         <item quantity="one">1 second ago</item>

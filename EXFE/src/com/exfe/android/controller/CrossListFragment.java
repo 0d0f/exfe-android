@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -264,11 +265,23 @@ public class CrossListFragment extends Fragment implements Observer {
 			int type = bundle.getInt(Model.OBSERVER_FIELD_TYPE);
 			switch (type) {
 			case CrossesModel.ACTION_TYPE_UPDATE_CROSSES:
-				setCrosses(mModel.Crosses().getCrosses());
+				mModel.mHandler.post(new Runnable() {
+
+					@Override
+					public void run() {
+						setCrosses(mModel.Crosses().getCrosses());
+					}
+				});
 				break;
 			case MeModel.ACTION_TYPE_UPDATE_MY_PROFILE:
-				User u = mModel.Me().getProfile();
-				loadHead(u);
+				final User u = mModel.Me().getProfile();
+				mModel.mHandler.post(new Runnable() {
+
+					@Override
+					public void run() {
+						loadHead(u);
+					}
+				});
 				break;
 			}
 		}
@@ -518,7 +531,8 @@ public class CrossListFragment extends Fragment implements Observer {
 						Date d = Const.UTC_DATE_FORMAT.parse(date);
 						if (time_mmmdd != null) {
 							time_mmmdd.setText(Const.UTC_DAY_FORMAT.format(d));
-							time_mmmdd.setAltText(Const.UTC_MONTH_FORMAT.format(d));
+							time_mmmdd.setAltText(Const.UTC_MONTH_FORMAT
+									.format(d));
 							time_mmmdd.getBackground().setLevel(0);
 						}
 						no_time = false;

@@ -28,6 +28,8 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.style.StyleSpan;
+import android.util.SparseArray;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,11 +41,15 @@ import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.FrameLayout.LayoutParams;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.example.android.bitmapfun.util.ImageFetcher;
+import com.example.android.bitmapfun.util.ImageWorker;
 import com.exfe.android.Application;
 import com.exfe.android.Const;
 import com.exfe.android.R;
@@ -80,13 +86,15 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 	private EditText mInput;
 	private Button mSend;
 	private View mScrollTopTime;
-	
+
 	final Animation mAnimOut = new AlphaAnimation(1.0f, 0.0f);
 	{
 		mAnimOut.setDuration(500);
 	}
 
 	private ConversationAdpater mAdapter = null;
+	
+	private ImageWorker mImageWorker = null;
 
 	/**
 	 * @return the model
@@ -107,6 +115,13 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		mModel = ((Application) getActivity().getApplicationContext())
 				.getModel();
 		mModel.addObserver(this);
+		
+		mImageWorker = new ImageFetcher(mModel.getAppContext(), getResources()
+				.getDimensionPixelSize(R.dimen.avatar_width),
+				getResources().getDimensionPixelSize(
+						R.dimen.avatar_height));
+		mImageWorker.setImageCache(mModel.ImageCache().ImageCache());
+		mImageWorker.setImageFadeIn(false);
 	}
 
 	/*
@@ -152,8 +167,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		mAdapter = new ConversationAdpater(getActivity(),
 				R.layout.listitem_conversation, new ArrayList<Post>());
 		setListAdapter(mAdapter);
-		// mConversationListView.setOnItemClickListener(itemClickListener);
-		// mConversationListView.setOnScrollListener(listScrollerListener);
+		getListView().setOnScrollListener(listScrollerListener);
 
 		// Start out with a progress indicator.
 		setListShown(false);
@@ -202,11 +216,6 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		if (v != null) {
 			mScrollTopTime = v;
 		}
-
-		mAdapter = new ConversationAdpater(this.getActivity(),
-				R.layout.listitem_conversation, new ArrayList<Post>());
-		setListAdapter(mAdapter);
-		getListView().setOnScrollListener(listScrollerListener);
 	}
 
 	/*
@@ -241,25 +250,49 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 			lv.setTag(null);
 		}
 
+		int line = 0;
+		View tv = v.findViewById(R.id.post_content);
+		if (tv != null) {
+			TextView content = (TextView) tv;
+			line = content.getLineCount();
+		}
+
 		final View time_layer = v.findViewById(R.id.post_time_layer);
 		if (time_layer != null) {
-			time_layer.setOnClickListener(new View.OnClickListener() {
+			FrameLayout.LayoutParams params = (LayoutParams) time_layer
+					.getLayoutParams();
+			if (line == 1) {
+				params.gravity = Gravity.CENTER_VERTICAL | Gravity.RIGHT;
+				params.topMargin = 0;
+			} else {
+				params.gravity = Gravity.TOP | Gravity.RIGHT;
+				params.topMargin = (int) (12 * time_layer.getResources()
+						.getDisplayMetrics().density);
+			}
+			v.findViewById(R.id.post_relative_time).setVisibility(View.VISIBLE);
+			v.findViewById(R.id.post_abs_date).setVisibility(View.GONE);
+			v.findViewById(R.id.post_abs_time).setVisibility(View.GONE);
+			
+			if (!time_layer.isClickable()) {
 
-				@Override
-				public void onClick(View v) {
-					View vv = v.findViewById(R.id.post_relative_time);
-					vv.setVisibility(vv.getVisibility() == View.VISIBLE ? View.GONE
-							: View.VISIBLE);
-					vv = v.findViewById(R.id.post_abs_date);
-					vv.setVisibility(vv.getVisibility() == View.VISIBLE ? View.GONE
-							: View.VISIBLE);
-					vv = v.findViewById(R.id.post_abs_time);
-					vv.setVisibility(vv.getVisibility() == View.VISIBLE ? View.GONE
-							: View.VISIBLE);
-				}
-			});
+				time_layer.setOnClickListener(new View.OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						View vv = v.findViewById(R.id.post_relative_time);
+						vv.setVisibility(vv.getVisibility() == View.VISIBLE ? View.GONE
+								: View.VISIBLE);
+						vv = v.findViewById(R.id.post_abs_date);
+						vv.setVisibility(vv.getVisibility() == View.VISIBLE ? View.GONE
+								: View.VISIBLE);
+						vv = v.findViewById(R.id.post_abs_time);
+						vv.setVisibility(vv.getVisibility() == View.VISIBLE ? View.GONE
+								: View.VISIBLE);
+					}
+				});
+			}
 			lv.setTag(time_layer);
-			showForSeconds(time_layer, 3);
+			showOneForSeconds(lv, 3);
 		}
 	}
 
@@ -358,7 +391,6 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 
 	@Override
 	public void update(Observable observable, Object data) {
-		// TODO Auto-generated method stub
 		Bundle bundle = (Bundle) data;
 		int type = bundle.getInt(Model.OBSERVER_FIELD_TYPE);
 		switch (type) {
@@ -411,11 +443,52 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 								return;
 							}
 						}
-						
+
 						if (v.getVisibility() == View.VISIBLE) {
 							v.startAnimation(mAnimOut);
 							v.setVisibility(View.INVISIBLE);
 							v.setTag(R.id.field_time_out, null);
+						}
+					}
+				}, (long) (seconds * 1000 * 0.8));
+			}
+		}
+	}
+
+	protected void showOneForSeconds(final View storage, final int seconds) {
+		if (storage == null) {
+			return;
+		}
+		View v = (View) storage.getTag();
+		if (v != null) {
+			v.setVisibility(View.VISIBLE);
+			Object tag = storage.getTag(R.id.field_time_out);
+			Date until = new Date(System.currentTimeMillis() + seconds * 1000);
+			storage.setTag(R.id.field_time_out, until);
+			if (tag == null) {
+				v.postDelayed(new Runnable() {
+
+					@Override
+					public void run() {
+						Object obj = storage.getTag(R.id.field_time_out);
+						if (obj != null) {
+							Date until = (Date) obj;
+							if (until.getTime() >= System.currentTimeMillis()) {
+								// wait again
+								View v = (View) storage.getTag();
+								if (v != null) {
+									v.postDelayed(this,
+											(long) (seconds * 1000 * 0.2));
+								}
+								return;
+							}
+						}
+
+						View v = (View) storage.getTag();
+						if (v != null && v.getVisibility() == View.VISIBLE) {
+							v.startAnimation(mAnimOut);
+							v.setVisibility(View.INVISIBLE);
+							storage.setTag(R.id.field_time_out, null);
 						}
 					}
 				}, (long) (seconds * 1000 * 0.8));
@@ -527,17 +600,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 
 	}
 
-	public static class ConversationAdpater extends ArrayAdapter<Post> {
-		public static class ViewHolder {
-			ImageView avatar;
-			TextView content;
-			TextView time;
-			TextView date;
-			TextView rel_time;
-			ViewGroup time_layer;
-			ProgressBar wait;
-			WeakReference<View> root;
-		}
+	public class ConversationAdpater extends ArrayAdapter<Post> {
 
 		private int mResource;
 		@SuppressWarnings("unused")
@@ -571,8 +634,8 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 
 		private View createViewFromResource(int position, View convertView,
 				ViewGroup parent, int resource) {
-			View view;
-			ViewHolder holder;
+			View view = null;
+			SparseArray<View> holder = null;
 			if (convertView == null) {
 				view = mInflater.inflate(resource, parent, false);
 				holder = creatViewHolder(view);
@@ -584,45 +647,43 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 					holder = creatViewHolder(view);
 					view.setTag(holder);
 				} else {
-					holder = (ViewHolder) obj;
+					holder = (SparseArray<View>) obj;
 				}
 			}
 
-			ImageView avatar = holder.avatar;
-			TextView content = holder.content;
-			TextView time = holder.time;
-			TextView date = holder.date;
-			ProgressBar wait = holder.wait;
-			ViewGroup layer = holder.time_layer;
-			TextView rel_time = holder.rel_time;
+			ImageView avatar = (ImageView) holder.get(R.id.post_avatar);
+			TextView content = (TextView) holder.get(R.id.post_content);
+			TextView time = (TextView) holder.get(R.id.post_abs_time);
+			TextView date = (TextView) holder.get(R.id.post_abs_date);
+			ProgressBar wait = (ProgressBar) holder.get(R.id.post_wait);
+			ViewGroup layer = (ViewGroup) holder.get(R.id.post_time_layer);
+			TextView rel_time = (TextView) holder.get(R.id.post_relative_time);
 			@SuppressWarnings("unused")
-			View root = holder.root.get();
+			View root = holder.get(R.id.list_post_root);
 
 			Post p = getItem(position);
 
 			boolean flag = false;
 			if (!TextUtils.isEmpty(p.getByIdentitiy().getAvatarFilename())) {
-				Bitmap bm = ImageCache.getInst().getImageFrom(
-						p.getByIdentitiy().getAvatarFilename());
-				if (bm != null) {
-					avatar.setImageBitmap(bm);
-					flag = true;
-				}
+				mImageWorker.loadImage(p.getByIdentitiy().getAvatarFilename(), avatar);
+				flag = true;
 			}
 			if (flag == false) {
 				avatar.setImageResource(R.drawable.default_avatar);
 			}
-			Log.d("ConversationAdpater", "Post %d: %s at %s", p.getId(),
-					p.getContent(), p.getCreatedAt());
+			Log.d("ConversationAdpater", "Post %1$d: %2$s at %3$s", p.getId(),
+					p.getContent(),
+					Const.LOCAL_FULL_FORMAT.format(p.getCreatedAt()));
 
 			if (content != null) {
 				String poster = p.getByIdentitiy().getName();
 				String message = p.getContent();
-				Spannable sp = new SpannableString(String.format("%s %s",
+				Spannable sp = new SpannableString(String.format("%1$s %2$s",
 						poster, message));
 				sp.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0,
 						poster.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 				content.setText(sp);
+
 			}
 
 			if (time != null) {
@@ -653,18 +714,20 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 			return view;
 		}
 
-		private ViewHolder creatViewHolder(View view) {
-			ViewHolder holder = new ViewHolder();
-			holder.avatar = (ImageView) view.findViewById(R.id.post_avatar);
-			holder.content = (TextView) view.findViewById(R.id.post_content);
-			holder.time = (TextView) view.findViewById(R.id.post_abs_time);
-			holder.date = (TextView) view.findViewById(R.id.post_abs_date);
-			holder.rel_time = (TextView) view
-					.findViewById(R.id.post_relative_time);
-			holder.time_layer = (ViewGroup) view
-					.findViewById(R.id.post_time_layer);
-			holder.wait = (ProgressBar) view.findViewById(R.id.post_wait);
-			holder.root = new WeakReference<View>(
+		private SparseArray<View> creatViewHolder(View view) {
+			SparseArray<View> holder = new SparseArray<View>();
+			holder.put(R.id.post_avatar, view.findViewById(R.id.post_avatar));
+			holder.put(R.id.post_content, view.findViewById(R.id.post_content));
+			holder.put(R.id.post_abs_time,
+					view.findViewById(R.id.post_abs_time));
+			holder.put(R.id.post_abs_date,
+					view.findViewById(R.id.post_abs_date));
+			holder.put(R.id.post_relative_time,
+					view.findViewById(R.id.post_relative_time));
+			holder.put(R.id.post_time_layer,
+					view.findViewById(R.id.post_time_layer));
+			holder.put(R.id.post_wait, view.findViewById(R.id.post_wait));
+			holder.put(R.id.list_post_root,
 					view.findViewById(R.id.list_post_root));
 			return holder;
 		}

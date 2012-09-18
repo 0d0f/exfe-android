@@ -53,6 +53,7 @@ import com.exfe.android.model.entity.Provider;
 import com.exfe.android.model.entity.Response;
 import com.exfe.android.model.entity.User;
 import com.exfe.android.util.ImageCache;
+import com.exfe.android.util.Tool;
 import com.exfe.android.view.SeperatedBaseAdapter;
 import com.flurry.android.FlurryAgent;
 
@@ -352,7 +353,9 @@ public class ProfileActivity extends Activity implements Observer {
 			if (!TextUtils.isEmpty(avatar_file_name)) {
 				Bitmap bm = ImageCache.getInst().getImageFrom(avatar_file_name);
 				if (bm != null) {
-					mAvatar.setImageBitmap(bm);
+					Bitmap roundBm = Tool.getRoundedCornerBitmap(bm, 10,
+							bm.getWidth(), bm.getHeight());
+					mAvatar.setImageBitmap(roundBm);
 					flag = true;
 				}
 			}
@@ -539,7 +542,8 @@ public class ProfileActivity extends Activity implements Observer {
 			ImageView icon = (ImageView) holder.get(R.id.identity_icon);
 			TextView main = (TextView) holder.get(R.id.identity_main);
 			TextView alt = (TextView) holder.get(R.id.identity_alt);
-			ImageView icon_type = (ImageView) holder.get(R.id.identity_type_icon);
+			ImageView icon_type = (ImageView) holder
+					.get(R.id.identity_type_icon);
 			@SuppressWarnings("unused")
 			View root = holder.get(R.id.list_identity_root);
 
@@ -572,9 +576,9 @@ public class ProfileActivity extends Activity implements Observer {
 			if (alt != null) {
 				alt.setText(id.getExternalId());
 			}
-			
+
 			if (icon_type != null) {
-				if (type != 1){
+				if (type != 1) {
 					int provider = Provider.getValue(id.getProvider());
 					icon_type.setImageLevel(provider);
 					icon_type.setVisibility(View.VISIBLE);
@@ -585,11 +589,15 @@ public class ProfileActivity extends Activity implements Observer {
 
 		private SparseArray<View> creatViewHolder(View view) {
 			SparseArray<View> holder = new SparseArray<View>();
-			holder.put(R.id.identity_icon, view.findViewById(R.id.identity_icon));
-			holder.put(R.id.identity_main, view.findViewById(R.id.identity_main));
+			holder.put(R.id.identity_icon,
+					view.findViewById(R.id.identity_icon));
+			holder.put(R.id.identity_main,
+					view.findViewById(R.id.identity_main));
 			holder.put(R.id.identity_alt, view.findViewById(R.id.identity_alt));
-			holder.put(R.id.identity_type_icon, view.findViewById(R.id.identity_type_icon));
-			holder.put(R.id.list_identity_root, view.findViewById(R.id.list_identity_root));
+			holder.put(R.id.identity_type_icon,
+					view.findViewById(R.id.identity_type_icon));
+			holder.put(R.id.list_identity_root,
+					view.findViewById(R.id.list_identity_root));
 			return holder;
 		}
 

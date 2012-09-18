@@ -53,7 +53,7 @@ public class CrossDetailActivity extends Activity implements Observer {
 		}
 
 		showFragment(mSideA);
-
+		mSideA = !mSideA;
 	}
 
 	@Override

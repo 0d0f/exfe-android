@@ -17,6 +17,7 @@
         <attr name="clipOrientation" format="integer" />
         <attr name="gravity" format="integer" />
         <attr name="drawable" format="reference|color" />
+        <attr name="radius" format="float" />
     </declare-styleable>
 
 </resources>

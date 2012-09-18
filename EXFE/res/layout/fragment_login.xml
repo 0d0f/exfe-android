@@ -94,7 +94,14 @@
                 <ImageView
                     android:id="@+id/input_indentity_avatar"
                     android:layout_width="40dp"
-                    android:layout_height="40dp" />
+                    android:layout_height="40dp"
+                    android:contentDescription="@string/image_hint_avatar" />
+
+                <ProgressBar
+                    android:id="@+id/indicator_indentity_avatar"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:visibility="invisible" />
             </FrameLayout>
         </LinearLayout>
 
@@ -180,7 +187,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="44sp"
                 android:background="@drawable/btn_dark_44_bg"
-                android:text="@string/login_sign_in"
+                android:text="@string/sign_in"
                 android:textColor="#CCE4FF"
                 android:textSize="18sp"
                 android:textStyle="bold" />

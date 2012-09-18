@@ -11,7 +11,7 @@ import android.text.TextUtils;
 
 public class Const {
 
-	public static final boolean override_domain = BuildConfig.DEBUG;
+	public static final boolean override_domain = false;// BuildConfig.DEBUG;
 
 	public static final String FLURRY_APP_ID = "4B9VJPB4DC7VPTTCS3G6";
 	public static final String PUSH_PROJECT_ID = override_domain ? "313001677673"
@@ -46,6 +46,8 @@ public class Const {
 			"hh:mm a", Locale.US);
 	public static final DateFormat LOCAL_TIME_DATE_FORMAT = new SimpleDateFormat(
 			"hh:mm a, MMM dd", Locale.US);
+	public static final DateFormat LOCAL_FULL_FORMAT = new SimpleDateFormat(
+			"ccc MMM dd hh:mm:ss a z yyyy", Locale.US);
 
 	public static final String EMPTY = "";
 

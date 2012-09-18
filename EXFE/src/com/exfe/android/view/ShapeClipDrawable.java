@@ -10,7 +10,9 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
+import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.view.Gravity;
 import android.os.Build;
@@ -47,8 +49,9 @@ import java.lang.reflect.Field;
  * @attr ref android.R.styleable#ClipDrawable_drawable
  */
 public class ShapeClipDrawable extends Drawable implements Drawable.Callback {
-	private ClipState mClipState;
-	private final Rect mTmpRect = new Rect();
+	private ShapeClipState mClipState;
+	private final Path mTmpPath = new Path();
+	private final RectF mTmpRectF = new RectF();
 
 	public static final int HORIZONTAL = 1;
 	public static final int VERTICAL = 2;
@@ -61,13 +64,14 @@ public class ShapeClipDrawable extends Drawable implements Drawable.Callback {
 	 * @param orientation
 	 *            Bitwise-or of {@link #HORIZONTAL} and/or {@link #VERTICAL}
 	 */
-	public ShapeClipDrawable(Drawable drawable, int gravity, int orientation) {
+	public ShapeClipDrawable(Drawable drawable, float radius) {
 		this(null, null);
 
 		mClipState.mDrawable = drawable;
-		mClipState.mGravity = gravity;
-		mClipState.mOrientation = orientation;
-
+		//mClipState.mGravity = gravity;
+		//mClipState.mOrientation = orientation;
+		mClipState.mRadius = radius;
+		
 		if (drawable != null) {
 			drawable.setCallback(this);
 		}
@@ -82,9 +86,10 @@ public class ShapeClipDrawable extends Drawable implements Drawable.Callback {
 
 		TypedArray a = r.obtainAttributes(attrs, R.styleable.ShapeClipDrawable);
 
-		int orientation = a.getInt(R.styleable.ShapeClipDrawable_clipOrientation,
-				HORIZONTAL);
-		int g = a.getInt(R.styleable.ShapeClipDrawable_gravity, Gravity.LEFT);
+		float radius = a.getFloat(R.styleable.ShapeClipDrawable_radius, 0f);
+//		int orientation = a.getInt(R.styleable.ShapeClipDrawable_clipOrientation,
+//				HORIZONTAL);
+//		int g = a.getInt(R.styleable.ShapeClipDrawable_gravity, Gravity.LEFT);
 		Drawable dr = a.getDrawable(R.styleable.ShapeClipDrawable_drawable);
 
 		a.recycle();
@@ -104,8 +109,10 @@ public class ShapeClipDrawable extends Drawable implements Drawable.Callback {
 		}
 
 		mClipState.mDrawable = dr;
-		mClipState.mOrientation = orientation;
-		mClipState.mGravity = g;
+		//mClipState.mOrientation = orientation;
+		//mClipState.mGravity = g;
+		mClipState.mRadius = radius;
+		
 
 		dr.setCallback(this);
 	}
@@ -262,24 +269,30 @@ public class ShapeClipDrawable extends Drawable implements Drawable.Callback {
 			return;
 		}
 
-		final Rect r = mTmpRect;
+		final Path path = mTmpPath;
+		path.reset();
 		final Rect bounds = getBounds();
-		int level = getLevel();
+		final RectF rf = mTmpRectF;
+		rf.set(bounds);
+//		int level = getLevel();
 		int w = bounds.width();
-		final int iw = 0; // mClipState.mDrawable.getIntrinsicWidth();
-		if ((mClipState.mOrientation & HORIZONTAL) != 0) {
-			w -= (w - iw) * (10000 - level) / 10000;
-		}
+//		final int iw = 0; // mClipState.mDrawable.getIntrinsicWidth();
+//		if ((mClipState.mOrientation & HORIZONTAL) != 0) {
+//			w -= (w - iw) * (10000 - level) / 10000;
+//		}
 		int h = bounds.height();
-		final int ih = 0; // mClipState.mDrawable.getIntrinsicHeight();
-		if ((mClipState.mOrientation & VERTICAL) != 0) {
-			h -= (h - ih) * (10000 - level) / 10000;
-		}
-		Gravity.apply(mClipState.mGravity, w, h, bounds, r);
-
+//		final int ih = 0; // mClipState.mDrawable.getIntrinsicHeight();
+//		if ((mClipState.mOrientation & VERTICAL) != 0) {
+//			h -= (h - ih) * (10000 - level) / 10000;
+//		}
+//		Gravity.apply(mClipState.mGravity, w, h, bounds, r);
+		
+		path.addRoundRect(rf, mClipState.mRadius, mClipState.mRadius, Path.Direction.CW);
+		
 		if (w > 0 && h > 0) {
 			canvas.save();
-			canvas.clipRect(r);
+			//canvas.clipRect(r);
+			canvas.clipPath(path);
 			mClipState.mDrawable.draw(canvas);
 			canvas.restore();
 		}
@@ -294,6 +307,14 @@ public class ShapeClipDrawable extends Drawable implements Drawable.Callback {
 	public int getIntrinsicHeight() {
 		return mClipState.mDrawable.getIntrinsicHeight();
 	}
+	
+	public float getRadius(){
+		return mClipState.mRadius;
+	}
+	
+	public void setRadius(float radius){
+		mClipState.mRadius  = radius;
+	}
 
 	@Override
 	public ConstantState getConstantState() {
@@ -305,16 +326,17 @@ public class ShapeClipDrawable extends Drawable implements Drawable.Callback {
 		return null;
 	}
 
-	final static class ClipState extends ConstantState {
+	final static class ShapeClipState extends ConstantState {
 		Drawable mDrawable;
 		int mChangingConfigurations;
-		int mOrientation;
-		int mGravity;
+		//int mOrientation;
+		//int mGravity;
+		float mRadius;
 
 		private boolean mCheckedConstantState;
 		private boolean mCanConstantState;
 
-		ClipState(ClipState orig, ShapeClipDrawable owner, Resources res) {
+		ShapeClipState(ShapeClipState orig, ShapeClipDrawable owner, Resources res) {
 			if (orig != null) {
 				if (res != null) {
 					mDrawable = orig.mDrawable.getConstantState().newDrawable(
@@ -323,8 +345,9 @@ public class ShapeClipDrawable extends Drawable implements Drawable.Callback {
 					mDrawable = orig.mDrawable.getConstantState().newDrawable();
 				}
 				mDrawable.setCallback(owner);
-				mOrientation = orig.mOrientation;
-				mGravity = orig.mGravity;
+				//mOrientation = orig.mOrientation;
+				//mGravity = orig.mGravity;
+				mRadius = orig.mRadius;
 				mCheckedConstantState = mCanConstantState = true;
 			}
 		}
@@ -354,7 +377,7 @@ public class ShapeClipDrawable extends Drawable implements Drawable.Callback {
 		}
 	}
 
-	private ShapeClipDrawable(ClipState state, Resources res) {
-		mClipState = new ClipState(state, this, res);
+	private ShapeClipDrawable(ShapeClipState state, Resources res) {
+		mClipState = new ShapeClipState(state, this, res);
 	}
 }

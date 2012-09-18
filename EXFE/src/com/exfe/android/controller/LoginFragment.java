@@ -21,7 +21,6 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.ContactsContract;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -70,8 +69,6 @@ public class LoginFragment extends Fragment implements Observer {
 	public static final int REG_QUERY_QUERIED_SIGN_IN = 4;
 	public static final int REG_QUERY_QUERIED_SIGN_UP = 5;
 
-	private Handler mHandler = new Handler();
-
 	private Fragment.ActivityCallBack mCallBack;
 	private ImageWorker mImageWorker = null;
 
@@ -86,6 +83,7 @@ public class LoginFragment extends Fragment implements Observer {
 	private View groupUserName = null;
 	private ProgressBar pbIndicator = null;
 	private ImageView ivAvatar = null;
+	private ProgressBar pbAvatar = null;
 
 	private String mKeyword = null;
 	private int mUiMode = UI_MODE_SIGN_IN;
@@ -207,6 +205,11 @@ public class LoginFragment extends Fragment implements Observer {
 		v = view.findViewById(R.id.input_indentity_avatar);
 		if (v != null) {
 			ivAvatar = (ImageView) v;
+		}
+		
+		v = view.findViewById(R.id.indicator_indentity_avatar);
+		if (v != null) {
+			pbAvatar = (ProgressBar) v;
 		}
 
 		mQueryStatus = REG_QUERY_NONE;
@@ -526,13 +529,14 @@ public class LoginFragment extends Fragment implements Observer {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
-							mHandler.post(new Runnable() {
+							getModel().mHandler.post(new Runnable() {
 
 								@Override
 								public void run() {
 
 									setUiMode(UI_MODE_SIGN_IN);
 									ivAvatar.setVisibility(View.VISIBLE);
+									pbAvatar.setVisibility(View.INVISIBLE);
 									mImageWorker.loadImage(
 											ident.getAvatarFilename(), ivAvatar);
 									if (status == REG_QUERY_QUERY_POST) {
@@ -547,10 +551,11 @@ public class LoginFragment extends Fragment implements Observer {
 						}
 					} else if ("SIGN_UP".equalsIgnoreCase(regFlag)) {
 						mQueryStatus = REG_QUERY_QUERIED_SIGN_UP;
-						mHandler.post(new Runnable() {
+						getModel().mHandler.post(new Runnable() {
 
 							@Override
 							public void run() {
+								pbAvatar.setVisibility(View.INVISIBLE);
 								setUiMode(UI_MODE_SIGN_UP);
 								// mImageWorker.loadImage(num,
 								// ivAvatar);
@@ -569,6 +574,7 @@ public class LoginFragment extends Fragment implements Observer {
 			}
 		};
 		ivAvatar.setVisibility(View.INVISIBLE);
+		pbAvatar.setVisibility(View.VISIBLE);
 		new Thread(run).start();
 	}
 
@@ -669,7 +675,7 @@ public class LoginFragment extends Fragment implements Observer {
 				}
 
 				// reset UI;
-				mHandler.post(new Runnable() {
+				getModel().mHandler.post(new Runnable() {
 
 					@Override
 					public void run() {
@@ -706,7 +712,7 @@ public class LoginFragment extends Fragment implements Observer {
 						}
 						break;
 					case HttpStatus.SC_FORBIDDEN:
-						mHandler.post(new Runnable() {
+						getModel().mHandler.post(new Runnable() {
 
 							@Override
 							public void run() {
