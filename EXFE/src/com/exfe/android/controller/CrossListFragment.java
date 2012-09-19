@@ -1,6 +1,6 @@
 package com.exfe.android.controller;
 
-import java.lang.ref.WeakReference;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,8 +18,11 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
 import android.text.TextUtils;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -36,6 +39,7 @@ import android.widget.TextView;
 
 import com.example.android.bitmapfun.util.ImageFetcher;
 import com.example.android.bitmapfun.util.ImageWorker;
+import com.exfe.android.Activity;
 import com.exfe.android.Application;
 import com.exfe.android.Const;
 import com.exfe.android.Fragment;
@@ -45,18 +49,22 @@ import com.exfe.android.model.CrossesModel;
 import com.exfe.android.model.MeModel;
 import com.exfe.android.model.Model;
 import com.exfe.android.model.entity.Cross;
-import com.exfe.android.model.entity.Entity;
 import com.exfe.android.model.entity.EntityFactory;
 import com.exfe.android.model.entity.Response;
 import com.exfe.android.model.entity.User;
 import com.exfe.android.util.ImageCache;
+import com.exfe.android.util.InterestingConfigChanges;
 import com.exfe.android.view.DoubleTextView;
+import com.exfe.android.view.IteratorAdapter;
 import com.exfe.android.view.SeperateTextView;
-import com.exfe.android.view.TwoLineTextView;
+import com.j256.ormlite.dao.CloseableIterator;
+import com.j256.ormlite.stmt.QueryBuilder;
 
 public class CrossListFragment extends Fragment implements Observer {
 
-	private ArrayAdapter<Cross> mAdapter = null;
+	static final int LOADER_QUERY_LOCAL = 1;
+
+	private IteratorAdapter<Cross> mAdapter = null;
 	private ImageView mUserAvatar = null;
 	private TextView mExfeeTitle = null;
 	private ImageWorker mImageWorker = null;
@@ -137,8 +145,8 @@ public class CrossListFragment extends Fragment implements Observer {
 		v = view.findViewById(R.id.list_crosses);
 		if (v != null) {
 			ListView listView = (ListView) v;
-			mAdapter = new CrossAdpater(getActivity(), R.layout.listitem_cross,
-					new ArrayList<Cross>());
+			mAdapter = new CrossIteratorAdapter(getActivity(),
+					R.layout.listitem_cross, null);
 			listView.setAdapter(mAdapter);
 			listView.setOnItemClickListener(mItemClickListener);
 			listView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -173,8 +181,23 @@ public class CrossListFragment extends Fragment implements Observer {
 			});
 		}
 
-		setCrosses(mModel.Crosses().getCrosses());
 		loadHead(mModel.Me().getProfile());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.support.v4.app.Fragment#onActivityCreated(android.os.Bundle)
+	 */
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		super.onActivityCreated(savedInstanceState);
+
+		// Prepare the loader. Either re-connect with an existing one,
+		// or start a new one.
+		getLoaderManager().initLoader(LOADER_QUERY_LOCAL, null,
+				mQueryLoaderHandler);
 	}
 
 	@Override
@@ -235,7 +258,8 @@ public class CrossListFragment extends Fragment implements Observer {
 			mModel.Crosses().setLastUpdateQuery(null);// new Date(112, 4,1,
 														// 0,0,0)
 			ImageCache.getInst().clearCachedFiles();
-			mAdapter.clear();
+			getLoaderManager().restartLoader(LOADER_QUERY_LOCAL,
+					null, mQueryLoaderHandler);
 			return true;
 			// break;
 		case R.id.btn_refresh:
@@ -269,7 +293,8 @@ public class CrossListFragment extends Fragment implements Observer {
 
 					@Override
 					public void run() {
-						setCrosses(mModel.Crosses().getCrosses());
+						getLoaderManager().restartLoader(LOADER_QUERY_LOCAL,
+								null, mQueryLoaderHandler);
 					}
 				});
 				break;
@@ -318,35 +343,10 @@ public class CrossListFragment extends Fragment implements Observer {
 
 	};
 
-	private void setCrosses(Collection<Cross> collection) {
-		if (collection == null || collection.size() == 0) {
-			return;
-		}
-		Log.d(TAG, "%d crosses is replaced.", collection.size());
-		mAdapter.setNotifyOnChange(false);
-		mAdapter.clear();
-		for (Cross x : collection) {
-			mAdapter.add(x);
-		}
-		mAdapter.sort(Entity.sIdComparator);
-		mAdapter.setNotifyOnChange(true);
-		mAdapter.notifyDataSetChanged();
-	}
-
 	private void loadHead(User user) {
 		if (user != null) {
 			if (mUserAvatar != null) {
 				String avatar_file_name = user.getAvatarFilename();
-				boolean flag = false;
-				/*
-				 * if (!TextUtils.isEmpty(avatar_file_name)) { Bitmap bm =
-				 * ImageCache.getInst().getImageFrom( avatar_file_name); if (bm
-				 * != null) { mUserAvatar.setImageBitmap(bm);
-				 * mUserAvatar.setVisibility(View.VISIBLE); flag = true; } } if
-				 * (flag == false) {
-				 * //mUserAvatar.setImageResource(R.drawable.default_avatar);
-				 * mUserAvatar.setVisibility(View.GONE); }
-				 */
 				mUserAvatar.setVisibility(View.VISIBLE);
 				mImageWorker.loadImage(avatar_file_name, mUserAvatar);
 			}
@@ -403,7 +403,7 @@ public class CrossListFragment extends Fragment implements Observer {
 				mModel.Crosses().addCrosses(xs);
 				break;
 			case HttpStatus.SC_UNAUTHORIZED:
-				// relogin
+				((Activity) getActivity()).signOut();
 			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 				// retry
 				break;
@@ -415,15 +415,6 @@ public class CrossListFragment extends Fragment implements Observer {
 	}
 
 	public static class CrossAdpater extends ArrayAdapter<Cross> {
-		public static class ViewHolder {
-			CheckedTextView title;
-			SeperateTextView exfee;
-			CheckedTextView time;
-			TwoLineTextView time_mmmdd;
-			CheckedTextView place;
-			TextView msgCount;
-			WeakReference<View> root;
-		}
 
 		private int mResource;
 		@SuppressWarnings("unused")
@@ -463,7 +454,7 @@ public class CrossListFragment extends Fragment implements Observer {
 		private View createViewFromResource(int position, View convertView,
 				ViewGroup parent, int resource) {
 			View view;
-			ViewHolder holder;
+			SparseArray<View> holder;
 			if (convertView == null) {
 				view = mInflater.inflate(resource, parent, false);
 				holder = creatViewHolder(view);
@@ -475,18 +466,23 @@ public class CrossListFragment extends Fragment implements Observer {
 					holder = creatViewHolder(view);
 					view.setTag(holder);
 				} else {
-					holder = (ViewHolder) obj;
+					holder = (SparseArray<View>) obj;
 				}
 			}
 
-			CheckedTextView title = holder.title;
-			SeperateTextView exfee = holder.exfee;
-			CheckedTextView time = holder.time;
-			DoubleTextView time_mmmdd = holder.time_mmmdd;
-			CheckedTextView place = holder.place;
-			TextView count = holder.msgCount;
+			CheckedTextView title = (CheckedTextView) holder
+					.get(R.id.cross_title);
+			SeperateTextView exfee = (SeperateTextView) holder
+					.get(R.id.cross_exfee);
+			CheckedTextView time = (CheckedTextView) holder
+					.get(R.id.cross_time);
+			DoubleTextView time_mmmdd = (DoubleTextView) holder
+					.get(R.id.cross_time_mmmdd);
+			CheckedTextView place = (CheckedTextView) holder
+					.get(R.id.cross_place);
+			TextView count = (TextView) holder.get(R.id.cross_message_count);
 			@SuppressWarnings("unused")
-			View root = holder.root.get();
+			View root = holder.get(R.id.list_cross_root);
 
 			Cross x = getItem(position);
 			x.loadFromDao(mModel.getHelper());
@@ -562,20 +558,17 @@ public class CrossListFragment extends Fragment implements Observer {
 			return view;
 		}
 
-		private ViewHolder creatViewHolder(View view) {
-			ViewHolder holder = new ViewHolder();
-			holder.title = (CheckedTextView) view
-					.findViewById(R.id.cross_title);
-			holder.exfee = (SeperateTextView) view
-					.findViewById(R.id.cross_exfee);
-			holder.time = (CheckedTextView) view.findViewById(R.id.cross_time);
-			holder.time_mmmdd = (TwoLineTextView) view
-					.findViewById(R.id.cross_time_mmmdd);
-			holder.place = (CheckedTextView) view
-					.findViewById(R.id.cross_place);
-			holder.msgCount = (TextView) view
-					.findViewById(R.id.cross_message_count);
-			holder.root = new WeakReference<View>(
+		private SparseArray<View> creatViewHolder(View view) {
+			SparseArray<View> holder = new SparseArray<View>();
+			holder.put(R.id.cross_title, view.findViewById(R.id.cross_title));
+			holder.put(R.id.cross_exfee, view.findViewById(R.id.cross_exfee));
+			holder.put(R.id.cross_time, view.findViewById(R.id.cross_time));
+			holder.put(R.id.cross_time_mmmdd,
+					view.findViewById(R.id.cross_time_mmmdd));
+			holder.put(R.id.cross_place, view.findViewById(R.id.cross_place));
+			holder.put(R.id.cross_message_count,
+					view.findViewById(R.id.cross_message_count));
+			holder.put(R.id.list_cross_root,
 					view.findViewById(R.id.list_cross_root));
 			return holder;
 		}
@@ -599,6 +592,344 @@ public class CrossListFragment extends Fragment implements Observer {
 		public boolean hasStableIds() {
 			// TODO Auto-generated method stub
 			return true;
+		}
+
+	}
+
+	LoaderManager.LoaderCallbacks<CloseableIterator<Cross>> mQueryLoaderHandler = new LoaderManager.LoaderCallbacks<CloseableIterator<Cross>>() {
+
+		@Override
+		public Loader<CloseableIterator<Cross>> onCreateLoader(int id,
+				Bundle args) {
+			switch (id) {
+			case LOADER_QUERY_LOCAL:
+
+				// build your query
+				QueryBuilder<Cross, Long> qb = getModel().getHelper()
+						.getCrossDao().queryBuilder();
+				// qb.where()...;
+				return new OrmLiteCursorLoader(getActivity(), getModel(), qb,
+						null);
+			default:
+				return null;
+			}
+		}
+
+		@Override
+		public void onLoadFinished(Loader<CloseableIterator<Cross>> loader,
+				CloseableIterator<Cross> data) {
+			mAdapter.changeIterator(data);
+		}
+
+		@Override
+		public void onLoaderReset(Loader<CloseableIterator<Cross>> loader) {
+			mAdapter.changeIterator(null);
+		}
+	};
+
+	public static class OrmLiteCursorLoader extends
+			AsyncTaskLoader<CloseableIterator<Cross>> {
+
+		final InterestingConfigChanges mLastConfig = new InterestingConfigChanges();
+		final Bundle mParam;
+		final private Model mModel;
+		QueryBuilder<Cross, Long> mQb;
+		CloseableIterator<Cross> mIterator;
+
+		public OrmLiteCursorLoader(Context context, Model model,
+				QueryBuilder<Cross, Long> qb, Bundle bundle) {
+			super(context);
+			mModel = model;
+			mParam = bundle;
+			mQb = qb;
+			setUpdateThrottle(500);
+		}
+
+		@Override
+		public CloseableIterator<Cross> loadInBackground() {
+			CloseableIterator<Cross> iterator = null;
+			try {
+				// when you are done, prepare your query and build an iterator
+				iterator = mModel.getHelper().getCrossDao()
+						.iterator(mQb.prepare());
+
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+
+			}
+			return iterator;
+		}
+
+		/**
+		 * Called when there is new data to deliver to the client. The super
+		 * class will take care of delivering it; the implementation here just
+		 * adds a little more logic.
+		 */
+		@Override
+		public void deliverResult(CloseableIterator<Cross> iterator) {
+			if (isReset()) {
+				// An async query came in while the loader is stopped. We
+				// don't need the result.
+				if (iterator != null) {
+					onReleaseResources(iterator);
+				}
+			}
+
+			CloseableIterator<Cross> oldApps = mIterator;
+			mIterator = iterator;
+
+			if (isStarted()) {
+				// If the Loader is currently started, we can immediately
+				// deliver its results.
+				super.deliverResult(iterator);
+			}
+
+			// At this point we can release the resources associated with
+			// 'oldApps' if needed; now that the new result is delivered we
+			// know that it is no longer in use.
+			if (oldApps != null && oldApps != iterator) {
+				onReleaseResources(oldApps);
+			}
+		}
+
+		/**
+		 * Handles a request to start the Loader.
+		 */
+		@Override
+		protected void onStartLoading() {
+			if (mIterator != null) {
+				// If we currently have a result available, deliver it
+				// immediately.
+				deliverResult(mIterator);
+			}
+
+			// Has something interesting in the configuration changed since we
+			// last built the app list?
+			boolean configChange = mLastConfig.applyNewConfig(getContext()
+					.getResources());
+
+			if (takeContentChanged() || mIterator == null || configChange) {
+				// If the data has changed since the last time it was loaded
+				// or is not currently available, start a load.
+				forceLoad();
+			}
+		}
+
+		/**
+		 * Handles a request to stop the Loader.
+		 */
+		@Override
+		protected void onStopLoading() {
+			// Attempt to cancel the current load task if possible.
+			cancelLoad();
+		}
+
+		/**
+		 * Handles a request to cancel a load.
+		 */
+		@Override
+		public void onCanceled(CloseableIterator<Cross> cursor) {
+			super.onCanceled(cursor);
+
+			// At this point we can release the resources associated with 'apps'
+			// if needed.
+			onReleaseResources(cursor);
+		}
+
+		/**
+		 * Handles a request to completely reset the Loader.
+		 */
+		@Override
+		protected void onReset() {
+			super.onReset();
+
+			// Ensure the loader is stopped
+			onStopLoading();
+
+			// At this point we can release the resources associated with 'apps'
+			// if needed.
+			if (mIterator != null) {
+				onReleaseResources(mIterator);
+				mIterator = null;
+			}
+		}
+
+		/**
+		 * Helper function to take care of releasing resources associated with
+		 * an actively loaded data set.
+		 */
+		protected void onReleaseResources(CloseableIterator<?> iterator) {
+			// For a simple List<> there is nothing to do. For something
+			// like a Cursor, we would close it here.
+			try {
+				iterator.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+	public class CrossIteratorAdapter extends IteratorAdapter<Cross> {
+
+		private int mResource;
+		@SuppressWarnings("unused")
+		private int mDropDownResource;
+		private LayoutInflater mInflater;
+		private Model mModel;
+
+		public CrossIteratorAdapter(Context context, int resource,
+				CloseableIterator<Cross> iterator) {
+			super(context, iterator, true);
+			init(context, resource);
+		}
+
+		public CrossIteratorAdapter(Context context, int resource,
+				CloseableIterator<Cross> iterator, boolean autoRequery) {
+			super(context, iterator, autoRequery);
+			init(context, resource);
+		}
+
+		private void init(Context context, int resource) {
+			mModel = ((Application) context.getApplicationContext()).getModel();
+			mInflater = (LayoutInflater) context
+					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			mResource = resource;
+			mDropDownResource = resource;
+		}
+
+		@Override
+		protected long getCursorId() {
+			try {
+				Cross cross = mIterator.current();
+				return cross.getId();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return 0;
+		}
+
+		@Override
+		public View newView(Context context, CloseableIterator<Cross> cursor,
+				ViewGroup parent) {
+			View view = mInflater.inflate(mResource, parent, false);
+			SparseArray<View> holder = creatViewHolder(view);
+			view.setTag(holder);
+			return view;
+		}
+
+		@Override
+		public void bindView(View view, Context context,
+				CloseableIterator<Cross> iterator) {
+			SparseArray<View> holder;
+			Object obj = view.getTag();
+			if (obj == null) {
+				holder = creatViewHolder(view);
+				view.setTag(holder);
+			} else {
+				holder = (SparseArray<View>) obj;
+			}
+
+			CheckedTextView title = (CheckedTextView) holder
+					.get(R.id.cross_title);
+			SeperateTextView exfee = (SeperateTextView) holder
+					.get(R.id.cross_exfee);
+			CheckedTextView time = (CheckedTextView) holder
+					.get(R.id.cross_time);
+			DoubleTextView time_mmmdd = (DoubleTextView) holder
+					.get(R.id.cross_time_mmmdd);
+			CheckedTextView place = (CheckedTextView) holder
+					.get(R.id.cross_place);
+			TextView count = (TextView) holder.get(R.id.cross_message_count);
+			@SuppressWarnings("unused")
+			View root = holder.get(R.id.list_cross_root);
+
+			Cross x;
+			try {
+				x = iterator.current();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+				return;
+			}
+			x.loadFromDao(mModel.getHelper());
+
+			String diff = x.diffByUpdate();
+
+			if (title != null) {
+				title.setText(x.getTitle());
+				title.setChecked(diff.contains("t"));
+			}
+			if (exfee != null) {
+				exfee.setText(String.valueOf(x.getExfee().getAccepted()));
+				exfee.setAltText(String.valueOf(x.getExfee().getTotal()));
+			}
+			if (place != null) {
+				if (x.getPlace() != null) {
+					place.setText(x.getPlace().getTitle());
+				}
+				place.setChecked(diff.contains("p"));
+			}
+			if (time != null) {
+				time.setText(x.getTime().getBeginAt()
+						.getRelativeStringFromNow(time.getResources()));
+				time.setChecked(diff.contains("m"));
+			}
+
+			boolean no_time = true;
+			if (x.getTime() != null && x.getTime().getBeginAt() != null) {
+				String date = x.getTime().getBeginAt().getDate();
+				if (!TextUtils.isEmpty(date)) {
+					try {
+						Date d = Const.UTC_DATE_FORMAT.parse(date);
+						if (time_mmmdd != null) {
+							time_mmmdd.setText(Const.UTC_DAY_FORMAT.format(d));
+							time_mmmdd.setAltText(Const.UTC_MONTH_FORMAT
+									.format(d));
+							time_mmmdd.getBackground().setLevel(0);
+						}
+						no_time = false;
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+			if (no_time) {
+				if (time_mmmdd != null) {
+					time_mmmdd.setText("");
+					time_mmmdd.setAltText("");
+					time_mmmdd.getBackground().setLevel(1);
+				}
+			}
+
+			if (count != null) {
+				int c = x.getConversationCount();
+				if (c < 30) {
+					count.setText(String.valueOf(c));
+				} else {
+					count.setText("");
+				}
+				count.getBackground().setLevel(c);
+			}
+		}
+
+		private SparseArray<View> creatViewHolder(View view) {
+			SparseArray<View> holder = new SparseArray<View>();
+			holder.put(R.id.cross_title, view.findViewById(R.id.cross_title));
+			holder.put(R.id.cross_exfee, view.findViewById(R.id.cross_exfee));
+			holder.put(R.id.cross_time, view.findViewById(R.id.cross_time));
+			holder.put(R.id.cross_time_mmmdd,
+					view.findViewById(R.id.cross_time_mmmdd));
+			holder.put(R.id.cross_place, view.findViewById(R.id.cross_place));
+			holder.put(R.id.cross_message_count,
+					view.findViewById(R.id.cross_message_count));
+			holder.put(R.id.list_cross_root,
+					view.findViewById(R.id.list_cross_root));
+			return holder;
 		}
 
 	}

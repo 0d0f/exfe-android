@@ -249,50 +249,7 @@ public class ProfileActivity extends Activity implements Observer {
 
 		@Override
 		public void onClick(final View v) {
-			final String deviceToken = mModel.Device().getPushToken();
-			final String appKey = mModel.Me().getToken();
-			mModel.Me().setToken("");
-			mModel.Me().setUserId(0L);
-			mModel.Me().setProvider("");
-			mModel.Me().setExternalId("");
-			mModel.Me().setUsername("");
-			mModel.Device().setPushToken("");
-			mModel.Crosses().clearCrosses();
-			mModel.Crosses().setLastUpdateQuery(null);
-			mModel.Me().setProfile(null);
-
-			Runnable run = new Runnable() {
-
-				public void run() {
-					FlurryAgent.logEvent("sign_out");
-					Response resp = mModel.getServer().signOut(appKey,
-							deviceToken);
-					if (resp.getCode() == HttpStatus.SC_OK) {
-						v.post(new Runnable() {
-
-							@Override
-							public void run() {
-								unregistGCM();
-							}
-						});
-					}
-					v.post(new Runnable() {
-
-						@Override
-						public void run() {
-							Intent it = new Intent();
-							it.setClass(v.getContext(), LandingActivity.class);
-							it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-							startActivity(it);
-							finish();
-						}
-					});
-
-				}
-			};
-
-			new Thread(run).start();
-
+			signOut();
 		}
 	};
 

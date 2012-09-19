@@ -25,8 +25,6 @@ public class User extends Entity {
 	private String name;
 	@DatabaseField
 	private String bio;
-	@DatabaseField(foreign = true)
-	private Identity default_identity;
 	@DatabaseField
 	private String avatar_filename;
 	@DatabaseField
@@ -54,7 +52,6 @@ public class User extends Entity {
 		mId = json.optLong("id", NO_ID);
 		name = Tool.parseString(json, "name");
 		bio = Tool.parseString(json, "bio");
-		default_identity = new Identity(json.optJSONObject("default_identity"));
 		avatar_filename = Tool.parseString(json, "avatar_filename");
 		avatar_updated_at = Tool.parseString(json, "avatar_updated_at");
 		timezone = Tool.parseString(json, "timezone");
@@ -124,21 +121,6 @@ public class User extends Entity {
 	 */
 	public void setBio(String bio) {
 		this.bio = bio;
-	}
-
-	/**
-	 * @return the defaultIdentity
-	 */
-	public Identity getDefaultIdentity() {
-		return this.default_identity;
-	}
-
-	/**
-	 * @param defaultIdentity
-	 *            the defaultIdentity to set
-	 */
-	public void setDefaultIdentity(Identity defaultIdentity) {
-		this.default_identity = defaultIdentity;
 	}
 
 	/**
@@ -220,9 +202,6 @@ public class User extends Entity {
 		try {
 			Dao<User, Long> dao = dbhelper.getCachedDao(getClass());
 			dao.createOrUpdate(this);
-			if (this.default_identity != null) {
-				this.default_identity.saveToDao(dbhelper);
-			}
 			for (Identity id : this.identities) {
 				id.saveToDao(dbhelper);
 			}

@@ -126,11 +126,11 @@ public class C2DMReceiver extends BroadcastReceiver {
 				notifyIntent = new Intent(context, CrossDetailActivity.class);
 				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_ID, cid);
 				notifyIntent
-						.putExtra(CrossDetailActivity.FIELD_CROSS_ID, false);
+						.putExtra(CrossDetailActivity.FIELD_CROSS_SIDE, false);
 			} else {
 				notifyIntent = new Intent(context, CrossDetailActivity.class);
 				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_ID, cid);
-				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_ID, true);
+				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_SIDE, true);
 			}
 		}
 

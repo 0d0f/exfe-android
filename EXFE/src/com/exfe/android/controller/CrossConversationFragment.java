@@ -1,6 +1,5 @@
 package com.exfe.android.controller;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -17,7 +16,6 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
@@ -50,6 +48,7 @@ import android.widget.TextView;
 
 import com.example.android.bitmapfun.util.ImageFetcher;
 import com.example.android.bitmapfun.util.ImageWorker;
+import com.exfe.android.Activity;
 import com.exfe.android.Application;
 import com.exfe.android.Const;
 import com.exfe.android.R;
@@ -62,8 +61,7 @@ import com.exfe.android.model.entity.Exfee;
 import com.exfe.android.model.entity.Invitation;
 import com.exfe.android.model.entity.Post;
 import com.exfe.android.model.entity.Response;
-import com.exfe.android.net.ServerAPI2;
-import com.exfe.android.util.ImageCache;
+import com.exfe.android.util.InterestingConfigChanges;
 import com.exfe.android.util.Tool;
 
 public class CrossConversationFragment extends ListFragment implements Observer {
@@ -93,7 +91,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 	}
 
 	private ConversationAdpater mAdapter = null;
-	
+
 	private ImageWorker mImageWorker = null;
 
 	/**
@@ -110,16 +108,14 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 	 */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		mModel = ((Application) getActivity().getApplicationContext())
 				.getModel();
 		mModel.addObserver(this);
-		
+
 		mImageWorker = new ImageFetcher(mModel.getAppContext(), getResources()
-				.getDimensionPixelSize(R.dimen.avatar_width),
-				getResources().getDimensionPixelSize(
-						R.dimen.avatar_height));
+				.getDimensionPixelSize(R.dimen.avatar_width), getResources()
+				.getDimensionPixelSize(R.dimen.avatar_height));
 		mImageWorker.setImageCache(mModel.ImageCache().ImageCache());
 		mImageWorker.setImageFadeIn(false);
 	}
@@ -225,7 +221,6 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 	 */
 	@Override
 	public void onDestroy() {
-		// TODO Auto-generated method stub
 		super.onDestroy();
 		mModel.deleteObserver(this);
 	}
@@ -272,7 +267,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 			v.findViewById(R.id.post_relative_time).setVisibility(View.VISIBLE);
 			v.findViewById(R.id.post_abs_date).setVisibility(View.GONE);
 			v.findViewById(R.id.post_abs_time).setVisibility(View.GONE);
-			
+
 			if (!time_layer.isClickable()) {
 
 				time_layer.setOnClickListener(new View.OnClickListener() {
@@ -378,7 +373,6 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 
 		@Override
 		public void onLoaderReset(Loader<List<Post>> loader) {
-			// TODO Auto-generated method stub
 			mAdapter.clear();
 		}
 	};
@@ -665,7 +659,8 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 
 			boolean flag = false;
 			if (!TextUtils.isEmpty(p.getByIdentitiy().getAvatarFilename())) {
-				mImageWorker.loadImage(p.getByIdentitiy().getAvatarFilename(), avatar);
+				mImageWorker.loadImage(p.getByIdentitiy().getAvatarFilename(),
+						avatar);
 				flag = true;
 			}
 			if (flag == false) {
@@ -756,28 +751,6 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 	}
 
 	/**
-	 * Helper for determining if the configuration has changed in an interesting
-	 * way so we need to rebuild the app list.
-	 */
-	public static class InterestingConfigChanges {
-		final Configuration mLastConfiguration = new Configuration();
-		int mLastDensity;
-
-		boolean applyNewConfig(Resources res) {
-			int configChanges = mLastConfiguration.updateFrom(res
-					.getConfiguration());
-			boolean densityChanged = mLastDensity != res.getDisplayMetrics().densityDpi;
-			if (densityChanged
-					|| (configChanges & (ActivityInfo.CONFIG_LOCALE
-							| ActivityInfo.CONFIG_UI_MODE | ActivityInfo.CONFIG_SCREEN_LAYOUT)) != 0) {
-				mLastDensity = res.getDisplayMetrics().densityDpi;
-				return true;
-			}
-			return false;
-		}
-	}
-
-	/**
 	 * A custom Loader that loads all of the installed applications.
 	 */
 	public static class ConversationLoader extends AsyncTaskLoader<List<Post>> {
@@ -785,8 +758,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		final Bundle mParam;
 		final private Model mModel;
 		final private Cross mCross;
-
-		List<Post> mApps;
+		List<Post> mPosts;
 
 		public ConversationLoader(Context context, Model model, Cross cross,
 				Bundle bundle) {
@@ -805,11 +777,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		@Override
 		public List<Post> loadInBackground() {
 			Exfee exfee = mCross.getExfee();
-			ServerAPI2 server = mModel.getServer();
-
-			Response result = server.getConversation(exfee);
-			// Response result =
-			// mModel.getServer().getConversation(exfee.getId());
+			Response result = mModel.getServer().getConversation(exfee.getId());
 
 			int code = result.getCode();
 			@SuppressWarnings("unused")
@@ -835,7 +803,8 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 				return posts;
 				// break;
 			case HttpStatus.SC_UNAUTHORIZED:
-				// relogin
+				//((Activity) getActivity()).signOut();
+				break;
 			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 				// retry
 				break;
@@ -861,8 +830,8 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 				}
 			}
 
-			List<Post> oldApps = posts;
-			mApps = posts;
+			List<Post> oldPosts = mPosts;
+			mPosts = posts;
 
 			if (isStarted()) {
 				// If the Loader is currently started, we can immediately
@@ -873,8 +842,8 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 			// At this point we can release the resources associated with
 			// 'oldApps' if needed; now that the new result is delivered we
 			// know that it is no longer in use.
-			if (oldApps != null) {
-				onReleaseResources(oldApps);
+			if (oldPosts != null) {
+				onReleaseResources(oldPosts);
 			}
 		}
 
@@ -883,10 +852,10 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		 */
 		@Override
 		protected void onStartLoading() {
-			if (mApps != null) {
+			if (mPosts != null) {
 				// If we currently have a result available, deliver it
 				// immediately.
-				deliverResult(mApps);
+				deliverResult(mPosts);
 			}
 
 			// Has something interesting in the configuration changed since we
@@ -894,7 +863,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 			boolean configChange = mLastConfig.applyNewConfig(getContext()
 					.getResources());
 
-			if (takeContentChanged() || mApps == null || configChange) {
+			if (takeContentChanged() || mPosts == null || configChange) {
 				// If the data has changed since the last time it was loaded
 				// or is not currently available, start a load.
 				forceLoad();
@@ -934,9 +903,9 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 
 			// At this point we can release the resources associated with 'apps'
 			// if needed.
-			if (mApps != null) {
-				onReleaseResources(mApps);
-				mApps = null;
+			if (mPosts != null) {
+				onReleaseResources(mPosts);
+				mPosts = null;
 			}
 		}
 

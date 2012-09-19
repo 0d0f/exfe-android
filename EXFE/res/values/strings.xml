@@ -167,7 +167,7 @@
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
     <string name="tomorrow">Tomorrow</string>
-    <string name="the_day_before_yesterday">The day before yesterday</string>
-    <string name="the_day_after_tomorrow">The day after tomorrow</string>
+    <string name="the_day_before_yesterday">Two days ago</string>
+    <string name="the_day_after_tomorrow">In 2 days</string>
 
 </resources>
