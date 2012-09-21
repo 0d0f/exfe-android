@@ -42,6 +42,8 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
+import com.example.android.bitmapfun.util.ImageFetcher;
+import com.example.android.bitmapfun.util.ImageWorker;
 import com.exfe.android.Activity;
 import com.exfe.android.R;
 import com.exfe.android.debug.Log;
@@ -60,6 +62,8 @@ import com.flurry.android.FlurryAgent;
 public class ProfileActivity extends Activity implements Observer {
 
 	private User mMe = null;
+	private ImageWorker mImageWorker = null;
+	
 	private ImageView mAvatar = null;
 	private TextView mName = null;
 	private EditText mNameInput = null;
@@ -123,8 +127,15 @@ public class ProfileActivity extends Activity implements Observer {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mModel.addObserver(this);
-		ImageCache.getInst().addObserver(this);
 		setContentView(R.layout.activity_profile);
+		
+		mImageWorker = new ImageFetcher(mModel.getAppContext(), getResources()
+				.getDimensionPixelSize(R.dimen.small_avatar_width),
+				getResources().getDimensionPixelSize(
+						R.dimen.small_avatar_height));
+		mImageWorker.setImageCache(mModel.ImageCache().ImageCache());
+		mImageWorker.setImageFadeIn(false);
+		mImageWorker.setLoadingImage(R.drawable.default_avatar);
 
 		View btnBack = findViewById(R.id.btn_back);
 		btnBack.setOnClickListener(mBackClick);
@@ -308,16 +319,7 @@ public class ProfileActivity extends Activity implements Observer {
 			boolean flag = false;
 
 			if (!TextUtils.isEmpty(avatar_file_name)) {
-				Bitmap bm = ImageCache.getInst().getImageFrom(avatar_file_name);
-				if (bm != null) {
-					Bitmap roundBm = Tool.getRoundedCornerBitmap(bm, 10,
-							bm.getWidth(), bm.getHeight());
-					mAvatar.setImageBitmap(roundBm);
-					flag = true;
-				}
-			}
-			if (flag == false) {
-				mAvatar.setImageResource(R.drawable.default_avatar);
+				mImageWorker.loadImage(avatar_file_name, mAvatar);
 			}
 
 			// set name
@@ -391,7 +393,6 @@ public class ProfileActivity extends Activity implements Observer {
 	@Override
 	protected void onDestroy() {
 		mModel.deleteObserver(this);
-		ImageCache.getInst().deleteObserver(this);
 		super.onDestroy();
 	}
 
@@ -427,11 +428,7 @@ public class ProfileActivity extends Activity implements Observer {
 
 	@Override
 	public void update(Observable observable, Object data) {
-		if (observable instanceof ImageCache) {
-			if (mMe.getAvatarFilename().equals(data)) {
-				loadUser(mMe);
-			}
-		} else if (observable instanceof Model) {
+		if (observable instanceof Model) {
 			Bundle bundle = (Bundle) data;
 			int type = bundle.getInt(Model.OBSERVER_FIELD_TYPE);
 			switch (type) {
@@ -444,7 +441,7 @@ public class ProfileActivity extends Activity implements Observer {
 		}
 	}
 
-	public static class IdentityAdpater extends ArrayAdapter<Identity> {
+	public class IdentityAdpater extends ArrayAdapter<Identity> {
 
 		private int[] mResource;
 		@SuppressWarnings("unused")
@@ -513,16 +510,8 @@ public class ProfileActivity extends Activity implements Observer {
 					flag = true;
 				} else {
 					if (!TextUtils.isEmpty(id.getAvatarFilename())) {
-						Bitmap bm = ImageCache.getInst().getImageFrom(
-								id.getAvatarFilename());
-						if (bm != null) {
-							icon.setImageBitmap(bm);
-							flag = true;
-						}
+						mImageWorker.loadImage(id.getAvatarFilename(), icon);
 					}
-				}
-				if (flag == false) {
-					icon.setImageResource(R.drawable.default_avatar);
 				}
 			}
 

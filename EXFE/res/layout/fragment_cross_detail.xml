@@ -231,7 +231,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:background="@color/blue_0"
-            android:orientation="horizontal" >
+            android:orientation="horizontal" 
+            android:visibility="invisible">
 
             <Button
                 android:id="@+id/x_rsvp_interested"
@@ -282,7 +283,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:background="@color/blue_0"
-            android:orientation="horizontal" >
+            android:orientation="horizontal" 
+            android:visibility="invisible">
 
             <com.exfe.android.view.CountControls
                 android:id="@+id/x_rsvp_others_change_mate"

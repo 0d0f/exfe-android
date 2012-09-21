@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -60,22 +61,38 @@ import com.exfe.android.view.SeperateTextView;
 import com.j256.ormlite.dao.CloseableIterator;
 import com.j256.ormlite.stmt.QueryBuilder;
 
-public class CrossListFragment extends Fragment implements Observer {
+public class CrossListFragment extends ListFragment implements Observer {
+	protected final String TAG = getClass().getSimpleName();
 
 	static final int LOADER_QUERY_LOCAL = 1;
+
+	static final int INTERNAL_EMPTY_ID = 0x00ff0001;
+	static final int INTERNAL_PROGRESS_CONTAINER_ID = 0x00ff0002;
+	static final int INTERNAL_LIST_CONTAINER_ID = 0x00ff0003;
+
+	protected Model mModel = null;
 
 	private IteratorAdapter<Cross> mAdapter = null;
 	private ImageView mUserAvatar = null;
 	private TextView mExfeeTitle = null;
+	private View mProgressBarHint = null;
 	private ImageWorker mImageWorker = null;
 
-	private FetchCrossesTask mTask = null;
+	/**
+	 * @return the model
+	 */
+	public Model getModel() {
+		return this.mModel;
+	}
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		mModel = ((Application) getActivity().getApplicationContext())
+				.getModel();
 		mModel.addObserver(this);
+
 		setHasOptionsMenu(true);
 		mImageWorker = new ImageFetcher(mModel.getAppContext(), getResources()
 				.getDimensionPixelSize(R.dimen.small_avatar_width),
@@ -99,6 +116,16 @@ public class CrossListFragment extends Fragment implements Observer {
 			Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.fragment_cross_list, container,
 				false);
+
+		View pc = v.findViewById(R.id.container_progress);
+		pc.setId(INTERNAL_PROGRESS_CONTAINER_ID);
+
+		View lc = v.findViewById(R.id.container_list);
+		lc.setId(INTERNAL_LIST_CONTAINER_ID);
+
+		View ev = v.findViewById(R.id.empty);
+		ev.setId(INTERNAL_EMPTY_ID);
+
 		return v;
 
 	}
@@ -121,6 +148,11 @@ public class CrossListFragment extends Fragment implements Observer {
 		if (v != null) {
 			v.setOnClickListener(mClickListener);
 		}
+		
+		v = view.findViewById(R.id.pb_network_hint);
+		if (v != null){
+			mProgressBarHint = v;
+		}
 
 		v = view.findViewById(R.id.btn_refresh);
 		if (v != null) {
@@ -142,45 +174,6 @@ public class CrossListFragment extends Fragment implements Observer {
 			mExfeeTitle = (TextView) v;
 		}
 
-		v = view.findViewById(R.id.list_crosses);
-		if (v != null) {
-			ListView listView = (ListView) v;
-			mAdapter = new CrossIteratorAdapter(getActivity(),
-					R.layout.listitem_cross, null);
-			listView.setAdapter(mAdapter);
-			listView.setOnItemClickListener(mItemClickListener);
-			listView.setOnScrollListener(new AbsListView.OnScrollListener() {
-
-				@Override
-				public void onScroll(AbsListView view, int firstVisibleItem,
-						int visibleItemCount, int totalItemCount) {
-					// TODO Auto-generated method stub
-				}
-
-				@Override
-				public void onScrollStateChanged(AbsListView view,
-						int scrollState) {
-					// TODO Auto-generated method stub
-					switch (scrollState) {
-					case AbsListView.OnScrollListener.SCROLL_STATE_FLING:
-						break;
-					case AbsListView.OnScrollListener.SCROLL_STATE_IDLE:
-						if (view.getFirstVisiblePosition() == 0) {
-							Log.d("ListView", "refresh new");
-							freshCrosses();
-						}
-						if (view.getLastVisiblePosition() == view.getAdapter()
-								.getCount() - 1) {
-							Log.d("ListView", "refresh more");
-						}
-						break;
-					case AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL:
-						break;
-					}
-				}
-			});
-		}
-
 		loadHead(mModel.Me().getProfile());
 	}
 
@@ -193,6 +186,18 @@ public class CrossListFragment extends Fragment implements Observer {
 	public void onActivityCreated(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
 		super.onActivityCreated(savedInstanceState);
+
+		setEmptyText("");
+		// We have a menu item to show in action bar.
+		setHasOptionsMenu(true);
+
+		mAdapter = new CrossIteratorAdapter(getActivity(),
+				R.layout.listitem_cross, null);
+		setListAdapter(mAdapter);
+		getListView().setOnScrollListener(listScrollerListener);
+
+		// Start out with a progress indicator.
+		setListShown(false);
 
 		// Prepare the loader. Either re-connect with an existing one,
 		// or start a new one.
@@ -214,14 +219,7 @@ public class CrossListFragment extends Fragment implements Observer {
 		Date last = mModel.Crosses().getLastUpdateQuery();
 		Date now = new Date();
 		if (last == null || now.getTime() - last.getTime() > 15 * 3600 * 1000) {
-			freshCrosses();
-		}
-	}
-
-	public void freshCrosses() {
-		if (mTask == null || mTask.getStatus() == AsyncTask.Status.FINISHED) {
-			mTask = new FetchCrossesTask();
-			mTask.execute();
+			mModel.Crosses().freshCrosses();
 		}
 	}
 
@@ -257,14 +255,13 @@ public class CrossListFragment extends Fragment implements Observer {
 			mModel.Crosses().clearCrosses();
 			mModel.Crosses().setLastUpdateQuery(null);// new Date(112, 4,1,
 														// 0,0,0)
-			ImageCache.getInst().clearCachedFiles();
-			getLoaderManager().restartLoader(LOADER_QUERY_LOCAL,
-					null, mQueryLoaderHandler);
+			getLoaderManager().restartLoader(LOADER_QUERY_LOCAL, null,
+					mQueryLoaderHandler);
 			return true;
 			// break;
 		case R.id.btn_refresh:
 			Log.v(TAG, "%s is clicked", "Refresh");
-			freshCrosses();
+			mModel.Crosses().freshCrosses();
 			return true;
 			// break;
 		default:
@@ -281,9 +278,7 @@ public class CrossListFragment extends Fragment implements Observer {
 	@Override
 	public void update(Observable observable, Object data) {
 
-		if (observable instanceof ImageCache) {
-
-		} else if (observable instanceof Model) {
+		if (observable instanceof Model) {
 
 			Bundle bundle = (Bundle) data;
 			int type = bundle.getInt(Model.OBSERVER_FIELD_TYPE);
@@ -305,6 +300,39 @@ public class CrossListFragment extends Fragment implements Observer {
 					@Override
 					public void run() {
 						loadHead(u);
+					}
+				});
+				break;
+			case Model.ACTION_TYPE_SIGN_OUT:
+				mModel.mHandler.post(new Runnable() {
+
+					@Override
+					public void run() {
+						((Activity) getActivity()).signOut();
+					}
+				});
+
+				break;
+				
+			case Model.ACTION_TYPE_START_NETWROK_QUERY:
+				mModel.mHandler.post(new Runnable() {
+					
+					@Override
+					public void run() {
+						if (mProgressBarHint != null){
+							mProgressBarHint.setVisibility(View.VISIBLE);
+						}
+					}
+				});
+				break;
+			case Model.ACTION_TYPE_STOP_NETWROK_QUERY:
+				mModel.mHandler.post(new Runnable() {
+					
+					@Override
+					public void run() {
+						if (mProgressBarHint != null){
+							mProgressBarHint.setVisibility(View.GONE);
+						}
 					}
 				});
 				break;
@@ -330,18 +358,43 @@ public class CrossListFragment extends Fragment implements Observer {
 		}
 	};
 
-	AdapterView.OnItemClickListener mItemClickListener = new AdapterView.OnItemClickListener() {
+	AbsListView.OnScrollListener listScrollerListener = new AbsListView.OnScrollListener() {
 
 		@Override
-		public void onItemClick(AdapterView<?> adpaterView, View v, int pos,
-				long id) {
-			Intent it = new Intent();
-			it.putExtra(CrossDetailActivity.FIELD_CROSS_ID, id);
-			it.setClass(getActivity(), CrossDetailActivity.class);
-			CrossListFragment.this.startActivity(it);
+		public void onScroll(AbsListView view, int firstVisibleItem,
+				int visibleItemCount, int totalItemCount) {
+			// TODO Auto-generated method stub
 		}
 
+		@Override
+		public void onScrollStateChanged(AbsListView view, int scrollState) {
+			// TODO Auto-generated method stub
+			switch (scrollState) {
+			case AbsListView.OnScrollListener.SCROLL_STATE_FLING:
+				break;
+			case AbsListView.OnScrollListener.SCROLL_STATE_IDLE:
+				if (view.getFirstVisiblePosition() == 0) {
+					Log.d("ListView", "refresh new");
+					mModel.Crosses().freshCrosses();
+				}
+				if (view.getLastVisiblePosition() == view.getAdapter()
+						.getCount() - 1) {
+					Log.d("ListView", "refresh more");
+				}
+				break;
+			case AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL:
+				break;
+			}
+		}
 	};
+
+	@Override
+	public void onListItemClick(ListView lv, View v, int position, long id) {
+		Intent it = new Intent();
+		it.putExtra(CrossDetailActivity.FIELD_CROSS_ID, id);
+		it.setClass(getActivity(), CrossDetailActivity.class);
+		CrossListFragment.this.startActivity(it);
+	}
 
 	private void loadHead(User user) {
 		if (user != null) {
@@ -357,245 +410,6 @@ public class CrossListFragment extends Fragment implements Observer {
 		}
 	}
 
-	class FetchCrossesTask extends AsyncTask<Integer, Integer, Response> {
-
-		private Date mLastQueryTime = null;
-		private Date mThisQueryTime = null;
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.os.AsyncTask#onPreExecute()
-		 */
-		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-			mLastQueryTime = mModel.Crosses().getLastUpdateQuery();
-		}
-
-		@Override
-		protected Response doInBackground(Integer... params) {
-			mThisQueryTime = new Date();
-			return mModel.getServer().getNewCrossesAfter(mLastQueryTime);
-		}
-
-		@Override
-		protected void onPostExecute(Response result) {
-			int code = result.getCode();
-			@SuppressWarnings("unused")
-			int http_category = code % 100;
-
-			switch (code) {
-			case HttpStatus.SC_OK:
-				List<Cross> xs = new ArrayList<Cross>();
-				JSONObject res = result.getResponse();
-				JSONArray array = res.optJSONArray("crosses");
-				if (array != null) {
-					for (int i = 0; i < array.length(); i++) {
-						JSONObject json = array.optJSONObject(i);
-						if (json != null) {
-							Cross cross = (Cross) EntityFactory.create(json);
-							xs.add(cross);
-						}
-					}
-				}
-				mModel.Crosses().setLastUpdateQuery(mThisQueryTime);
-				mModel.Crosses().addCrosses(xs);
-				break;
-			case HttpStatus.SC_UNAUTHORIZED:
-				((Activity) getActivity()).signOut();
-			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
-				// retry
-				break;
-			default:
-				break;
-			}
-		}
-
-	}
-
-	public static class CrossAdpater extends ArrayAdapter<Cross> {
-
-		private int mResource;
-		@SuppressWarnings("unused")
-		private int mDropDownResource;
-		private LayoutInflater mInflater;
-		private Model mModel;
-
-		public CrossAdpater(Context context, int resource, List<Cross> objects) {
-			super(context, resource, objects);
-			// TODO Auto-generated constructor stub
-			init(context, resource);
-		}
-
-		private void init(Context context, int resource) {
-			mModel = ((Application) context.getApplicationContext()).getModel();
-			mInflater = (LayoutInflater) context
-					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			mResource = resource;
-			mDropDownResource = resource;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.widget.ArrayAdapter#getView(int, android.view.View,
-		 * android.view.ViewGroup)
-		 */
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			// TODO Auto-generated method stub
-			return createViewFromResource(position, convertView, parent,
-					mResource);
-
-			// return super.getView(position, convertView, parent);
-		}
-
-		private View createViewFromResource(int position, View convertView,
-				ViewGroup parent, int resource) {
-			View view;
-			SparseArray<View> holder;
-			if (convertView == null) {
-				view = mInflater.inflate(resource, parent, false);
-				holder = creatViewHolder(view);
-				view.setTag(holder);
-			} else {
-				view = convertView;
-				Object obj = view.getTag();
-				if (obj == null) {
-					holder = creatViewHolder(view);
-					view.setTag(holder);
-				} else {
-					holder = (SparseArray<View>) obj;
-				}
-			}
-
-			CheckedTextView title = (CheckedTextView) holder
-					.get(R.id.cross_title);
-			SeperateTextView exfee = (SeperateTextView) holder
-					.get(R.id.cross_exfee);
-			CheckedTextView time = (CheckedTextView) holder
-					.get(R.id.cross_time);
-			DoubleTextView time_mmmdd = (DoubleTextView) holder
-					.get(R.id.cross_time_mmmdd);
-			CheckedTextView place = (CheckedTextView) holder
-					.get(R.id.cross_place);
-			TextView count = (TextView) holder.get(R.id.cross_message_count);
-			@SuppressWarnings("unused")
-			View root = holder.get(R.id.list_cross_root);
-
-			Cross x = getItem(position);
-			x.loadFromDao(mModel.getHelper());
-
-			String diff = x.diffByUpdate();
-
-			/*
-			 * if (avatar != null) { boolean flag = false; if
-			 * (x.getByIdentitiy() != null) { if
-			 * (!TextUtils.isEmpty(x.getByIdentitiy() .getAvatarFilename())) {
-			 * Bitmap bm = ImageCache.getInst().getImageFrom(
-			 * x.getByIdentitiy().getAvatarFilename()); if (bm != null) {
-			 * avatar.setImageBitmap(bm); flag = true; } } } if (flag == false)
-			 * { avatar.setImageResource(R.drawable.default_avatar); } }
-			 */
-
-			if (title != null) {
-				title.setText(x.getTitle());
-				title.setChecked(diff.contains("t"));
-			}
-			if (exfee != null) {
-				exfee.setText(String.valueOf(x.getExfee().getAccepted()));
-				exfee.setAltText(String.valueOf(x.getExfee().getTotal()));
-			}
-			if (place != null) {
-				if (x.getPlace() != null) {
-					place.setText(x.getPlace().getTitle());
-				}
-				place.setChecked(diff.contains("p"));
-			}
-			if (time != null) {
-				time.setText(x.getTime().getBeginAt()
-						.getRelativeStringFromNow(time.getResources()));
-				time.setChecked(diff.contains("m"));
-			}
-
-			boolean no_time = true;
-			if (x.getTime() != null && x.getTime().getBeginAt() != null) {
-				String date = x.getTime().getBeginAt().getDate();
-				if (!TextUtils.isEmpty(date)) {
-					try {
-						Date d = Const.UTC_DATE_FORMAT.parse(date);
-						if (time_mmmdd != null) {
-							time_mmmdd.setText(Const.UTC_DAY_FORMAT.format(d));
-							time_mmmdd.setAltText(Const.UTC_MONTH_FORMAT
-									.format(d));
-							time_mmmdd.getBackground().setLevel(0);
-						}
-						no_time = false;
-					} catch (ParseException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}
-			if (no_time) {
-				if (time_mmmdd != null) {
-					time_mmmdd.setText("");
-					time_mmmdd.setAltText("");
-					time_mmmdd.getBackground().setLevel(1);
-				}
-			}
-
-			if (count != null) {
-				int c = x.getConversationCount();
-				if (c < 30) {
-					count.setText(String.valueOf(c));
-				} else {
-					count.setText("");
-				}
-				count.getBackground().setLevel(c);
-			}
-			return view;
-		}
-
-		private SparseArray<View> creatViewHolder(View view) {
-			SparseArray<View> holder = new SparseArray<View>();
-			holder.put(R.id.cross_title, view.findViewById(R.id.cross_title));
-			holder.put(R.id.cross_exfee, view.findViewById(R.id.cross_exfee));
-			holder.put(R.id.cross_time, view.findViewById(R.id.cross_time));
-			holder.put(R.id.cross_time_mmmdd,
-					view.findViewById(R.id.cross_time_mmmdd));
-			holder.put(R.id.cross_place, view.findViewById(R.id.cross_place));
-			holder.put(R.id.cross_message_count,
-					view.findViewById(R.id.cross_message_count));
-			holder.put(R.id.list_cross_root,
-					view.findViewById(R.id.list_cross_root));
-			return holder;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.widget.ArrayAdapter#getItemId(int)
-		 */
-		@Override
-		public long getItemId(int position) {
-			return getItem(position).getId();
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.widget.BaseAdapter#hasStableIds()
-		 */
-		@Override
-		public boolean hasStableIds() {
-			// TODO Auto-generated method stub
-			return true;
-		}
-
-	}
-
 	LoaderManager.LoaderCallbacks<CloseableIterator<Cross>> mQueryLoaderHandler = new LoaderManager.LoaderCallbacks<CloseableIterator<Cross>>() {
 
 		@Override
@@ -603,11 +417,9 @@ public class CrossListFragment extends Fragment implements Observer {
 				Bundle args) {
 			switch (id) {
 			case LOADER_QUERY_LOCAL:
-
-				// build your query
 				QueryBuilder<Cross, Long> qb = getModel().getHelper()
 						.getCrossDao().queryBuilder();
-				// qb.where()...;
+				qb.orderBy("updated_at", false);
 				return new OrmLiteCursorLoader(getActivity(), getModel(), qb,
 						null);
 			default:
@@ -619,6 +431,13 @@ public class CrossListFragment extends Fragment implements Observer {
 		public void onLoadFinished(Loader<CloseableIterator<Cross>> loader,
 				CloseableIterator<Cross> data) {
 			mAdapter.changeIterator(data);
+
+			// The list should now be shown.
+			if (isResumed()) {
+				setListShown(true);
+			} else {
+				setListShownNoAnimation(true);
+			}
 		}
 
 		@Override
@@ -764,7 +583,9 @@ public class CrossListFragment extends Fragment implements Observer {
 			// For a simple List<> there is nothing to do. For something
 			// like a Cursor, we would close it here.
 			try {
-				iterator.close();
+				if (iterator != null) {
+					iterator.close();
+				}
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

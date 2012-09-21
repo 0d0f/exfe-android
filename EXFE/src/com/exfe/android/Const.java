@@ -22,22 +22,21 @@ public class Const {
 	public static final String GCM_FIELD_SENDER = "sender";
 
 	public static final DateFormat UTC_DATE_TIME_FORMAT = new SimpleDateFormat(
-			"yyyy-MM-dd HH:mm:ss", Locale.US);
+			"yyyy-MM-dd HH:mm:ss Z", Locale.US);
 	public static final DateFormat UTC_DATE_FORMAT = new SimpleDateFormat(
 			"yyyy-MM-dd", Locale.US);
 	public static final DateFormat UTC_MONTH_FORMAT = new SimpleDateFormat(
 			"MMM", Locale.US);
 	public static final DateFormat UTC_DAY_FORMAT = new SimpleDateFormat("dd",
 			Locale.US);
-	public static final DateFormat UTC_Time_MMHH_FORMAT = new SimpleDateFormat(
-			"mm:hh", Locale.US);
+	public static final DateFormat UTC_Time_HHMM_FORMAT = new SimpleDateFormat(
+			"hh:mm", Locale.US);
 	static {
 		TimeZone tz = TimeZone.getTimeZone("UTC");
-		UTC_DATE_TIME_FORMAT.setTimeZone(tz);
 		UTC_DATE_FORMAT.setTimeZone(tz);
 		UTC_MONTH_FORMAT.setTimeZone(tz);
 		UTC_DAY_FORMAT.setTimeZone(tz);
-		UTC_Time_MMHH_FORMAT.setTimeZone(tz);
+		UTC_Time_HHMM_FORMAT.setTimeZone(tz);
 	}
 
 	public static final DateFormat LOCAL_DATE_FORMAT = new SimpleDateFormat(

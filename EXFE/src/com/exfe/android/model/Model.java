@@ -7,6 +7,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
@@ -23,10 +24,14 @@ public class Model extends Observable {
 	public static final String OBSERVER_FIELD_TYPE = "ACTION_TYPE";
 
 	public static final int ACTION_TYPE_NOTIFICATION_BASE = 100;
+	public static final int ACTION_TYPE_SIGN_OUT = Model.ACTION_TYPE_NOTIFICATION_BASE + 1;
+	public static final int ACTION_TYPE_START_NETWROK_QUERY = Model.ACTION_TYPE_NOTIFICATION_BASE + 2;
+	public static final int ACTION_TYPE_STOP_NETWROK_QUERY = Model.ACTION_TYPE_NOTIFICATION_BASE + 3;
 
 	public static final int ACTION_TYPE_CROSSES_BASE = 200;
 	public static final int ACTION_TYPE_CONVERSATION_BASE = 300;
 	public static final int ACTION_TYPE_ME_BASE = 400;
+	public static final int ACTION_TYPE_DEVICE_BASE = 500;
 
 	// public Looper mLooper = Looper.getMainLooper();
 	public Handler mHandler = new Handler();
@@ -230,6 +235,27 @@ public class Model extends Observable {
 	public String getDeviceId() {
 		return Settings.Secure.getString(mAppContext.getContentResolver(),
 				Settings.Secure.ANDROID_ID);
+	}
+	
+	public void signOut(){
+		setChanged();
+		Bundle data = new Bundle();
+		data.putInt(Model.OBSERVER_FIELD_TYPE, ACTION_TYPE_SIGN_OUT);
+		notifyObservers(data);
+	}
+	
+	public void startNetworkQuery(){
+		setChanged();
+		Bundle data = new Bundle();
+		data.putInt(Model.OBSERVER_FIELD_TYPE, ACTION_TYPE_START_NETWROK_QUERY);
+		notifyObservers(data);
+	}
+	
+	public void stopNetworkQuery(){
+		setChanged();
+		Bundle data = new Bundle();
+		data.putInt(Model.OBSERVER_FIELD_TYPE, ACTION_TYPE_STOP_NETWROK_QUERY);
+		notifyObservers(data);
 	}
 
 }

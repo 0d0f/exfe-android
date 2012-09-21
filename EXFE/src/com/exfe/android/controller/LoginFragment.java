@@ -705,10 +705,15 @@ public class LoginFragment extends Fragment implements Observer {
 						((Activity) getActivity()).registGCM();
 
 						if (mCallBack != null) {
-							Bundle param = new Bundle();
-							param.putInt(LandingActivity.FIELD_ACTION,
-									LandingActivity.ACTIVITY_RESULT_CROSS);
-							mCallBack.onSwitch(LoginFragment.this, param);
+							mModel.mHandler.post(new Runnable(){
+
+								@Override
+								public void run() {
+									Bundle param = new Bundle();
+									param.putInt(LandingActivity.FIELD_ACTION,
+											LandingActivity.ACTIVITY_RESULT_CROSS);
+									mCallBack.onSwitch(LoginFragment.this, param);
+								}});
 						}
 						break;
 					case HttpStatus.SC_FORBIDDEN:

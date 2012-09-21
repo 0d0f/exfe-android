@@ -12,6 +12,7 @@ import android.text.TextUtils;
 import com.exfe.android.Const;
 import com.exfe.android.db.DatabaseHelper;
 import com.exfe.android.debug.Log;
+import com.exfe.android.util.Tool;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
@@ -63,27 +64,8 @@ public class Invitation extends Entity {
 		via = json.optString("via", "");
 		host = json.optBoolean("host", false);
 		mates = json.optInt("mates", 0);
-		try {
-			created_at = Const.UTC_DATE_TIME_FORMAT.parse(json.optString(
-					"created_at", ""));
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
-		if (!json.isNull("updated_at")) {
-			try {
-				String update = json.optString("updated_at", "");
-				if (!TextUtils.isEmpty(update)) {
-					updated_at = Const.UTC_DATE_TIME_FORMAT.parse(update);
-				} else {
-					updated_at = null;
-				}
-			} catch (ParseException e) {
-				e.printStackTrace();
-			}
-		}
-		if (updated_at == null) {
-			updated_at = created_at;
-		}
+		created_at = Tool.parseDate(json, "created_at");
+		updated_at = Tool.parseDate(json, "updated_at", created_at);
 	}
 
 	public JSONObject toJSON(boolean deep) {
@@ -96,9 +78,13 @@ public class Invitation extends Entity {
 			json.put("via", via);
 			json.put("host", host);
 			json.put("mates", mates);
-			json.put("created_at", Const.UTC_DATE_TIME_FORMAT.format(created_at));
+			if (created_at == null) {
+				json.put("created_at", "");
+			} else {
+				json.put("created_at", Const.UTC_DATE_TIME_FORMAT.format(created_at));
+			}
 			if (updated_at == null) {
-				json.put("updated_at", Const.UTC_DATE_TIME_FORMAT.format(created_at));
+				json.put("updated_at", "");
 			} else {
 				json.put("updated_at", Const.UTC_DATE_TIME_FORMAT.format(updated_at));
 			}

@@ -11,6 +11,7 @@ import org.json.JSONObject;
 
 import com.exfe.android.Const;
 import com.exfe.android.db.DatabaseHelper;
+import com.exfe.android.util.Tool;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
@@ -52,13 +53,7 @@ public class Post extends Entity {
 		mType = EntityFactory.TYPE_POST;
 
 		mId = Long.parseLong(json.optString("id", "0"));
-		try {
-			created_at = Const.UTC_DATE_TIME_FORMAT.parse(json.optString(
-					"created_at", ""));
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		created_at = Tool.parseDate(json, "created_at");
 		by_identity = (Identity) EntityFactory.create(json
 				.optJSONObject("by_identity"));
 		/*
@@ -83,7 +78,11 @@ public class Post extends Entity {
 		try {
 
 			if (deep) {
-				json.put("created_at", Const.UTC_DATE_TIME_FORMAT.format(created_at));
+				if (created_at == null){
+					json.put("created_at", "");
+				}else{
+					json.put("created_at", Const.UTC_DATE_TIME_FORMAT.format(created_at));
+				}
 			}
 
 			if (deep) {

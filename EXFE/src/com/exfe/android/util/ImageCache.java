@@ -22,6 +22,7 @@ import android.text.TextUtils;
 import com.exfe.android.Const;
 import com.exfe.android.exception.ExfeException;
 
+@Deprecated
 public class ImageCache extends Observable {
 
 	private static ImageCache sInst = null;

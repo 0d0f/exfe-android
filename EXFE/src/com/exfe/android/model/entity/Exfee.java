@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import com.exfe.android.Const;
 import com.exfe.android.db.DatabaseHelper;
 import com.exfe.android.debug.Log;
+import com.exfe.android.util.Tool;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.field.ForeignCollectionField;
@@ -63,13 +64,8 @@ public class Exfee extends Entity {
 			}
 		}
 
-		try {
-			updated_at = Const.UTC_DATE_TIME_FORMAT.parse(json.optString(
-					"updated_at", ""));
-		} catch (ParseException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+		updated_at = Tool.parseDate(json, "updated_at");
+
 	}
 
 	public JSONObject toJSON(boolean deep) {
@@ -85,7 +81,12 @@ public class Exfee extends Entity {
 			}
 			json.put("invitations", array);
 
-			json.put("updated_at", Const.UTC_DATE_TIME_FORMAT.format(updated_at));
+			if (updated_at == null) {
+				json.put("updated_at", "");
+			} else {
+				json.put("updated_at",
+						Const.UTC_DATE_TIME_FORMAT.format(updated_at));
+			}
 
 		} catch (JSONException e) {
 			e.printStackTrace();

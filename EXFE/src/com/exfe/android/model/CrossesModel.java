@@ -6,11 +6,18 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.http.HttpStatus;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import android.content.SharedPreferences.Editor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 import com.exfe.android.PrefKeys;
 import com.exfe.android.model.entity.Cross;
+import com.exfe.android.model.entity.EntityFactory;
+import com.exfe.android.model.entity.Response;
 import com.j256.ormlite.dao.Dao;
 
 public class CrossesModel {
@@ -19,6 +26,9 @@ public class CrossesModel {
 
 	private Model mRoot = null;
 
+	private Date mLastUpdateQuery = null;
+	private FetchCrossesTask mTask = null;
+
 	public CrossesModel(Model m) {
 		mRoot = m;
 	}
@@ -26,8 +36,6 @@ public class CrossesModel {
 	private Dao<Cross, Long> getDao() {
 		return mRoot.getHelper().getCrossDao();
 	}
-
-	private Date mLastUpdateQuery = null;
 
 	public void addCrosses(List<Cross> xs) {
 
@@ -113,8 +121,8 @@ public class CrossesModel {
 			Cross result = getDao().queryForId(id);
 			if (result != null) {
 				result.loadFromDao(mRoot.getHelper());
-				return result;
 			}
+			return result;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -138,5 +146,105 @@ public class CrossesModel {
 			}
 
 		}
+	}
+
+	public void fetchCross(final long crossId) {
+		Runnable run = new Runnable() {
+
+			@Override
+			public void run() {
+				Response result = mRoot.getServer().getCrossById(crossId);
+				int code = result.getCode();
+				@SuppressWarnings("unused")
+				int http_category = code % 100;
+				mRoot.stopNetworkQuery();
+				switch (code) {
+				case HttpStatus.SC_OK:
+					JSONObject res = result.getResponse();
+					JSONObject json = res.optJSONObject("cross");
+					if (json != null) {
+						Cross cross = (Cross) EntityFactory.create(json);
+						List<Cross> xs = new ArrayList<Cross>();
+						xs.add(cross);
+						addCrosses(xs);
+					}
+					break;
+				case HttpStatus.SC_UNAUTHORIZED:
+					// mRoot.signOut();
+				case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+					// retry
+					break;
+				default:
+					break;
+				}
+			}
+		};
+		Thread th = new Thread(run);
+		th.start();
+	}
+
+	public void freshCrosses() {
+		if (mTask == null || mTask.getStatus() == AsyncTask.Status.FINISHED) {
+			mTask = new FetchCrossesTask();
+			mTask.execute();
+		}
+	}
+
+	class FetchCrossesTask extends AsyncTask<Integer, Integer, Response> {
+
+		private Date mLastQueryTime = null;
+		private Date mThisQueryTime = null;
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see android.os.AsyncTask#onPreExecute()
+		 */
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			mLastQueryTime = getLastUpdateQuery();
+			mRoot.startNetworkQuery();
+		}
+
+		@Override
+		protected Response doInBackground(Integer... params) {
+			mThisQueryTime = new Date();
+			return mRoot.getServer().getNewCrossesAfter(mLastQueryTime);
+		}
+
+		@Override
+		protected void onPostExecute(Response result) {
+			int code = result.getCode();
+			@SuppressWarnings("unused")
+			int http_category = code % 100;
+			mRoot.stopNetworkQuery();
+			switch (code) {
+			case HttpStatus.SC_OK:
+				List<Cross> xs = new ArrayList<Cross>();
+				JSONObject res = result.getResponse();
+				JSONArray array = res.optJSONArray("crosses");
+				if (array != null) {
+					for (int i = 0; i < array.length(); i++) {
+						JSONObject json = array.optJSONObject(i);
+						if (json != null) {
+							Cross cross = (Cross) EntityFactory.create(json);
+							xs.add(cross);
+						}
+					}
+				}
+				setLastUpdateQuery(mThisQueryTime);
+				addCrosses(xs);
+				break;
+			case HttpStatus.SC_UNAUTHORIZED:
+				mRoot.signOut();
+			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+				// retry
+				break;
+			default:
+				break;
+			}
+		}
+
 	}
 }

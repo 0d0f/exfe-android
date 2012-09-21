@@ -11,6 +11,7 @@ import android.text.TextUtils;
 
 import com.exfe.android.Const;
 import com.exfe.android.db.DatabaseHelper;
+import com.exfe.android.util.Tool;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
@@ -66,31 +67,11 @@ public class Identity extends Entity {
 			external_username = json.optString("external_username", "");
 			avatar_filename = json.optString("avatar_filename", "");
 			avatar_updated_at = json.optString("avatar_updated_at", "");
-
-			try {
-				created_at = Const.UTC_DATE_TIME_FORMAT.parse(json.optString(
-						"created_at", ""));
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			if (!json.isNull("updated_at")) {
-				try {
-					String update = json.optString("updated_at", "");
-					if (!TextUtils.isEmpty(update)) {
-						updated_at = Const.UTC_DATE_TIME_FORMAT.parse(update);
-					} else {
-						updated_at = null;
-					}
-				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+			created_at = Tool.parseDate(json, "created_at");
+			updated_at = Tool.parseDate(json, "updated_at", created_at);
 			if (updated_at == null) {
 				updated_at = created_at;
 			}
-
 		}
 	}
 
@@ -107,13 +88,14 @@ public class Identity extends Entity {
 			json.put("external_username", external_username);
 			json.put("avatar_filename", avatar_filename);
 			json.put("avatar_updated_at", avatar_updated_at);
+			
 			if (created_at == null) {
-				json.put("created_at", null);
+				json.put("created_at", "");
 			} else {
 				json.put("created_at", Const.UTC_DATE_TIME_FORMAT.format(created_at));
 			}
 			if (updated_at == null) {
-				json.put("updated_at", null);
+				json.put("updated_at", "");
 			} else {
 				json.put("updated_at", Const.UTC_DATE_TIME_FORMAT.format(updated_at));
 			}

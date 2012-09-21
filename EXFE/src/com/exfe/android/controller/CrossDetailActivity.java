@@ -49,6 +49,8 @@ public class CrossDetailActivity extends Activity implements Observer {
 			Cross x = mModel.Crosses().getCrossById(mCrossId);
 			if (x != null) {
 				tv.setText(x.getTitle());
+			}else{
+				mModel.Crosses().fetchCross(mCrossId);
 			}
 		}
 

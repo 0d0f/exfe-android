@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical" >
 
     <LinearLayout
@@ -29,11 +29,20 @@
             android:layout_weight="1"
             android:gravity="left"
             android:hint="(Someone Exfee)"
-            android:textSize="@dimen/nav_title_text_size"
-            android:textColor="@color/gray_233"
-            android:textStyle="bold" 
             android:shadowColor="@android:color/black"
-            android:shadowDy="-1"/>
+            android:shadowDy="-1"
+            android:textColor="@color/gray_233"
+            android:textSize="@dimen/nav_title_text_size"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/pb_network_hint"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" 
+            android:layout_gravity="center_vertical"
+            android:layout_margin="8dp"/>
 
         <ImageButton
             android:id="@+id/btn_gather"
@@ -42,18 +51,48 @@
             android:layout_gravity="center_vertical"
             android:layout_marginRight="@dimen/base_small_margin"
             android:contentDescription="User profile button"
-            android:visibility="invisible"/>
+            android:visibility="gone" />
     </LinearLayout>
 
-    <ListView
-        android:id="@+id/list_crosses"
-        android:layout_width="fill_parent"
+    <FrameLayout
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="@drawable/list_cross_bg"
-        android:cacheColorHint="@android:color/transparent"
-        android:divider="@android:color/transparent"
-        android:dividerHeight="0dp" >
-    </ListView>
+        android:background="@drawable/list_cross_bg" >
+
+        <LinearLayout
+            android:id="@+id/container_progress"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:visibility="gone" >
+
+            <ProgressBar
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/container_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/empty"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center|top" />
+
+            <ListView
+                android:id="@android:id/list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/list_cross_bg"
+                android:cacheColorHint="@android:color/transparent"
+                android:divider="@android:color/transparent"
+                android:dividerHeight="0dp" />
+        </FrameLayout>
+    </FrameLayout>
 
 </LinearLayout>

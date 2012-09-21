@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.text.TextUtils;
 
 import com.exfe.android.Activity;
-import com.exfe.android.Const;
 import com.exfe.android.Fragment;
 import com.exfe.android.R;
 import com.exfe.android.debug.Log;
@@ -79,7 +78,7 @@ public class LandingActivity extends Activity implements Observer,
 	}
 
 	protected void showFragment(String provider) {
-		Fragment fragment = null;
+		android.support.v4.app.Fragment fragment = null;
 		mCurrentProvider = provider;
 		
 		

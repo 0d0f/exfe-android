@@ -35,6 +35,8 @@ import com.exfe.android.Const;
 import com.exfe.android.Fragment;
 import com.exfe.android.R;
 import com.exfe.android.debug.Log;
+import com.exfe.android.model.CrossesModel;
+import com.exfe.android.model.Model;
 import com.exfe.android.model.entity.Cross;
 import com.exfe.android.model.entity.EntityFactory;
 import com.exfe.android.model.entity.Exfee;
@@ -882,6 +884,25 @@ public class CrossDetailFragment extends Fragment implements Observer {
 
 	@Override
 	public void update(Observable observable, Object data) {
+		Bundle bundle = (Bundle) data;
+		int type = bundle.getInt(Model.OBSERVER_FIELD_TYPE);
+		switch (type) {
+		case CrossesModel.ACTION_TYPE_UPDATE_CROSSES:
+			mModel.mHandler.post(new Runnable() {
+
+				@Override
+				public void run() {
+					if (mCross == null && mCrossId != 0){
+						mCross = mModel.Crosses().getCrossById(mCrossId);
+						if (mCross != null){
+							showCross(mCross);
+							showToolBar();
+						}
+					}
+				}
+			});
+			break;
+		}
 
 	}
 

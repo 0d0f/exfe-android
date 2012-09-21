@@ -25,7 +25,6 @@ public class Application extends android.app.Application {
 	public void onCreate() {
 		super.onCreate();
 		mModel = new Model(this);
-		ImageCache.getInst(this);
 	}
 
 	/* (non-Javadoc)
