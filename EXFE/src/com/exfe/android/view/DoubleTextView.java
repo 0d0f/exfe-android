@@ -1,17 +1,11 @@
 package com.exfe.android.view;
 
-import com.exfe.android.R;
-
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Paint.Align;
-import android.graphics.Typeface;
-import android.text.TextPaint;
-import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.widget.TextView;
+
+import com.exfe.android.R;
 
 public class DoubleTextView extends TextView {
 

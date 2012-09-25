@@ -3,8 +3,10 @@ package com.exfe.android.controller;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.TimeZone;
 
 import org.apache.http.HttpStatus;
 import org.json.JSONArray;
@@ -38,6 +40,7 @@ import com.exfe.android.debug.Log;
 import com.exfe.android.model.CrossesModel;
 import com.exfe.android.model.Model;
 import com.exfe.android.model.entity.Cross;
+import com.exfe.android.model.entity.CrossTime;
 import com.exfe.android.model.entity.EntityFactory;
 import com.exfe.android.model.entity.Exfee;
 import com.exfe.android.model.entity.Identity;
@@ -58,7 +61,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 	private long mCrossId = 0;
 	private Cross mCross = null;
 	private Invitation mMyInvitation = null;
-	private long mIdentityId = 0;
+	// private long mIdentityId = 0;
 	private View mPopupView = null;
 	private final WindowManager.LayoutParams mParams = new WindowManager.LayoutParams();
 
@@ -175,11 +178,31 @@ public class CrossDetailFragment extends Fragment implements Observer {
 		showToolBar();
 	}
 
+	private void fillText(int id, CharSequence text, int visibility) {
+		fillText(id, text, null, visibility);
+	}
+
+	private void fillText(int id, CharSequence text, CharSequence def) {
+		fillText(id, text, def, View.VISIBLE);
+	}
+
 	private void fillText(int id, CharSequence text) {
+		fillText(id, text, null, View.VISIBLE);
+	}
+
+	private void fillText(int id, CharSequence text, CharSequence def,
+			int visibility) {
 		View v = getActivity().findViewById(id);
 		if (v != null) {
 			TextView tv = (TextView) v;
-			tv.setText(text);
+			if (TextUtils.isEmpty(text)) {
+				tv.setText(def);
+			} else {
+				tv.setText(text);
+			}
+			if (tv.getVisibility() != visibility) {
+				tv.setVisibility(visibility);
+			}
 		}
 	}
 
@@ -229,14 +252,34 @@ public class CrossDetailFragment extends Fragment implements Observer {
 			fillText(R.id.x_attendee_all,
 					String.format("/%d", cross.getExfee().getTotal()));
 
-			fillText(R.id.x_rel_date, cross.getTime().getBeginAt()
-					.getRelativeStringFromNow(getResources()));
-			fillText(R.id.x_time_date,
-					cross.getTime().getLongLocalTimeSring(null, getResources()));
+			if (cross.getTime() != null) {
+				fillText(R.id.x_rel_date, cross.getTime().getBeginAt()
+						.getRelativeStringFromNow(getResources()),
+						getText(R.string.sometime));
+				fillText(R.id.x_time_date, cross.getTime()
+						.getLongLocalTimeSring(null, getResources()));
 
-			fillText(R.id.x_zone, cross.getTime().getBeginAt().getTimezone());
-			fillText(R.id.x_addr_title, cross.getPlace().getTitle());
-			fillText(R.id.x_addr_desc, cross.getPlace().getDescription());
+				if (Tool.isSameWithLocalZone(cross.getTime().getBeginAt()
+						.getTimezone())) {
+					fillText(R.id.x_zone, "", View.INVISIBLE);
+				} else {
+					fillText(R.id.x_zone, cross.getTime().getBeginAt()
+							.getTimezone(), View.VISIBLE);
+				}
+			} else {
+				fillText(R.id.x_rel_date, getText(R.string.sometime));
+				fillText(R.id.x_time_date, "");
+				fillText(R.id.x_zone, "", View.INVISIBLE);
+			}
+
+			if (cross.getPlace() != null) {
+				fillText(R.id.x_addr_title, cross.getPlace().getTitle(),
+						getText(R.string.somewhere));
+				fillText(R.id.x_addr_desc, cross.getPlace().getDescription());
+			} else {
+				fillText(R.id.x_addr_title, getText(R.string.somewhere));
+				fillText(R.id.x_addr_desc, "");
+			}
 
 			fillText(R.id.x_description, cross.getDescription());
 
@@ -246,11 +289,8 @@ public class CrossDetailFragment extends Fragment implements Observer {
 			View mvf = getActivity().findViewById(R.id.x_map_frame);
 			if (mv != null) {
 				Place p = cross.getPlace();
-				if (p != null
-						&& !TextUtils.isEmpty(p.getLat())
-						&& !TextUtils.isEmpty(p.getLng())
-						&& !("0".equalsIgnoreCase(p.getLat()) && "0"
-								.equalsIgnoreCase(p.getLng()))) {
+				if (p != null && !TextUtils.isEmpty(p.getLat())
+						&& !TextUtils.isEmpty(p.getLng())) {
 					if (mvf != null) {
 						mvf.setVisibility(View.VISIBLE);
 					}
@@ -892,9 +932,9 @@ public class CrossDetailFragment extends Fragment implements Observer {
 
 				@Override
 				public void run() {
-					if (mCross == null && mCrossId != 0){
+					if (mCross == null && mCrossId != 0) {
 						mCross = mModel.Crosses().getCrossById(mCrossId);
-						if (mCross != null){
+						if (mCross != null) {
 							showCross(mCross);
 							showToolBar();
 						}

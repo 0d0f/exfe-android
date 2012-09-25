@@ -33,7 +33,6 @@ import org.apache.http.util.EntityUtils;
 
 import android.text.TextUtils;
 
-import com.exfe.android.BuildConfig;
 import com.exfe.android.Const;
 import com.exfe.android.debug.Log;
 import com.exfe.android.model.Model;

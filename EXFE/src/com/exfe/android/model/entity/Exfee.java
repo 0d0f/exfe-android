@@ -1,7 +1,6 @@
 package com.exfe.android.model.entity;
 
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -12,7 +11,6 @@ import org.json.JSONObject;
 
 import com.exfe.android.Const;
 import com.exfe.android.db.DatabaseHelper;
-import com.exfe.android.debug.Log;
 import com.exfe.android.util.Tool;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.field.DatabaseField;
@@ -188,8 +186,12 @@ public class Exfee extends Entity {
 		try {
 			Dao<Exfee, Long> dao = dbhelper.getCachedDao(getClass());
 			dao.refresh(this);
-			for (Invitation inv : this.invitations) {
-				inv.loadFromDao(dbhelper);
+			if (this.invitations != null) {
+				for (Invitation inv : this.invitations) {
+					if (inv != null) {
+						inv.loadFromDao(dbhelper);
+					}
+				}
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block

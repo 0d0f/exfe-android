@@ -1,10 +1,6 @@
 package com.exfe.android.model;
 
-import android.util.DisplayMetrics;
-
 import com.example.android.bitmapfun.util.ImageCache;
-import com.example.android.bitmapfun.util.ImageFetcher;
-import com.example.android.bitmapfun.util.ImageWorker;
 
 public class CacheModel {
 

@@ -1,17 +1,13 @@
 package com.exfe.android.model.entity;
 
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.Date;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.text.TextUtils;
-
 import com.exfe.android.Const;
 import com.exfe.android.db.DatabaseHelper;
-import com.exfe.android.debug.Log;
 import com.exfe.android.util.Tool;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.field.DatabaseField;

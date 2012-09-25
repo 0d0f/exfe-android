@@ -3,9 +3,7 @@
  */
 package com.exfe.android.test;
 
-import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 
 import org.json.JSONArray;
 import org.json.JSONException;

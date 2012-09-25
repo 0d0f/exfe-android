@@ -59,7 +59,7 @@
             android:drawablePadding="@dimen/base_small_margin"
             android:ellipsize="end"
             android:gravity="left|center_vertical"
-            android:hint="@string/text_hint_place"
+            android:hint="@string/somewhere"
             android:paddingLeft="@dimen/base_small_margin"
             android:paddingRight="@dimen/base_small_margin"
             android:singleLine="true"
@@ -95,6 +95,7 @@
                 android:layout_weight="1"
                 android:checkMark="@null"
                 android:ellipsize="end"
+                android:hint="@string/sometime"
                 android:singleLine="true"
                 android:textColor="@color/gray_69"
                 android:textSize="@dimen/list_alternative_text_size" />

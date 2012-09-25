@@ -2,21 +2,15 @@ package com.exfe.android.controller;
 
 import java.sql.SQLException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
-import org.apache.http.HttpStatus;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
@@ -31,8 +25,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.CheckedTextView;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -43,17 +35,13 @@ import com.example.android.bitmapfun.util.ImageWorker;
 import com.exfe.android.Activity;
 import com.exfe.android.Application;
 import com.exfe.android.Const;
-import com.exfe.android.Fragment;
 import com.exfe.android.R;
 import com.exfe.android.debug.Log;
 import com.exfe.android.model.CrossesModel;
 import com.exfe.android.model.MeModel;
 import com.exfe.android.model.Model;
 import com.exfe.android.model.entity.Cross;
-import com.exfe.android.model.entity.EntityFactory;
-import com.exfe.android.model.entity.Response;
 import com.exfe.android.model.entity.User;
-import com.exfe.android.util.ImageCache;
 import com.exfe.android.util.InterestingConfigChanges;
 import com.exfe.android.view.DoubleTextView;
 import com.exfe.android.view.IteratorAdapter;
@@ -148,9 +136,9 @@ public class CrossListFragment extends ListFragment implements Observer {
 		if (v != null) {
 			v.setOnClickListener(mClickListener);
 		}
-		
+
 		v = view.findViewById(R.id.pb_network_hint);
-		if (v != null){
+		if (v != null) {
 			mProgressBarHint = v;
 		}
 
@@ -308,18 +296,44 @@ public class CrossListFragment extends ListFragment implements Observer {
 
 					@Override
 					public void run() {
-						((Activity) getActivity()).signOut();
+						AlertDialog.Builder builder = new AlertDialog.Builder(
+								getActivity());
+						builder.setMessage(
+								"The token is invalid. Do you want to sign out?")
+								.setPositiveButton(R.string.sign_out,
+										new DialogInterface.OnClickListener() {
+
+											@Override
+											public void onClick(
+													DialogInterface dialog,
+													int which) {
+												dialog.dismiss();
+												((Activity) getActivity())
+														.signOut();
+											}
+										})
+								.setNegativeButton(R.string.cancel,
+										new DialogInterface.OnClickListener() {
+
+											@Override
+											public void onClick(
+													DialogInterface dialog,
+													int which) {
+												dialog.cancel();
+											}
+										});
+						builder.create().show();
 					}
 				});
 
 				break;
-				
+
 			case Model.ACTION_TYPE_START_NETWROK_QUERY:
 				mModel.mHandler.post(new Runnable() {
-					
+
 					@Override
 					public void run() {
-						if (mProgressBarHint != null){
+						if (mProgressBarHint != null) {
 							mProgressBarHint.setVisibility(View.VISIBLE);
 						}
 					}
@@ -327,10 +341,10 @@ public class CrossListFragment extends ListFragment implements Observer {
 				break;
 			case Model.ACTION_TYPE_STOP_NETWROK_QUERY:
 				mModel.mHandler.post(new Runnable() {
-					
+
 					@Override
 					public void run() {
-						if (mProgressBarHint != null){
+						if (mProgressBarHint != null) {
 							mProgressBarHint.setVisibility(View.GONE);
 						}
 					}
@@ -729,12 +743,18 @@ public class CrossListFragment extends ListFragment implements Observer {
 
 			if (count != null) {
 				int c = x.getConversationCount();
-				if (c < 30) {
+				if (c == 0) {
+					count.setVisibility(View.INVISIBLE);
 					count.setText(String.valueOf(c));
 				} else {
-					count.setText("");
+					count.setVisibility(View.VISIBLE);
+					if (c < 30) {
+						count.setText(String.valueOf(c));
+					} else {
+						count.setText("");
+					}
+					count.getBackground().setLevel(c);
 				}
-				count.getBackground().setLevel(c);
 			}
 		}
 

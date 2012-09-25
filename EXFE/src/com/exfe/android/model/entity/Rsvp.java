@@ -1,14 +1,10 @@
 package com.exfe.android.model.entity;
 
-import java.sql.SQLException;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.exfe.android.R;
 import com.exfe.android.db.DatabaseHelper;
-import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.table.DatabaseTable;
 
 public class Rsvp extends Entity {
 

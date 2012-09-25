@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="sometime">某刻</string>
+    <string name="somewhere">某处</string>
+
     <plurals name="n_years">
         <item quantity="other">%d年</item>
     </plurals>

@@ -13,7 +13,6 @@ import android.widget.AbsoluteLayout;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
-import com.exfe.android.Const;
 import com.exfe.android.Fragment;
 import com.exfe.android.R;
 import com.exfe.android.model.entity.Provider;

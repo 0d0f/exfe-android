@@ -23,6 +23,7 @@ import com.j256.ormlite.dao.Dao;
 public class CrossesModel {
 
 	public static final int ACTION_TYPE_UPDATE_CROSSES = Model.ACTION_TYPE_CROSSES_BASE + 1;
+	public static final int ACTION_TYPE_CROSSES_UPDATE_MILESTONE = Model.ACTION_TYPE_CROSSES_BASE + 2;
 
 	private Model mRoot = null;
 
@@ -45,6 +46,13 @@ public class CrossesModel {
 				if (x != null /* && x.getByIdentitiy() != null */) {
 					x.saveToDao(mRoot.getHelper());
 					update.add(x.getId());
+					if (update.size() % 5 == 4){
+						mRoot.setChanged();
+						Bundle data = new Bundle();
+						data.putInt(Model.OBSERVER_FIELD_TYPE,
+								ACTION_TYPE_CROSSES_UPDATE_MILESTONE);
+						mRoot.notifyObservers(data);
+					}
 				}
 			}
 			if (update.size() > 0) {
@@ -128,6 +136,15 @@ public class CrossesModel {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public void saveCross(Cross x){
+		try {
+			getDao().createOrUpdate(x);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void updateLastView(Cross cross) {

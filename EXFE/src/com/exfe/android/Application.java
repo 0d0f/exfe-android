@@ -1,10 +1,9 @@
 package com.exfe.android;
 
+import android.content.res.Configuration;
+
 import com.exfe.android.debug.Log;
 import com.exfe.android.model.Model;
-import com.exfe.android.util.ImageCache;
-
-import android.content.res.Configuration;
 
 public class Application extends android.app.Application {
 

@@ -323,7 +323,6 @@ public class TestEntity extends
 				c.getLongLocalTimeSring("-08:00 PST", null));
 	}
 
-	@SuppressWarnings("deprecation")
 	public final void testToolXRelativeTime() {
 
 		Calendar base = new GregorianCalendar(2012, 8 - 1, 13, 14, 0, 0);

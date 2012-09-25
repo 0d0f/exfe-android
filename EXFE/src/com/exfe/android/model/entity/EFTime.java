@@ -14,7 +14,6 @@ import org.json.JSONObject;
 import android.content.res.Resources;
 import android.text.TextUtils;
 
-import com.exfe.android.R;
 import com.exfe.android.db.DatabaseHelper;
 import com.exfe.android.util.Tool;
 import com.j256.ormlite.dao.Dao;

@@ -13,9 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
@@ -48,7 +46,6 @@ import android.widget.TextView;
 
 import com.example.android.bitmapfun.util.ImageFetcher;
 import com.example.android.bitmapfun.util.ImageWorker;
-import com.exfe.android.Activity;
 import com.exfe.android.Application;
 import com.exfe.android.Const;
 import com.exfe.android.R;
@@ -171,7 +168,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		// Prepare the loader. Either re-connect with an existing one,
 		// or start a new one.
 		getLoaderManager().initLoader(LOADER_QUERY_LOCAL, null,
-				queryLoaderHandler);
+				mQueryLoaderHandler);
 	}
 
 	/*
@@ -340,7 +337,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		}
 	};
 
-	LoaderManager.LoaderCallbacks<List<Post>> queryLoaderHandler = new LoaderManager.LoaderCallbacks<List<Post>>() {
+	LoaderManager.LoaderCallbacks<List<Post>> mQueryLoaderHandler = new LoaderManager.LoaderCallbacks<List<Post>>() {
 
 		@Override
 		public Loader<List<Post>> onCreateLoader(int id, Bundle args) {
@@ -385,18 +382,31 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 
 	@Override
 	public void update(Observable observable, Object data) {
-		Bundle bundle = (Bundle) data;
+		final Bundle bundle = (Bundle) data;
 		int type = bundle.getInt(Model.OBSERVER_FIELD_TYPE);
 		switch (type) {
 		case ConversationModel.ACTION_TYPE_CLEAR_CONVERSATION:
-			showConversation(mModel.Conversations().getFullConversationByExfee(
-					mCross.getExfee()));
+			mModel.mHandler.post(new Runnable() {
+
+				@Override
+				public void run() {
+					showConversation(mModel.Conversations()
+							.getFullConversationByExfee(mCross.getExfee()));
+				}
+			});
+
 			break;
 		case ConversationModel.ACTION_TYPE_NEW_CONVERSATION:
-			if (bundle.getLong("exfee_id") == mCross.getExfee().getId()) {
-				showConversation(mModel.Conversations()
-						.getFullConversationByExfee(mCross.getExfee()));
-			}
+			mModel.mHandler.post(new Runnable() {
+
+				@Override
+				public void run() {
+					if (bundle.getLong("exfee_id") == mCross.getExfee().getId()) {
+						showConversation(mModel.Conversations()
+								.getFullConversationByExfee(mCross.getExfee()));
+					}
+				}
+			});
 		}
 	}
 
@@ -514,8 +524,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 						p.setVia("Android");
 						p.setPostableType("exfee");
 						p.setPostableId(mCross.getExfee().getId());
-						new PostPost(mModel, mInput).execute(p); // mModel.Conversations().addPostToPendingList(p);
-																	// //
+						postPost(p); // mModel.Conversations().addPostToPendingList(p);
 						mInput.getText().clear();
 					}
 				}
@@ -526,72 +535,51 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		}
 	};
 
-	class PostPost extends AsyncTask<Post, Void, Post> {
+	void postPost(final Post post) {
 
-		private Model mModel;
-		private TextView mInput;
+		Runnable run = new Runnable() {
 
-		PostPost(Model model, TextView tv) {
-			mModel = model;
-			mInput = tv;
-		}
+			@Override
+			public void run() {
+				Response result = mModel.getServer().addConversation(post);
+				int code = result.getCode();
+				@SuppressWarnings("unused")
+				int http_category = code % 100;
+				mModel.mHandler.post(new Runnable() {
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.os.AsyncTask#onCancelled()
-		 */
-		@Override
-		protected void onCancelled() {
-			super.onCancelled();
-			mInput.setEnabled(true);
-		}
+					@Override
+					public void run() {
+						mInput.setEnabled(true);
+					}
+				});
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
-		 */
-		@Override
-		protected void onPostExecute(Post result) {
-			super.onPostExecute(result);
-			mInput.setEnabled(true);
-			mInput.getEditableText().clear();
-			if (result != null) {
-				mModel.Conversations().addPost(result);
-			}
-		}
+				switch (code) {
+				case HttpStatus.SC_OK:
+					mModel.mHandler.post(new Runnable() {
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.os.AsyncTask#onPreExecute()
-		 */
-		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-			mInput.setEnabled(false);
-		}
+						@Override
+						public void run() {
+							mInput.getEditableText().clear();
+						}
+					});
 
-		@Override
-		protected Post doInBackground(Post... params) {
-			Response result = mModel.getServer().addConversation(params[0]);
-			int code = result.getCode();
-			@SuppressWarnings("unused")
-			int http_category = code % 100;
-			switch (code) {
-			case HttpStatus.SC_OK:
-				JSONObject res = result.getResponse();
-				JSONObject json = res.optJSONObject("post");
-				if (json != null) {
-					Post p = (Post) EntityFactory.create(json);
-					return p;
+					JSONObject res = result.getResponse();
+					JSONObject json = res.optJSONObject("post");
+					if (json != null) {
+						final Post p = (Post) EntityFactory.create(json);
+						if (p != null) {
+							mModel.Conversations().addPost(p);
+						}
+					}
+					break;
 				}
-				break;
 			}
-			return null;
-		}
 
+		};
+
+		Thread th = new Thread(run);
+		mInput.setEnabled(false);
+		th.start();
 	}
 
 	public class ConversationAdpater extends ArrayAdapter<Post> {
@@ -750,9 +738,6 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 
 	}
 
-	/**
-	 * A custom Loader that loads all of the installed applications.
-	 */
 	public static class ConversationLoader extends AsyncTaskLoader<List<Post>> {
 		final InterestingConfigChanges mLastConfig = new InterestingConfigChanges();
 		final Bundle mParam;
@@ -797,13 +782,15 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 						}
 					}
 				}
+				mCross.setConversationCount(0);
+				mModel.Crosses().saveCross(mCross);
 				// Sort the list.
 				// Collections.sort(entries, ALPHA_COMPARATOR);
 
 				return posts;
 				// break;
 			case HttpStatus.SC_UNAUTHORIZED:
-				//((Activity) getActivity()).signOut();
+				// ((Activity) getActivity()).signOut();
 				break;
 			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 				// retry

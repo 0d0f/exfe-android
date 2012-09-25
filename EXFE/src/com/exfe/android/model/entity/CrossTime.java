@@ -15,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.exfe.android.db.DatabaseHelper;
+import com.exfe.android.util.Tool;
 import com.j256.ormlite.dao.Dao;
 
 import android.content.res.Resources;
@@ -124,19 +125,6 @@ public class CrossTime extends Entity {
 		this.mOriginMarkType = originMarkType;
 	}
 
-	public String converTimeZoneId(String three_letters) {
-		String tz_str = three_letters;
-		if (tz_str == null) {
-			tz_str = "";
-		}
-		Pattern p = Pattern.compile("[\\+\\-]\\d\\d:\\d\\d");
-		Matcher m = p.matcher(tz_str);
-		if (m.find()) {
-			return "GMT".concat(m.group().trim());
-		}
-		return "UTC";
-	}
-
 	public static Date NOW = null;
 
 	public String getLongLocalTimeSring(String tz, Resources res) {
@@ -148,20 +136,19 @@ public class CrossTime extends Entity {
 		GregorianCalendar now = new GregorianCalendar();
 		// use test mock time
 		if (NOW != null) {
-			now.setTimeInMillis(now.getTimeInMillis());
+			now.setTimeInMillis(NOW.getTime());
 		}
 		// use the test input time zone
 		if (!TextUtils.isEmpty(tz)) {
-			now.setTimeZone(TimeZone.getTimeZone(converTimeZoneId(tz)));
+			now.setTimeZone(TimeZone.getTimeZone(Tool.converTimeZoneId(tz)));
 		}else{
 			tz = "";
 		}
 		
-		
 		TimeZone current_tz = now.getTimeZone();
 		TimeZone target_tz = current_tz;
 		if (!TextUtils.isEmpty(eftime.getTimezone())) {
-			target_tz = TimeZone.getTimeZone(converTimeZoneId(eftime
+			target_tz = TimeZone.getTimeZone(Tool.converTimeZoneId(eftime
 					.getTimezone()));
 		}
 		boolean same_tz = current_tz.hasSameRules(target_tz);
@@ -171,7 +158,7 @@ public class CrossTime extends Entity {
 			sb.append(mOrigin);
 			if (!same_tz) {
 				if (!TextUtils.isEmpty(eftime.getTimezone())) {
-					appendSpaceWhenNeeded(sb);
+					Tool.appendSpaceWhenNeeded(sb);
 					sb.append(eftime.getTimezone());
 				}
 			}
@@ -215,16 +202,16 @@ public class CrossTime extends Entity {
 				e.printStackTrace();
 			}
 
-			appendSpaceWhenNeeded(sb);
+			Tool.appendSpaceWhenNeeded(sb);
 			// Time_word
 			if (hasTimeWord) {
 				sb.append(eftime.getTimeWord());
 			}
-			appendSpaceWhenNeeded(sb);
+			Tool.appendSpaceWhenNeeded(sb);
 			if (hasTimeWord && hasTime) {
 				sb.append("at");
 			}
-			appendSpaceWhenNeeded(sb);
+			Tool.appendSpaceWhenNeeded(sb);
 			// Time
 			if (hasTime) {
 				// handle the date format
@@ -233,7 +220,7 @@ public class CrossTime extends Entity {
 				dfFormator.setTimeZone(then_in_here.getTimeZone());
 				sb.append(dfFormator.format(then_in_here.getTime()));
 			}
-			appendSpaceWhenNeeded(sb);
+			Tool.appendSpaceWhenNeeded(sb);
 			// timezone
 			if (!same_tz) {
 				if (hasTime) {
@@ -244,16 +231,16 @@ public class CrossTime extends Entity {
 					sb.append(eftime.getTimezone());
 				}
 			}
-			appendSpaceWhenNeeded(sb);
+			Tool.appendSpaceWhenNeeded(sb);
 			// Date_word
 			if (hasDateWord) {
 				sb.append(eftime.getDateWord());
 			}
-			appendSpaceWhenNeeded(sb);
+			Tool.appendSpaceWhenNeeded(sb);
 			if (sb.length() > 0 && hasDate) {
 				sb.append("on");
 			}
-			appendSpaceWhenNeeded(sb);
+			Tool.appendSpaceWhenNeeded(sb);
 			// Date
 			if (hasDate) {
 				// handle the date format
@@ -272,12 +259,6 @@ public class CrossTime extends Entity {
 			}
 		}
 		return sb.toString().trim();
-	}
-
-	public void appendSpaceWhenNeeded(StringBuilder sb) {
-		if (sb.length() > 0 && sb.charAt(sb.length() - 1) != ' ') {
-			sb.append(" ");
-		}
 	}
 	
 	public void saveToDao(DatabaseHelper dbhelper){

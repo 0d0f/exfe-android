@@ -3,7 +3,6 @@ package com.exfe.android.model;
 import java.lang.ref.WeakReference;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -24,7 +23,11 @@ import com.exfe.android.model.entity.EntityFactory;
 import com.exfe.android.model.entity.Exfee;
 import com.exfe.android.model.entity.Post;
 import com.exfe.android.model.entity.Response;
+import com.j256.ormlite.dao.CloseableIterator;
+import com.j256.ormlite.dao.CloseableWrappedIterable;
 import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.stmt.PreparedQuery;
+import com.j256.ormlite.stmt.QueryBuilder;
 
 public class ConversationModel {
 
@@ -44,31 +47,43 @@ public class ConversationModel {
 	}
 
 	public boolean hasConversation(long exfee_id) {
-		List<Post> posts = null;
+		long count = 0;
 		try {
-			HashMap<String, Object> where = new HashMap<String, Object>();
-			where.put(Post.POSTABLE_TYPE_FIELD_NAME, Post.POSTABLE_TYPE_EXFEE);
-			where.put(Post.POSTABLE_ID_FIELD_NAME, exfee_id);
-			posts = getDao().queryForFieldValues(where);
+			QueryBuilder<Post, Long> queryBuilder = getDao().queryBuilder();
+			queryBuilder
+					.where()
+					.eq(Post.POSTABLE_TYPE_FIELD_NAME, Post.POSTABLE_TYPE_EXFEE)
+					.and().eq(Post.POSTABLE_ID_FIELD_NAME, exfee_id);
+			PreparedQuery<Post> preparedQuery = queryBuilder.prepare();
+			count = getDao().countOf(preparedQuery);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return posts != null && !posts.isEmpty();
+		return count > 0;
 	}
 
 	public List<Post> getConversationByExfee(Exfee exfee) {
-		List<Post> posts = null;
+		List<Post> posts = new ArrayList<Post>();
 		try {
-			HashMap<String, Object> where = new HashMap<String, Object>();
-			where.put(Post.POSTABLE_TYPE_FIELD_NAME, Post.POSTABLE_TYPE_EXFEE);
-			where.put(Post.POSTABLE_ID_FIELD_NAME, exfee.getId());
-			posts = getDao().queryForFieldValues(where);
-			for (Post p : posts) {
-				p.loadFromDao(mRoot.getHelper());
+			QueryBuilder<Post, Long> queryBuilder = getDao().queryBuilder();
+			queryBuilder
+					.where()
+					.eq(Post.POSTABLE_TYPE_FIELD_NAME, Post.POSTABLE_TYPE_EXFEE)
+					.and().eq(Post.POSTABLE_ID_FIELD_NAME, exfee.getId());
+			PreparedQuery<Post> preparedQuery = queryBuilder.prepare();
+			CloseableWrappedIterable<Post> wrappedIterable = getDao()
+					.getWrappedIterable(preparedQuery);
+			try {
+				for (Post p : wrappedIterable) {
+					p.loadFromDao(mRoot.getHelper());
+					posts.add(p);
+				}
+			} finally {
+				wrappedIterable.close();
 			}
+
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return posts;

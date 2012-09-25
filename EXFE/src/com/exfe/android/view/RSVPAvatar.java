@@ -1,15 +1,10 @@
 package com.exfe.android.view;
 
-import com.exfe.android.R;
-
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.util.AttributeSet;
 import android.widget.CompoundButton;
-import android.widget.FrameLayout;
-import android.widget.TextView;
 
 public class RSVPAvatar extends CompoundButton {
 

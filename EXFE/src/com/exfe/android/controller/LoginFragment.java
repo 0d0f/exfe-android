@@ -217,7 +217,7 @@ public class LoginFragment extends Fragment implements Observer {
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			getLoaderManager().initLoader(QUERY_ID_PROFILE, null,
-					queryLoaderHandler);
+					mQueryLoaderHandler);
 		} else {
 			// TODO: should handle version related code in a nice way.
 			String defAccount = null;
@@ -256,7 +256,7 @@ public class LoginFragment extends Fragment implements Observer {
 		}
 	};
 
-	LoaderManager.LoaderCallbacks<Cursor> queryLoaderHandler = new LoaderManager.LoaderCallbacks<Cursor>() {
+	LoaderManager.LoaderCallbacks<Cursor> mQueryLoaderHandler = new LoaderManager.LoaderCallbacks<Cursor>() {
 		final String[] PROJECTION = {
 				ContactsContract.CommonDataKinds.Email.ADDRESS,
 				ContactsContract.CommonDataKinds.Email.IS_PRIMARY,

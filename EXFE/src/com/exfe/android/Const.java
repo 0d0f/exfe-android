@@ -11,7 +11,7 @@ import android.text.TextUtils;
 
 public class Const {
 
-	public static final boolean override_domain = BuildConfig.DEBUG;
+	public static final boolean override_domain = false; //BuildConfig.DEBUG;
 
 	public static final String FLURRY_APP_ID = "4B9VJPB4DC7VPTTCS3G6";
 	public static final String PUSH_PROJECT_ID = override_domain ? "313001677673"

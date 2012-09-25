@@ -37,6 +37,8 @@
     <string name="please_input_your_name">Please input your name.</string>
     <string name="add_comments">Add comments</string>
     <string name="sign_in">Sign In</string>
+    <string name="sometime">Sometime</string>
+    <string name="somewhere">Somewhere</string>
 
     <!-- function string -->
     <string name="app_name">EXFE</string>

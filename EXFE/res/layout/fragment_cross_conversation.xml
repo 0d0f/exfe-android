@@ -103,7 +103,11 @@
             android:id="@+id/x_add_post"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/send" />
+            android:text="@string/send"
+            android:background="@drawable/btn_blue_round_bg"
+            android:textColor="@color/gray_7"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp" />
     </LinearLayout>
 
 </LinearLayout>

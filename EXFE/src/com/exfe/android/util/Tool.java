@@ -5,7 +5,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.json.JSONObject;
@@ -29,6 +31,8 @@ public class Tool {
 	private static final String TAG = Tool.class.getSimpleName();
 
 	private static Pattern PatternJSON = Pattern.compile("^\\{.*\\}*$");
+	private static Pattern ZonePattern = Pattern
+			.compile("[\\+\\-]\\d\\d:\\d\\d");
 
 	public static boolean isJson(String str) {
 		if (TextUtils.isEmpty(str)) {
@@ -405,8 +409,8 @@ public class Tool {
 
 	public static Bitmap getRoundedCornerBitmap(Bitmap input,
 			float cornerRadius, int w, int h) {
-		return getRoundedCornerBitmap(input, cornerRadius, w, h, false, false, false,
-				false);
+		return getRoundedCornerBitmap(input, cornerRadius, w, h, false, false,
+				false, false);
 	}
 
 	/**
@@ -490,4 +494,32 @@ public class Tool {
 		text.setSpan(style, 0, pos, 0);
 		return text;
 	}
+
+	public static String converTimeZoneId(String three_letters) {
+		String tz_str = three_letters;
+		if (tz_str == null) {
+			tz_str = "";
+		}
+
+		Matcher m = ZonePattern.matcher(tz_str);
+		if (m.find()) {
+			return "GMT".concat(m.group().trim());
+		}
+		return "UTC";
+	}
+
+	public static void appendSpaceWhenNeeded(StringBuilder sb) {
+		if (sb.length() > 0 && sb.charAt(sb.length() - 1) != ' ') {
+			sb.append(" ");
+		}
+	}
+
+	public static boolean isSameWithLocalZone(String zone_string) {
+		TimeZone tz = TimeZone.getDefault();
+		int local_offset = tz.getOffset(System.currentTimeMillis());
+		TimeZone target = TimeZone.getTimeZone(converTimeZoneId(zone_string));
+		int target_offset = target.getRawOffset();
+		return local_offset / (60 * 1000) == target_offset / (60 * 1000);
+	}
+
 }

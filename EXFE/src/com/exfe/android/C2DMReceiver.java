@@ -108,10 +108,22 @@ public class C2DMReceiver extends BroadcastReceiver {
 		}
 	}
 
-	private void handleData(Context context, Intent intent) {
+	private void handleData(Context context, Intent data) {
 		String app_name = (String) context.getText(R.string.app_name);
-		String message = intent.getStringExtra("message");// text
-		String cross_id = intent.getStringExtra("cid");
+		/**intent field:
+		 * text: message to display
+		 * sound
+		 * badge
+		 * cid: cross id
+		 * t: type, ciur
+		 * 	c: conversation
+		 *  i: invite to a new cross
+		 *  u: update
+		 *  r: remove a user from exfee
+		 */  
+		String message = data.getStringExtra("text");
+		String cross_id = data.getStringExtra("cid");
+		
 		long cid = 0L;
 		if (cross_id != null) {
 			cid = Long.parseLong(cross_id);
@@ -121,16 +133,22 @@ public class C2DMReceiver extends BroadcastReceiver {
 		// notification is clicked
 		Intent notifyIntent = null;
 		if (cid > 0) {
-			String type = intent.getStringExtra("t"); // ciur
+			String type = data.getStringExtra("t"); // ciur
 			if (type.equals("c")) {
 				notifyIntent = new Intent(context, CrossDetailActivity.class);
 				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_ID, cid);
 				notifyIntent
 						.putExtra(CrossDetailActivity.FIELD_CROSS_SIDE, false);
-			} else {
+				// need refresh conversation
+			}if (type.equals("r")) {
+				// no access to the cross
+				// need refresh cross list
+			}
+			else {
 				notifyIntent = new Intent(context, CrossDetailActivity.class);
 				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_ID, cid);
 				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_SIDE, true);
+				// need refresh cross detail
 			}
 		}
 

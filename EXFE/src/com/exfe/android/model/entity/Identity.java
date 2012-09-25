@@ -1,13 +1,10 @@
 package com.exfe.android.model.entity;
 
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.Date;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import android.text.TextUtils;
 
 import com.exfe.android.Const;
 import com.exfe.android.db.DatabaseHelper;

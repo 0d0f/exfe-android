@@ -12,7 +12,6 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
@@ -54,10 +53,7 @@ import com.exfe.android.model.entity.Identity;
 import com.exfe.android.model.entity.Provider;
 import com.exfe.android.model.entity.Response;
 import com.exfe.android.model.entity.User;
-import com.exfe.android.util.ImageCache;
-import com.exfe.android.util.Tool;
 import com.exfe.android.view.SeperatedBaseAdapter;
-import com.flurry.android.FlurryAgent;
 
 public class ProfileActivity extends Activity implements Observer {
 
@@ -316,8 +312,6 @@ public class ProfileActivity extends Activity implements Observer {
 		if (user != null) {
 			// set avatar
 			String avatar_file_name = user.getAvatarFilename();
-			boolean flag = false;
-
 			if (!TextUtils.isEmpty(avatar_file_name)) {
 				mImageWorker.loadImage(avatar_file_name, mAvatar);
 			}
