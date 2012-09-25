@@ -206,7 +206,7 @@ public class LoginFragment extends Fragment implements Observer {
 		if (v != null) {
 			ivAvatar = (ImageView) v;
 		}
-		
+
 		v = view.findViewById(R.id.indicator_indentity_avatar);
 		if (v != null) {
 			pbAvatar = (ProgressBar) v;
@@ -232,11 +232,18 @@ public class LoginFragment extends Fragment implements Observer {
 					etIdentity.setText(defAccount);
 					etIdentity.setSelection(defAccount.length());
 					etIdentity.setOnFocusChangeListener(focusChangeListener);
-					etIdentity.requestFocus();
+
 				}
 			}
 		}
 
+		if (etIdentity != null) {
+			etIdentity.requestFocus();
+			InputMethodManager imm = (InputMethodManager) etIdentity
+					.getContext()
+					.getSystemService(Context.INPUT_METHOD_SERVICE);
+			imm.showSoftInput(etIdentity, InputMethodManager.SHOW_IMPLICIT);
+		}
 	}
 
 	View.OnFocusChangeListener focusChangeListener = new View.OnFocusChangeListener() {
@@ -312,11 +319,11 @@ public class LoginFragment extends Fragment implements Observer {
 					etIdentity.setSelection(defAccount.length());
 					etIdentity.setOnFocusChangeListener(focusChangeListener);
 					etIdentity.requestFocus();
-					// InputMethodManager imm = (InputMethodManager) etIdentity
-					// .getContext().getSystemService(
-					// Context.INPUT_METHOD_SERVICE);
-					// imm.showSoftInput(etIdentity,
-					// InputMethodManager.SHOW_IMPLICIT);
+					InputMethodManager imm = (InputMethodManager) etIdentity
+							.getContext().getSystemService(
+									Context.INPUT_METHOD_SERVICE);
+					imm.showSoftInput(etIdentity,
+							InputMethodManager.SHOW_IMPLICIT);
 				}
 			}
 
@@ -699,21 +706,24 @@ public class LoginFragment extends Fragment implements Observer {
 						mModel.Me().setToken(token);
 						mModel.Me().setUserId(user_id);
 						mModel.Me().setExternalId(external_id);
-						
+
 						mModel.Me().fetchProfile();
 
 						((Activity) getActivity()).registGCM();
 
 						if (mCallBack != null) {
-							mModel.mHandler.post(new Runnable(){
+							mModel.mHandler.post(new Runnable() {
 
 								@Override
 								public void run() {
 									Bundle param = new Bundle();
-									param.putInt(LandingActivity.FIELD_ACTION,
+									param.putInt(
+											LandingActivity.FIELD_ACTION,
 											LandingActivity.ACTIVITY_RESULT_CROSS);
-									mCallBack.onSwitch(LoginFragment.this, param);
-								}});
+									mCallBack.onSwitch(LoginFragment.this,
+											param);
+								}
+							});
 						}
 						break;
 					case HttpStatus.SC_FORBIDDEN:

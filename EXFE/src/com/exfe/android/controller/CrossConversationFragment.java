@@ -1,20 +1,16 @@
 package com.exfe.android.controller;
 
-import java.util.ArrayList;
+import java.sql.SQLException;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
 import org.apache.http.HttpStatus;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
@@ -34,7 +30,6 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AbsListView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -54,12 +49,14 @@ import com.exfe.android.model.ConversationModel;
 import com.exfe.android.model.Model;
 import com.exfe.android.model.entity.Cross;
 import com.exfe.android.model.entity.EntityFactory;
-import com.exfe.android.model.entity.Exfee;
 import com.exfe.android.model.entity.Invitation;
 import com.exfe.android.model.entity.Post;
 import com.exfe.android.model.entity.Response;
 import com.exfe.android.util.InterestingConfigChanges;
 import com.exfe.android.util.Tool;
+import com.exfe.android.view.IteratorAdapter;
+import com.j256.ormlite.dao.CloseableIterator;
+import com.j256.ormlite.stmt.QueryBuilder;
 
 public class CrossConversationFragment extends ListFragment implements Observer {
 	protected final String TAG = getClass().getSimpleName();
@@ -87,7 +84,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		mAnimOut.setDuration(500);
 	}
 
-	private ConversationAdpater mAdapter = null;
+	private ConversationIteratorAdpater mAdapter = null;
 
 	private ImageWorker mImageWorker = null;
 
@@ -157,8 +154,9 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		setHasOptionsMenu(true);
 
 		// Create an empty adapter we will use to display the loaded data.
-		mAdapter = new ConversationAdpater(getActivity(),
-				R.layout.listitem_conversation, new ArrayList<Post>());
+		mAdapter = new ConversationIteratorAdpater(getActivity(),
+				R.layout.listitem_conversation, null);
+
 		setListAdapter(mAdapter);
 		getListView().setOnScrollListener(listScrollerListener);
 
@@ -209,6 +207,22 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		if (v != null) {
 			mScrollTopTime = v;
 		}
+	}
+
+	@Override
+	public void onStart() {
+		// TODO Auto-generated method stub
+		super.onStart();
+
+		if (mCross != null) {
+			mModel.Conversations().refreshPosts(mCross);
+		}
+	}
+
+	@Override
+	public void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
 	}
 
 	/*
@@ -291,6 +305,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 	AbsListView.OnScrollListener listScrollerListener = new AbsListView.OnScrollListener() {
 
 		int lastIndex = -1;
+		boolean allShown = true;
 
 		@Override
 		public void onScroll(AbsListView view, int firstVisibleItem,
@@ -298,6 +313,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 
 			if (mScrollTopTime != null) {
 				if (visibleItemCount > 0 && firstVisibleItem != lastIndex) {
+					allShown = visibleItemCount == totalItemCount;
 					lastIndex = firstVisibleItem;
 					Post post = (Post) view.getAdapter().getItem(
 							firstVisibleItem);
@@ -331,34 +347,45 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		public void onScrollStateChanged(AbsListView view, int scrollState) {
 
 			Log.d(TAG, "scroll: %d", scrollState);
-			if (scrollState != SCROLL_STATE_IDLE) {
+			if (scrollState != SCROLL_STATE_IDLE && !allShown) {
 				showForSeconds(mScrollTopTime, 1);
 			}
 		}
 	};
 
-	LoaderManager.LoaderCallbacks<List<Post>> mQueryLoaderHandler = new LoaderManager.LoaderCallbacks<List<Post>>() {
+	LoaderManager.LoaderCallbacks<CloseableIterator<Post>> mQueryLoaderHandler = new LoaderManager.LoaderCallbacks<CloseableIterator<Post>>() {
 
 		@Override
-		public Loader<List<Post>> onCreateLoader(int id, Bundle args) {
+		public Loader<CloseableIterator<Post>> onCreateLoader(int id,
+				Bundle args) {
 			switch (id) {
 			case LOADER_QUERY_LOCAL:
-				return new ConversationLoader(getActivity(), mModel, mCross,
-						args);
-			case LOADER_QUERY_NETWORK:
-				return new ConversationLoader(getActivity(), mModel, mCross,
-						args);
+				QueryBuilder<Post, Long> qb = getModel().getHelper()
+						.getPostDao().queryBuilder();
+				try {
+					qb.orderBy("created_at", true);
+					qb.where()
+							.eq(Post.POSTABLE_TYPE_FIELD_NAME,
+									Post.POSTABLE_TYPE_EXFEE)
+							.and()
+							.eq(Post.POSTABLE_ID_FIELD_NAME,
+									mCross.getExfee().getId());
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				return new OrmLiteCursorLoader(getActivity(), getModel(), qb,
+						null);
+			default:
+				return null;
 			}
-			return null;
 		}
 
 		@Override
-		public void onLoadFinished(Loader<List<Post>> loader, List<Post> data) {
-
-			mModel.Conversations().addConversation(data);
-
-			// Set the new data in the adapter.
-			showConversation(data);
+		public void onLoadFinished(Loader<CloseableIterator<Post>> loader,
+				CloseableIterator<Post> data) {
+			mAdapter.changeIterator(data);
 
 			// The list should now be shown.
 			if (isResumed()) {
@@ -369,8 +396,8 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		}
 
 		@Override
-		public void onLoaderReset(Loader<List<Post>> loader) {
-			mAdapter.clear();
+		public void onLoaderReset(Loader<CloseableIterator<Post>> loader) {
+			mAdapter.changeIterator(null);
 		}
 	};
 
@@ -390,39 +417,24 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 
 				@Override
 				public void run() {
-					showConversation(mModel.Conversations()
-							.getFullConversationByExfee(mCross.getExfee()));
+					getLoaderManager().restartLoader(LOADER_QUERY_LOCAL, null,
+							mQueryLoaderHandler);
 				}
 			});
 
 			break;
 		case ConversationModel.ACTION_TYPE_NEW_CONVERSATION:
-			mModel.mHandler.post(new Runnable() {
+			if (bundle.getLong("exfee_id") == mCross.getExfee().getId()) {
+				mModel.mHandler.post(new Runnable() {
 
-				@Override
-				public void run() {
-					if (bundle.getLong("exfee_id") == mCross.getExfee().getId()) {
-						showConversation(mModel.Conversations()
-								.getFullConversationByExfee(mCross.getExfee()));
+					@Override
+					public void run() {
+						getLoaderManager().restartLoader(LOADER_QUERY_LOCAL,
+								null, mQueryLoaderHandler);
+
 					}
-				}
-			});
-		}
-	}
-
-	protected void showConversation(List<Post> posts) {
-		try {
-			mAdapter.setNotifyOnChange(false);
-			mAdapter.clear();
-			if (posts != null) {
-				Collections.sort(posts, Post.sCreateTimeComparator);
-				for (Post p : posts) {
-					mAdapter.add(p);
-				}
+				});
 			}
-		} finally {
-			mAdapter.setNotifyOnChange(true);
-			mAdapter.notifyDataSetChanged();
 		}
 	}
 
@@ -582,55 +594,64 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		th.start();
 	}
 
-	public class ConversationAdpater extends ArrayAdapter<Post> {
-
+	public class ConversationIteratorAdpater extends IteratorAdapter<Post> {
 		private int mResource;
 		@SuppressWarnings("unused")
 		private int mDropDownResource;
 		private LayoutInflater mInflater;
+		private Model mModel;
 
-		public ConversationAdpater(Context context, int resource,
-				List<Post> objects) {
-			super(context, resource, objects);
+		public ConversationIteratorAdpater(Context context, int resource,
+				CloseableIterator<Post> iterator) {
+			super(context, iterator, true);
+			init(context, resource);
+		}
+
+		public ConversationIteratorAdpater(Context context, int resource,
+				CloseableIterator<Post> iterator, boolean autoRequery) {
+			super(context, iterator, autoRequery);
 			init(context, resource);
 		}
 
 		private void init(Context context, int resource) {
+			mModel = ((Application) context.getApplicationContext()).getModel();
 			mInflater = (LayoutInflater) context
 					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			mResource = resource;
 			mDropDownResource = resource;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.widget.ArrayAdapter#getView(int, android.view.View,
-		 * android.view.ViewGroup)
-		 */
 		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			return createViewFromResource(position, convertView, parent,
-					mResource);
+		protected long getCursorId() {
+			try {
+				Post p = mIterator.current();
+				return p.getId();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return 0;
 		}
 
-		private View createViewFromResource(int position, View convertView,
-				ViewGroup parent, int resource) {
-			View view = null;
-			SparseArray<View> holder = null;
-			if (convertView == null) {
-				view = mInflater.inflate(resource, parent, false);
+		@Override
+		public View newView(Context context, CloseableIterator<Post> cursor,
+				ViewGroup parent) {
+			View view = mInflater.inflate(mResource, parent, false);
+			SparseArray<View> holder = creatViewHolder(view);
+			view.setTag(holder);
+			return view;
+		}
+
+		@Override
+		public void bindView(View view, Context context,
+				CloseableIterator<Post> iterator) {
+			SparseArray<View> holder;
+			Object obj = view.getTag();
+			if (obj == null) {
 				holder = creatViewHolder(view);
 				view.setTag(holder);
 			} else {
-				view = convertView;
-				Object obj = view.getTag();
-				if (obj == null) {
-					holder = creatViewHolder(view);
-					view.setTag(holder);
-				} else {
-					holder = (SparseArray<View>) obj;
-				}
+				holder = (SparseArray<View>) obj;
 			}
 
 			ImageView avatar = (ImageView) holder.get(R.id.post_avatar);
@@ -643,7 +664,14 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 			@SuppressWarnings("unused")
 			View root = holder.get(R.id.list_post_root);
 
-			Post p = getItem(position);
+			Post p;
+			try {
+				p = iterator.current();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+				return;
+			}
+			p.loadFromDao(mModel.getHelper());
 
 			boolean flag = false;
 			if (!TextUtils.isEmpty(p.getByIdentitiy().getAvatarFilename())) {
@@ -694,7 +722,6 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 					wait.setVisibility(View.GONE);
 				}
 			}
-			return view;
 		}
 
 		private SparseArray<View> creatViewHolder(View view) {
@@ -715,91 +742,41 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 			return holder;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.widget.ArrayAdapter#getItemId(int)
-		 */
-		@Override
-		public long getItemId(int position) {
-			return getItem(position).getId();
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see android.widget.BaseAdapter#hasStableIds()
-		 */
-		@Override
-		public boolean hasStableIds() {
-			// TODO Auto-generated method stub
-			return true;
-		}
-
 	}
 
-	public static class ConversationLoader extends AsyncTaskLoader<List<Post>> {
+	public static class OrmLiteCursorLoader extends
+			AsyncTaskLoader<CloseableIterator<Post>> {
+
 		final InterestingConfigChanges mLastConfig = new InterestingConfigChanges();
 		final Bundle mParam;
 		final private Model mModel;
-		final private Cross mCross;
-		List<Post> mPosts;
+		QueryBuilder<Post, Long> mQb;
+		CloseableIterator<Post> mIterator;
 
-		public ConversationLoader(Context context, Model model, Cross cross,
-				Bundle bundle) {
+		public OrmLiteCursorLoader(Context context, Model model,
+				QueryBuilder<Post, Long> qb, Bundle bundle) {
 			super(context);
 			mModel = model;
-			mCross = cross;
 			mParam = bundle;
-			setUpdateThrottle(300);
+			mQb = qb;
+			setUpdateThrottle(500);
 		}
 
-		/**
-		 * This is where the bulk of our work is done. This function is called
-		 * in a background thread and should generate a new set of data to be
-		 * published by the loader.
-		 */
 		@Override
-		public List<Post> loadInBackground() {
-			Exfee exfee = mCross.getExfee();
-			Response result = mModel.getServer().getConversation(exfee.getId());
+		public CloseableIterator<Post> loadInBackground() {
+			CloseableIterator<Post> iterator = null;
+			try {
+				// when you are done, prepare your query and build an iterator
+				iterator = mModel.getHelper().getPostDao()
+						.iterator(mQb.prepare());
 
-			int code = result.getCode();
-			@SuppressWarnings("unused")
-			int http_category = code % 100;
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
 
-			switch (code) {
-			case HttpStatus.SC_OK:
-				List<Post> posts = new ArrayList<Post>();
-				JSONObject res = result.getResponse();
-				JSONArray array = res.optJSONArray("conversation");
-				if (array != null) {
-					for (int i = 0; i < array.length(); i++) {
-						JSONObject json = array.optJSONObject(i);
-						if (json != null) {
-							Post p = (Post) EntityFactory.create(json);
-							posts.add(p);
-						}
-					}
-				}
-				mCross.setConversationCount(0);
-				mModel.Crosses().saveCross(mCross);
-				// Sort the list.
-				// Collections.sort(entries, ALPHA_COMPARATOR);
-
-				return posts;
-				// break;
-			case HttpStatus.SC_UNAUTHORIZED:
-				// ((Activity) getActivity()).signOut();
-				break;
-			case HttpStatus.SC_INTERNAL_SERVER_ERROR:
-				// retry
-				break;
-			default:
-				break;
 			}
-
-			return null;
+			return iterator;
 		}
 
 		/**
@@ -808,29 +785,29 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		 * adds a little more logic.
 		 */
 		@Override
-		public void deliverResult(List<Post> posts) {
+		public void deliverResult(CloseableIterator<Post> iterator) {
 			if (isReset()) {
 				// An async query came in while the loader is stopped. We
 				// don't need the result.
-				if (posts != null) {
-					onReleaseResources(posts);
+				if (iterator != null) {
+					onReleaseResources(iterator);
 				}
 			}
 
-			List<Post> oldPosts = mPosts;
-			mPosts = posts;
+			CloseableIterator<Post> oldIterator = mIterator;
+			mIterator = iterator;
 
 			if (isStarted()) {
 				// If the Loader is currently started, we can immediately
 				// deliver its results.
-				super.deliverResult(posts);
+				super.deliverResult(iterator);
 			}
 
 			// At this point we can release the resources associated with
 			// 'oldApps' if needed; now that the new result is delivered we
 			// know that it is no longer in use.
-			if (oldPosts != null) {
-				onReleaseResources(oldPosts);
+			if (oldIterator != null && oldIterator != iterator) {
+				onReleaseResources(oldIterator);
 			}
 		}
 
@@ -839,10 +816,10 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		 */
 		@Override
 		protected void onStartLoading() {
-			if (mPosts != null) {
+			if (mIterator != null) {
 				// If we currently have a result available, deliver it
 				// immediately.
-				deliverResult(mPosts);
+				deliverResult(mIterator);
 			}
 
 			// Has something interesting in the configuration changed since we
@@ -850,7 +827,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 			boolean configChange = mLastConfig.applyNewConfig(getContext()
 					.getResources());
 
-			if (takeContentChanged() || mPosts == null || configChange) {
+			if (takeContentChanged() || mIterator == null || configChange) {
 				// If the data has changed since the last time it was loaded
 				// or is not currently available, start a load.
 				forceLoad();
@@ -870,12 +847,12 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		 * Handles a request to cancel a load.
 		 */
 		@Override
-		public void onCanceled(List<Post> apps) {
-			super.onCanceled(apps);
+		public void onCanceled(CloseableIterator<Post> cursor) {
+			super.onCanceled(cursor);
 
 			// At this point we can release the resources associated with 'apps'
 			// if needed.
-			onReleaseResources(apps);
+			onReleaseResources(cursor);
 		}
 
 		/**
@@ -890,9 +867,9 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 
 			// At this point we can release the resources associated with 'apps'
 			// if needed.
-			if (mPosts != null) {
-				onReleaseResources(mPosts);
-				mPosts = null;
+			if (mIterator != null) {
+				onReleaseResources(mIterator);
+				mIterator = null;
 			}
 		}
 
@@ -900,9 +877,19 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		 * Helper function to take care of releasing resources associated with
 		 * an actively loaded data set.
 		 */
-		protected void onReleaseResources(List<Post> apps) {
+		protected void onReleaseResources(CloseableIterator<?> iterator) {
 			// For a simple List<> there is nothing to do. For something
 			// like a Cursor, we would close it here.
+			try {
+				if (iterator != null) {
+					iterator.close();
+				}
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+
 	}
+
 }

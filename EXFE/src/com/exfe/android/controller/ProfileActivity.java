@@ -59,7 +59,7 @@ public class ProfileActivity extends Activity implements Observer {
 
 	private User mMe = null;
 	private ImageWorker mImageWorker = null;
-	
+
 	private ImageView mAvatar = null;
 	private TextView mName = null;
 	private EditText mNameInput = null;
@@ -124,7 +124,7 @@ public class ProfileActivity extends Activity implements Observer {
 		super.onCreate(savedInstanceState);
 		mModel.addObserver(this);
 		setContentView(R.layout.activity_profile);
-		
+
 		mImageWorker = new ImageFetcher(mModel.getAppContext(), getResources()
 				.getDimensionPixelSize(R.dimen.small_avatar_width),
 				getResources().getDimensionPixelSize(
@@ -428,8 +428,15 @@ public class ProfileActivity extends Activity implements Observer {
 			switch (type) {
 			case MeModel.ACTION_TYPE_UPDATE_MY_PROFILE:
 				mMe = mModel.Me().getProfile();
-				loadUser(mMe);
-				loadIdentities(mMe);
+				mModel.mHandler.post(new Runnable() {
+
+					@Override
+					public void run() {
+						loadUser(mMe);
+						loadIdentities(mMe);
+					}
+				});
+
 				break;
 			}
 		}
@@ -510,11 +517,19 @@ public class ProfileActivity extends Activity implements Observer {
 			}
 
 			if (main != null) {
-				main.setText(id.getExternalUsername());
+				if (Provider.TWITTER == Provider.getValue(id.getProvider())) {
+					main.setText(id.getName());
+				} else {
+					main.setText(id.getExternalUsername());
+				}
 			}
 
 			if (alt != null) {
-				alt.setText(id.getExternalId());
+				if (Provider.TWITTER == Provider.getValue(id.getProvider())) {
+					alt.setText("@" + id.getExternalUsername());
+				} else {
+					alt.setText(id.getExternalId());
+				}
 			}
 
 			if (icon_type != null) {

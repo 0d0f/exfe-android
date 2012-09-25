@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.http.HttpStatus;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import android.app.Notification;
@@ -18,6 +19,7 @@ import android.os.Bundle;
 
 import com.exfe.android.R;
 import com.exfe.android.controller.CrossDetailActivity;
+import com.exfe.android.model.entity.Cross;
 import com.exfe.android.model.entity.Entity;
 import com.exfe.android.model.entity.EntityFactory;
 import com.exfe.android.model.entity.Exfee;
@@ -177,6 +179,59 @@ public class ConversationModel {
 		List<Post> posts = getConversationByExfee(exfee);
 		posts.addAll(getPendingPosts(exfee));
 		return posts;
+	}
+	
+	public void refreshPosts(final Cross x) {
+		if (x == null || x.getExfee() == null){
+			return;
+		}
+		
+		Runnable run = new Runnable() {
+
+			@Override
+			public void run() {
+				Response result = mRoot.getServer().getConversation(
+						x.getExfee().getId());
+
+				int code = result.getCode();
+				@SuppressWarnings("unused")
+				int http_category = code % 100;
+
+				switch (code) {
+				case HttpStatus.SC_OK:
+					x.setConversationCount(0);
+					mRoot.Crosses().saveCross(x);
+
+					List<Post> posts = new ArrayList<Post>();
+					JSONObject res = result.getResponse();
+					JSONArray array = res.optJSONArray("conversation");
+					if (array != null) {
+						for (int i = 0; i < array.length(); i++) {
+							JSONObject json = array.optJSONObject(i);
+							if (json != null) {
+								Post p = (Post) EntityFactory.create(json);
+								posts.add(p);
+							}
+						}
+					}
+					addConversation(posts);
+
+					break;
+				case HttpStatus.SC_UNAUTHORIZED:
+					// ((Activity) getActivity()).signOut();
+					break;
+				case HttpStatus.SC_INTERNAL_SERVER_ERROR:
+					// retry
+					break;
+				default:
+					break;
+				}
+			}
+		};
+
+		Thread th = new Thread(run);
+		th.start();
+
 	}
 
 	public void addPostToPendingList(Post post) {

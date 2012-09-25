@@ -376,7 +376,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 			ImageView iv = (ImageView) vg.findViewById(R.id.x_exfer_icon);
 			mImageWorker.loadImage(idet.getAvatarFilename(), iv);
 			if (status != Rsvp.ACCEPTED) {
-				iv.setAlpha(180);
+				iv.setAlpha(96);
 			} else {
 				iv.setAlpha(255);
 			}
