@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/list_cross_root"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/list_card_height" >
+
+    <LinearLayout
+        android:id="@+id/list_cross_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/cell_content"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/cross_title"
+            android:layout_width="match_parent"
+            android:layout_height="33dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/cell_title"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:hint="@string/text_hint_title"
+            android:padding="@dimen/base_small_margin"
+            android:singleLine="true"
+            android:text="@string/gather_a_cross"
+            android:textColor="@color/gray_69"
+            android:textSize="@dimen/list_main_text_size" />
+
+        <TextView
+            android:id="@+id/cross_detail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:paddingRight="@dimen/base_small_margin"
+            android:paddingTop="@dimen/base_small_margin"
+            android:shadowColor="@color/white"
+            android:shadowDy="2"
+            android:shadowRadius="1"
+            android:text="@string/please_go_to_exfe_to_gather"
+            android:textColor="@color/gray_5"
+            android:textSize="@dimen/list_alternative_text_size" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/abc"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/card_mask"
+        android:clickable="false" />
+
+</FrameLayout>

@@ -11,10 +11,10 @@
         android:layout_width="@dimen/list_avatar_width"
         android:layout_height="@dimen/list_avatar_height"
         android:layout_gravity="center_vertical"
-        android:layout_marginBottom="@dimen/base_split_margin"
+        android:layout_marginBottom="@dimen/base_tiny_margin"
         android:layout_marginLeft="@dimen/base_margin"
         android:layout_marginRight="@dimen/base_margin"
-        android:layout_marginTop="@dimen/base_split_margin"
+        android:layout_marginTop="@dimen/base_tiny_margin"
         android:background="@android:color/white"
         android:contentDescription="device icon"
         android:src="@drawable/ic_launcher" />

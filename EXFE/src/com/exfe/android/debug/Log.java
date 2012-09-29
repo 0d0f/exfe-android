@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Set;
 
+import com.exfe.android.BuildConfig;
+
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -13,7 +15,8 @@ import android.os.Bundle;
 import android.os.Environment;
 
 public class Log {
-	public static boolean DEBUG = true;// BuildConfig.DEBUG;
+	public static boolean DEBUG = BuildConfig.DEBUG;
+	public static int LOG_LEVEL = DEBUG?android.util.Log.VERBOSE:android.util.Log.WARN;
 
 	public static void v(Class<?> tag, String msg, Object... args) {
 		v(tag.getSimpleName(), msg, args);
@@ -48,7 +51,7 @@ public class Log {
 
 	public static void v(String tag, Throwable tr, boolean debugOn, String msg,
 			Object... args) {
-		if (DEBUG || debugOn) {
+		if (android.util.Log.VERBOSE >= LOG_LEVEL || debugOn) {
 			if (tr != null) {
 				android.util.Log.v(tag, String.format(msg, args), tr);
 			} else {
@@ -90,7 +93,7 @@ public class Log {
 
 	public static void d(String tag, Throwable tr, boolean debugOn, String msg,
 			Object... args) {
-		if (DEBUG || debugOn) {
+		if (android.util.Log.DEBUG >= LOG_LEVEL || debugOn) {
 			if (tr != null) {
 				android.util.Log.d(tag, String.format(msg, args), tr);
 			} else {
@@ -132,7 +135,7 @@ public class Log {
 
 	public static void i(String tag, Throwable tr, boolean debugOn, String msg,
 			Object... args) {
-		if (DEBUG || debugOn) {
+		if (android.util.Log.INFO >= LOG_LEVEL || debugOn) {
 			if (tr != null) {
 				android.util.Log.i(tag, String.format(msg, args), tr);
 			} else {
@@ -174,7 +177,7 @@ public class Log {
 
 	public static void w(String tag, Throwable tr, boolean debugOn, String msg,
 			Object... args) {
-		if (DEBUG || debugOn) {
+		if (android.util.Log.WARN >= LOG_LEVEL || debugOn) {
 			if (tr != null) {
 				android.util.Log.w(tag, String.format(msg, args), tr);
 			} else {
@@ -216,11 +219,53 @@ public class Log {
 
 	public static void e(String tag, Throwable tr, boolean debugOn, String msg,
 			Object... args) {
-		if (DEBUG || debugOn) {
+		if (android.util.Log.ERROR >= LOG_LEVEL || debugOn) {
 			if (tr != null) {
 				android.util.Log.e(tag, String.format(msg, args), tr);
 			} else {
 				android.util.Log.e(tag, String.format(msg, args));
+			}
+		}
+	}
+	
+	public static void wtf(Class<?> tag, String msg, Object... args) {
+		wtf(tag.getSimpleName(), msg, args);
+	}
+
+	public static void wtf(String tag, String msg, Object... args) {
+		wtf(tag, null, false, msg, args);
+	}
+
+	public static void wtf(Class<?> tag, boolean debugOn, String msg,
+			Object... args) {
+		wtf(tag.getSimpleName(), debugOn, msg, args);
+	}
+
+	public static void wtf(String tag, boolean debugOn, String msg,
+			Object... args) {
+		wtf(tag, null, debugOn, msg, args);
+	}
+
+	public static void wtf(Class<?> tag, Throwable tr, String msg, Object... args) {
+		wtf(tag.getSimpleName(), tr, msg, args);
+	}
+
+	public static void wtf(String tag, Throwable tr, String msg, Object... args) {
+		wtf(tag, tr, false, msg, args);
+	}
+
+	public static void wtf(Class<?> tag, Throwable tr, boolean debugOn,
+			String msg, Object... args) {
+		wtf(tag.getSimpleName(), tr, debugOn, msg, args);
+	}
+
+	public static void wtf(String tag, Throwable tr, boolean debugOn, String msg,
+			Object... args) {
+		if (android.util.Log.ASSERT >= LOG_LEVEL || debugOn) {
+			if (tr != null) {
+				android.util.Log.wtf(tag, String.format(msg, args), tr);
+			} else {
+				android.util.Log.wtf(tag, String.format(msg, args));
 			}
 		}
 	}
@@ -230,7 +275,7 @@ public class Log {
 	}
 
 	public static boolean isLoggable(Class<?> tag, int level) {
-		return android.util.Log.isLoggable(tag.getSimpleName(), level);
+		return android.util.Log.isLoggable(tag.getSimpleName(), level) && level >= LOG_LEVEL ;
 	}
 
 	public static void println(int priority, Class<?> tag, String msg,
@@ -250,7 +295,7 @@ public class Log {
 
 	public static void println(int priority, String tag, boolean debugOn,
 			String msg, Object... args) {
-		if (DEBUG || debugOn)
+		if (android.util.Log.DEBUG >= LOG_LEVEL || debugOn)
 			android.util.Log.println(priority, tag, String.format(msg, args));
 	}
 
@@ -259,7 +304,7 @@ public class Log {
 	}
 
 	public static void printCursor(String tag, Cursor cursor) {
-		if (DEBUG) {
+		if (android.util.Log.DEBUG >= LOG_LEVEL) {
 			if (cursor != null) {
 				int count = cursor.getColumnCount();
 				if (count == 0) {
@@ -288,7 +333,7 @@ public class Log {
 	}
 
 	public static void print(Bundle b) {
-		if (DEBUG) {
+		if (android.util.Log.DEBUG >= LOG_LEVEL) {
 			if (b != null) {
 				Set<String> set = b.keySet();
 				if (set.size() > 0) {
@@ -310,7 +355,7 @@ public class Log {
 	}
 
 	public static void print(Intent it) {
-		if (DEBUG) {
+		if (android.util.Log.DEBUG >= LOG_LEVEL) {
 			if (it != null) {
 				android.util.Log.e("Intent Content", "TO BE IMPLEMENTED!!!!");
 			}

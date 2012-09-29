@@ -39,6 +39,8 @@
     <string name="sign_in">Sign In</string>
     <string name="sometime">Sometime</string>
     <string name="somewhere">Somewhere</string>
+    <string name="gather_a_cross">Gather a ·X·</string>
+    <string name="please_go_to_exfe_to_gather">Gathering on Android will soon to be supported, please use EXFE.com instead, sorry. </string>
 
     <!-- function string -->
     <string name="app_name">EXFE</string>

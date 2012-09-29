@@ -3,7 +3,7 @@
     package="com.exfe.android"
     android:installLocation="auto"
     android:versionCode="1"
-    android:versionName="0.68 beta" >
+    android:versionName="1.0" android:sharedUserId="com.exfe">
 
     <uses-sdk
         android:minSdkVersion="9"

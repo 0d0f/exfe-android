@@ -14,8 +14,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="34dp"
             android:background="@drawable/cell_title"
             android:orientation="horizontal"
             android:paddingLeft="@dimen/list_commom_padding"
@@ -32,6 +31,9 @@
                 android:ellipsize="end"
                 android:gravity="center_vertical"
                 android:hint="@string/text_hint_title"
+                android:shadowColor="@color/white"
+                android:shadowDy="2"
+                android:shadowRadius="1"
                 android:singleLine="true"
                 android:textColor="@color/gray_69"
                 android:textSize="@dimen/list_main_text_size" />
@@ -47,31 +49,11 @@
                 android:textSize="@dimen/list_alternative_text_size" />
         </LinearLayout>
 
-        <CheckedTextView
-            android:id="@+id/cross_place"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginLeft="@dimen/list_commom_padding"
-            android:layout_marginRight="@dimen/list_commom_padding"
-            android:layout_weight="1"
-            android:checkMark="@null"
-            android:drawableLeft="@drawable/location_icon"
-            android:drawablePadding="@dimen/base_small_margin"
-            android:ellipsize="end"
-            android:gravity="left|center_vertical"
-            android:hint="@string/somewhere"
-            android:paddingLeft="@dimen/base_small_margin"
-            android:paddingRight="@dimen/base_small_margin"
-            android:singleLine="true"
-            android:textColor="@color/gray_69"
-            android:textSize="@dimen/list_alternative_text_size" />
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginBottom="@dimen/list_commom_margin"
+            android:layout_marginTop="@dimen/base_small_margin"
             android:layout_weight="1"
-            android:orientation="horizontal"
             android:paddingLeft="@dimen/list_commom_padding"
             android:paddingRight="@dimen/list_commom_padding" >
 
@@ -89,13 +71,40 @@
 
             <CheckedTextView
                 android:id="@+id/cross_time"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_weight="1"
                 android:checkMark="@null"
                 android:ellipsize="end"
                 android:hint="@string/sometime"
+                android:singleLine="true"
+                android:textColor="@color/gray_69"
+                android:textSize="@dimen/list_alternative_text_size" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="@dimen/base_margin_shift"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/list_commom_padding"
+            android:paddingRight="@dimen/list_commom_padding" >
+
+            <CheckedTextView
+                android:id="@+id/cross_place"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/base_small_margin"
+                android:layout_weight="1"
+                android:checkMark="@null"
+                android:drawableLeft="@drawable/location_icon"
+                android:drawablePadding="@dimen/base_small_margin"
+                android:ellipsize="end"
+                android:gravity="left|center_vertical"
+                android:hint="@string/somewhere"
+                android:paddingLeft="@dimen/base_small_margin"
+                android:paddingRight="@dimen/base_small_margin"
                 android:singleLine="true"
                 android:textColor="@color/gray_69"
                 android:textSize="@dimen/list_alternative_text_size" />

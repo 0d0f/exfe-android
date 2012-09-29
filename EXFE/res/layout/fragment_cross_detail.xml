@@ -232,7 +232,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:background="@color/blue_0"
+            android:background="@drawable/toolbar_bg"
             android:orientation="horizontal"
             android:visibility="invisible" >
 
@@ -284,7 +284,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:background="@color/blue_0"
+            android:background="@drawable/toolbar_bg"
             android:orientation="horizontal"
             android:visibility="invisible" >
 
@@ -344,7 +344,7 @@
             android:layout_width="60dp"
             android:layout_height="33dp"
             android:layout_gravity="bottom|right"
-            android:background="@color/blue_0"
+            android:background="@drawable/toolbar_l"
             android:paddingTop="2dp"
             android:scaleType="center"
             android:src="@drawable/my_rsvp_button" />

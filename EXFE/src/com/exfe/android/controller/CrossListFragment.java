@@ -179,11 +179,13 @@ public class CrossListFragment extends ListFragment implements Observer {
 		// We have a menu item to show in action bar.
 		setHasOptionsMenu(true);
 
+		View emptyView = getActivity().getLayoutInflater().inflate(
+				R.layout.listitem_cross_empty, getListView(), false);
+		getListView().addFooterView(emptyView, null, false);
 		mAdapter = new CrossIteratorAdapter(getActivity(),
 				R.layout.listitem_cross, null);
 		setListAdapter(mAdapter);
 		getListView().setOnScrollListener(listScrollerListener);
-
 		// Start out with a progress indicator.
 		setListShown(false);
 
@@ -709,8 +711,12 @@ public class CrossListFragment extends ListFragment implements Observer {
 				place.setChecked(diff.contains("p"));
 			}
 			if (time != null) {
-				time.setText(x.getTime().getBeginAt()
-						.getRelativeStringFromNow(time.getResources()));
+				if (x.getTime() != null) {
+					time.setText(x.getTime().getLongLocalTimeSring("",
+							time.getResources()));
+				} else {
+					time.setText(null);
+				}
 				time.setChecked(diff.contains("m"));
 			}
 

@@ -3,10 +3,8 @@ package com.exfe.android.controller;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.TimeZone;
 
 import org.apache.http.HttpStatus;
 import org.json.JSONArray;
@@ -14,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.res.Resources;
+import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,6 +26,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -40,7 +40,6 @@ import com.exfe.android.debug.Log;
 import com.exfe.android.model.CrossesModel;
 import com.exfe.android.model.Model;
 import com.exfe.android.model.entity.Cross;
-import com.exfe.android.model.entity.CrossTime;
 import com.exfe.android.model.entity.EntityFactory;
 import com.exfe.android.model.entity.Exfee;
 import com.exfe.android.model.entity.Identity;
@@ -131,6 +130,42 @@ public class CrossDetailFragment extends Fragment implements Observer {
 		v = getActivity().findViewById(R.id.x_rsvp_action_bar);
 		if (v != null) {
 			mToolBar = (ViewGroup) v;
+
+			v.setOnClickListener(new View.OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					Log.d(TAG, "Click...");
+				}
+			});
+		}
+
+		v = getActivity().findViewById(R.id.x_widget_background);
+		if (v != null) {
+			final ImageView bgView = (ImageView) v;
+
+			int dwidth = 880;
+			int dheight = 495;
+			int vwidth = mDm.widthPixels;
+			int vheight = (int) (108 * mDm.density);
+
+			Matrix mDrawMatrix = new Matrix();
+
+			float scale;
+			float dx = 0, dy = 0;
+
+			if (dwidth * vheight > vwidth * dheight) {
+				scale = (float) vheight / (float) dheight;
+				dx = (vwidth - dwidth * scale) * 0.5f;
+			} else {
+				scale = (float) vwidth / (float) dwidth;
+				dy = (vheight - dheight * scale) * 1.0f;
+			}
+
+			mDrawMatrix.setScale(scale, scale);
+			mDrawMatrix.postTranslate(dx, dy);
+			bgView.setScaleType(ScaleType.MATRIX);
+			bgView.setImageMatrix(mDrawMatrix);
 		}
 
 		// bar me
@@ -211,26 +246,11 @@ public class CrossDetailFragment extends Fragment implements Observer {
 
 			ImageView bgView = (ImageView) getActivity().findViewById(
 					R.id.x_widget_background);
+
 			Widget w = cross.getWidgetByCategory("Background");
 			if (w.getJson() != null) {
 				String pic = w.getJson().optString("image");
 				if (!TextUtils.isEmpty(pic)) {
-					// TODO: we should handle the matrix
-					/*
-					 * if (ScaleType.CENTER_CROP == mScaleType) { mDrawMatrix =
-					 * mMatrix;
-					 * 
-					 * float scale; float dx = 0, dy = 0;
-					 * 
-					 * if (dwidth * vheight > vwidth * dheight) { scale =
-					 * (float) vheight / (float) dheight; dx = (vwidth - dwidth
-					 * * scale) * 0.5f; } else { scale = (float) vwidth /
-					 * (float) dwidth; dy = (vheight - dheight * scale) * 0.5f;
-					 * }
-					 * 
-					 * mDrawMatrix.setScale(scale, scale);
-					 * mDrawMatrix.postTranslate(dx, dy);
-					 */
 					String url = null;
 					if (pic.startsWith("http://") || pic.startsWith("https://")) {
 						url = pic;
@@ -448,6 +468,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 		int i = 0;
 		int c = mToolBar.getChildCount();
 		if (mToolBar != null) {
+
 			for (i = 0; i < c; i++) {
 				View v = mToolBar.getChildAt(i);
 				if (v.getId() == id) {
