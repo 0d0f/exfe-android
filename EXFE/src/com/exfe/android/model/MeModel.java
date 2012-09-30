@@ -174,10 +174,10 @@ public class MeModel {
 		try {
 			if (profile != null) {
 
-				User current = mRoot.Me().getProfile();
-				if (current == null || 
-						profile.getLatestModify().getTime() > 
-				current.getLatestModify().getTime()) {
+//				User current = mRoot.Me().getProfile();
+//				if (current == null || 
+//						profile.getLatestModify().getTime() > 
+//				current.getLatestModify().getTime()) {
 					profile.saveToDao(mRoot.getHelper());
 					getDao().createOrUpdate(profile);
 					setUserId(profile.getId());
@@ -187,7 +187,7 @@ public class MeModel {
 					data.putInt(Model.OBSERVER_FIELD_TYPE,
 							ACTION_TYPE_UPDATE_MY_PROFILE);
 					mRoot.notifyObservers(data);
-				}
+//				}
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block

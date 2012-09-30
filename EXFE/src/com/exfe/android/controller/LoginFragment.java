@@ -593,8 +593,14 @@ public class LoginFragment extends Fragment implements Observer {
 					|| actionId == EditorInfo.IME_ACTION_DONE
 					|| (event.getAction() == KeyEvent.ACTION_DOWN && event
 							.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
-				if (btnSignIn != null) {
-					btnSignIn.performClick();
+				if (getUiMode() == UI_MODE_SIGN_UP) {
+					if (btnSetupNew != null) {
+						btnSetupNew.performClick();
+					}
+				} else {
+					if (btnSignIn != null) {
+						btnSignIn.performClick();
+					}
 				}
 				return true;
 			}
