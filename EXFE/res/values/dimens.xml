@@ -6,7 +6,7 @@
     <dimen name="small_avatar_height">30dp</dimen>
     <dimen name="nav_btn_width">30dp</dimen>
     <dimen name="nav_btn_height">30dp</dimen>
-    <dimen name="nav_bar_height">47dp</dimen>
+    <dimen name="nav_bar_height">44dp</dimen>
     <dimen name="avatar_width">60dp</dimen>
     <dimen name="avatar_height">60dp</dimen>
     <dimen name="list_item_height">60sp</dimen>

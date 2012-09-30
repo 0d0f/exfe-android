@@ -175,8 +175,9 @@ public class MeModel {
 			if (profile != null) {
 
 				User current = mRoot.Me().getProfile();
-				if (current == null || profile.getLatestModify().getTime() > current
-						.getLatestModify().getTime()) {
+				if (current == null || 
+						profile.getLatestModify().getTime() > 
+				current.getLatestModify().getTime()) {
 					profile.saveToDao(mRoot.getHelper());
 					getDao().createOrUpdate(profile);
 					setUserId(profile.getId());

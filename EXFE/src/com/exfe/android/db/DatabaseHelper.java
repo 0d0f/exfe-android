@@ -5,8 +5,8 @@ import java.util.HashMap;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
+import com.exfe.android.debug.Log;
 import com.exfe.android.model.entity.Cross;
 import com.exfe.android.model.entity.Exfee;
 import com.exfe.android.model.entity.Identity;

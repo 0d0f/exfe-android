@@ -224,7 +224,7 @@ public class User extends Entity {
 	public Date getLatestModify() {
 		long latest = 0;
 		Date data = null;
-		Date result = null;
+		Date result = new Date(0L);
 
 		if (identities != null) {
 			for (Identity ident : identities) {
