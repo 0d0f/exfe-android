@@ -83,7 +83,7 @@ public class Exfee extends Entity {
 				json.put("updated_at", "");
 			} else {
 				json.put("updated_at",
-						Const.UTC_DATE_TIME_FORMAT.format(updated_at));
+						Const.UTC_DATE_TIME_TIMEZONE_FORMAT.format(updated_at));
 			}
 
 		} catch (JSONException e) {

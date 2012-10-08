@@ -80,7 +80,7 @@ public class Post extends Entity {
 				if (created_at == null){
 					json.put("created_at", "");
 				}else{
-					json.put("created_at", Const.UTC_DATE_TIME_FORMAT.format(created_at));
+					json.put("created_at", Const.UTC_DATE_TIME_TIMEZONE_FORMAT.format(created_at));
 				}
 			}
 

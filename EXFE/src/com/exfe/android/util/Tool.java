@@ -92,7 +92,7 @@ public class Tool {
 		}
 
 		try {
-			Date d = Const.UTC_DATE_TIME_FORMAT.parse(result);
+			Date d = Const.UTC_DATE_TIME_TIMEZONE_FORMAT.parse(result);
 			return d;
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block

@@ -1,6 +1,7 @@
 package com.exfe.android.model.entity;
 
 import java.sql.SQLException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -8,18 +9,17 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.res.Resources;
+import android.text.TextUtils;
+
+import com.exfe.android.Const;
 import com.exfe.android.db.DatabaseHelper;
 import com.exfe.android.util.Tool;
 import com.j256.ormlite.dao.Dao;
-
-import android.content.res.Resources;
-import android.text.TextUtils;
 
 public class CrossTime extends Entity {
 
@@ -173,26 +173,23 @@ public class CrossTime extends Entity {
 
 			try {
 				boolean skip = false;
-				String fmtParser = null;
+				DateFormat parser = null;
 				String timestr = null;
 				if (hasTime && hasDate) {
-					fmtParser = "yyyy-MM-dd HH:mm:ss";
+					parser = Const.UTC_DATE_TIME_FORMAT;
 					timestr = String.format("%s %s", eftime.getDate(),
 							eftime.getTime());
 				} else if (hasTime) {
-					fmtParser = "HH:mm:ss";
+					parser = Const.UTC_TIME_HHMMSS_FORMAT;
 					timestr = eftime.getTime();
 				} else if (hasDate) {
-					fmtParser = "yyyy-MM-dd";
+					parser = Const.UTC_DATE_FORMAT;
 					timestr = eftime.getDate();
 				} else {
 					skip = true;
 				}
 				if (!skip) {
-					SimpleDateFormat dfParser = new SimpleDateFormat(fmtParser,
-							Locale.US);
-					dfParser.setTimeZone(target_tz);
-					Date beginTime = dfParser.parse(timestr);
+					Date beginTime = parser.parse(timestr);
 					then.setTime(beginTime);
 					then_in_here.setTime(beginTime);
 					then_in_here.setTimeZone(current_tz);

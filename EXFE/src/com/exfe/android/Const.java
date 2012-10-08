@@ -11,7 +11,7 @@ import android.text.TextUtils;
 
 public class Const {
 
-	public static final boolean override_domain = BuildConfig.DEBUG;
+	public static final boolean override_domain = false; //BuildConfig.DEBUG;
 
 	public static final String FLURRY_APP_ID = "4B9VJPB4DC7VPTTCS3G6";
 	public static final String PUSH_PROJECT_ID = override_domain ? "313001677673"
@@ -21,8 +21,10 @@ public class Const {
 	public static final String GCM_FIELD_APP = "app";
 	public static final String GCM_FIELD_SENDER = "sender";
 
-	public static final DateFormat UTC_DATE_TIME_FORMAT = new SimpleDateFormat(
+	public static final DateFormat UTC_DATE_TIME_TIMEZONE_FORMAT = new SimpleDateFormat(
 			"yyyy-MM-dd HH:mm:ss Z", Locale.US);
+	public static final DateFormat UTC_DATE_TIME_FORMAT = new SimpleDateFormat(
+			"yyyy-MM-dd HH:mm:ss", Locale.US);
 	public static final DateFormat UTC_DATE_FORMAT = new SimpleDateFormat(
 			"yyyy-MM-dd", Locale.US);
 	public static final DateFormat UTC_MONTH_FORMAT = new SimpleDateFormat(
@@ -30,13 +32,17 @@ public class Const {
 	public static final DateFormat UTC_DAY_FORMAT = new SimpleDateFormat("dd",
 			Locale.US);
 	public static final DateFormat UTC_Time_HHMM_FORMAT = new SimpleDateFormat(
-			"hh:mm", Locale.US);
+			"HH:mm", Locale.US);
+	public static final DateFormat UTC_TIME_HHMMSS_FORMAT = new SimpleDateFormat("HH:mm:ss", Locale.US);
+	
 	static {
 		TimeZone tz = TimeZone.getTimeZone("UTC");
+		UTC_DATE_TIME_FORMAT.setTimeZone(tz);
 		UTC_DATE_FORMAT.setTimeZone(tz);
 		UTC_MONTH_FORMAT.setTimeZone(tz);
 		UTC_DAY_FORMAT.setTimeZone(tz);
 		UTC_Time_HHMM_FORMAT.setTimeZone(tz);
+		UTC_TIME_HHMMSS_FORMAT.setTimeZone(tz);
 	}
 
 	public static final DateFormat LOCAL_DATE_FORMAT = new SimpleDateFormat(

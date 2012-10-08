@@ -115,13 +115,13 @@ public class Cross extends Entity {
 					json.put("created_at", "");
 				} else {
 					json.put("created_at",
-							Const.UTC_DATE_TIME_FORMAT.format(created_at));
+							Const.UTC_DATE_TIME_TIMEZONE_FORMAT.format(created_at));
 				}
 				if (updated_at == null) {
 					json.put("updated_at", "");
 				} else {
 					json.put("updated_at",
-							Const.UTC_DATE_TIME_FORMAT.format(updated_at));
+							Const.UTC_DATE_TIME_TIMEZONE_FORMAT.format(updated_at));
 				}
 			}
 
