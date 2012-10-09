@@ -277,7 +277,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 						.getRelativeStringFromNow(getResources()),
 						getText(R.string.sometime));
 				fillText(R.id.x_time_date, cross.getTime()
-						.getLongLocalTimeSring(null, getResources()));
+						.getLongLocalTimeSring(false, getResources()));
 
 				if (Tool.isSameWithLocalZone(cross.getTime().getBeginAt()
 						.getTimezone())) {

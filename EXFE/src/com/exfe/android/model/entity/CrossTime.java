@@ -47,7 +47,8 @@ public class CrossTime extends Entity {
 
 		mType = EntityFactory.TYPE_CROSSTIME;
 
-		mBeginAt = (EFTime) EntityFactory.create(json.optJSONObject("begin_at"));
+		mBeginAt = (EFTime) EntityFactory
+				.create(json.optJSONObject("begin_at"));
 		mOrigin = json.optString("origin", "");
 		mOriginMarkType = json.optInt("outputformat", 0);
 	}
@@ -64,7 +65,7 @@ public class CrossTime extends Entity {
 
 		return json;
 	}
-	
+
 	/**
 	 * @return the id
 	 */
@@ -125,38 +126,42 @@ public class CrossTime extends Entity {
 		this.mOriginMarkType = originMarkType;
 	}
 
-	public static Date NOW = null;
-
-	public String getLongLocalTimeSring(String tz, Resources res) {
-		return getLongLocalTimeSring(mBeginAt, tz, res);
+	public String getLongLocalTimeSring(Resources res) {
+		return getLongLocalTimeSring(mBeginAt, true, res);
+	}
+	
+	public String getLongLocalTimeSring(boolean needTimeZone, Resources res) {
+		return getLongLocalTimeSring(mBeginAt, needTimeZone, res);
 	}
 
-	public String getLongLocalTimeSring(EFTime eftime, String tz, Resources res) {
+	public String getLongLocalTimeSring(EFTime eftime, boolean needTimeZone,
+			Resources res) {
 		// use default time and time zone
 		GregorianCalendar now = new GregorianCalendar();
+		String tz = "";
 		// use test mock time
-		if (NOW != null) {
-			now.setTimeInMillis(NOW.getTime());
+		if (Tool.NOW != null) {
+			now.setTimeInMillis(Tool.NOW.getTime());
 		}
 		// use the test input time zone
-		if (!TextUtils.isEmpty(tz)) {
-			now.setTimeZone(TimeZone.getTimeZone(Tool.converTimeZoneId(tz)));
-		}else{
-			tz = "";
+		if (Tool.NOW != null && !TextUtils.isEmpty(Tool.TIME_ZONE)) {
+			tz = Tool.TIME_ZONE;
+			now.setTimeZone(TimeZone.getTimeZone(Tool
+					.converTimeZoneId(Tool.TIME_ZONE)));
 		}
-		
+
 		TimeZone current_tz = now.getTimeZone();
 		TimeZone target_tz = current_tz;
 		if (!TextUtils.isEmpty(eftime.getTimezone())) {
 			target_tz = TimeZone.getTimeZone(Tool.converTimeZoneId(eftime
 					.getTimezone()));
 		}
-		boolean same_tz = current_tz.hasSameRules(target_tz);
+		boolean same_tz = Tool.isSameTimeZone(current_tz, target_tz);
 
 		StringBuilder sb = new StringBuilder();
 		if (mOriginMarkType == MARK_ORIGINAL) {
 			sb.append(mOrigin);
-			if (!same_tz) {
+			if (!same_tz  && needTimeZone) {
 				if (!TextUtils.isEmpty(eftime.getTimezone())) {
 					Tool.appendSpaceWhenNeeded(sb);
 					sb.append(eftime.getTimezone());
@@ -212,14 +217,14 @@ public class CrossTime extends Entity {
 			// Time
 			if (hasTime) {
 				// handle the date format
-				SimpleDateFormat dfFormator = new SimpleDateFormat(
-						"h:mma", Locale.US);
+				SimpleDateFormat dfFormator = new SimpleDateFormat("h:mma",
+						Locale.US);
 				dfFormator.setTimeZone(then_in_here.getTimeZone());
 				sb.append(dfFormator.format(then_in_here.getTime()));
 			}
 			Tool.appendSpaceWhenNeeded(sb);
 			// timezone
-			if (!same_tz) {
+			if (!same_tz && needTimeZone) {
 				if (hasTime) {
 					// location_zone
 					sb.append(tz);
@@ -257,8 +262,8 @@ public class CrossTime extends Entity {
 		}
 		return sb.toString().trim();
 	}
-	
-	public void saveToDao(DatabaseHelper dbhelper){
+
+	public void saveToDao(DatabaseHelper dbhelper) {
 		try {
 			Dao<CrossTime, Long> dao = dbhelper.getCachedDao(getClass());
 		} catch (SQLException e) {
@@ -270,6 +275,6 @@ public class CrossTime extends Entity {
 	@Override
 	public void loadFromDao(DatabaseHelper dbhelper) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

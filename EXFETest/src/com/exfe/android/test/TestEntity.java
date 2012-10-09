@@ -96,231 +96,227 @@ public class TestEntity extends
 	}
 
 	public final void testCrossTime() {
-		CrossTime.NOW = new Date(2012, 4, 4, 14, 8, 0);
-		Tool.NOW = CrossTime.NOW;
+		Tool.NOW = new Date(112, 3, 4, 14, 8, 0);
 		CrossTime c = null;
-		c = new CrossTime(new EFTime("", "2012-04-04", "", "14:08:00",
+
+		Tool.TIME_ZONE = "+08:00 CST";
+		c = new CrossTime(new EFTime("", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "2012-04-04 14:08:00", CrossTime.MARK_FORMAT);
-		assertEquals("2:08PM on Wed, Apr 4",
-				c.getLongLocalTimeSring("+08:00 CST", null));
-		c = new CrossTime(new EFTime("", "2012-04-04", "", "14:08:00",
+		assertEquals("2:08PM on Wed, Apr 4", c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "2012-04-04 2:08:00 pm abc",
 				CrossTime.MARK_ORIGINAL);
-		assertEquals("2012-04-04 2:08:00 pm abc",
-				c.getLongLocalTimeSring("+08:00 CST", null));
+		assertEquals("2012-04-04 2:08:00 pm abc", c.getLongLocalTimeSring(null));
 
 		// Time_word (at) Time Date_word (on) Date
 		c = new CrossTime(new EFTime("This Week", "", "", "", "+08:00 CST"),
 				"This week", CrossTime.MARK_FORMAT);
-		assertEquals("This Week", c.getLongLocalTimeSring("+08:00 CST", null));
+		assertEquals("This Week", c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("", "2012-04-04", "", "", "+08:00 CST"),
 				"2012 4 4", CrossTime.MARK_FORMAT);
-		assertEquals("Wed, Apr 4", c.getLongLocalTimeSring("+08:00 CST", null));
+		assertEquals("Wed, Apr 4", c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("", "", "Dinner", "", "+08:00 CST"),
 				"dinner", CrossTime.MARK_FORMAT);
-		assertEquals("Dinner", c.getLongLocalTimeSring("+08:00 CST", null));
-		c = new CrossTime(new EFTime("", "", "", "14:08:00", "+08:00 CST"),
+		assertEquals("Dinner", c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("", "", "", "06:08:00", "+08:00 CST"),
 				"14:08:00", CrossTime.MARK_FORMAT);
-		assertEquals("2:08PM", c.getLongLocalTimeSring("+08:00 CST", null));
+		assertEquals("2:08PM", c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("This Week", "2012-04-04", "", "",
 				"+08:00 CST"), "This week 2012 04 04", CrossTime.MARK_FORMAT);
-		assertEquals("This Week on Wed, Apr 4",
-				c.getLongLocalTimeSring("+08:00 CST", null));
+		assertEquals("This Week on Wed, Apr 4", c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("This Week", "", "Dinner", "",
 				"+08:00 CST"), "dinner this week", CrossTime.MARK_FORMAT);
-		assertEquals("Dinner This Week",
-				c.getLongLocalTimeSring("+08:00 CST", null));
-		c = new CrossTime(new EFTime("This Week", "", "", "14:08:00",
+		assertEquals("Dinner This Week", c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("This Week", "", "", "06:08:00",
 				"+08:00 CST"), "14:08 this week", CrossTime.MARK_FORMAT);
-		assertEquals("2:08PM This Week",
-				c.getLongLocalTimeSring("+08:00 CST", null));
+		assertEquals("2:08PM This Week", c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("", "2012-04-04", "Dinner", "",
 				"+08:00 CST"), "dinner 2012-04-04", CrossTime.MARK_FORMAT);
-		assertEquals("Dinner on Wed, Apr 4",
-				c.getLongLocalTimeSring("+08:00 CST", null));
-		c = new CrossTime(new EFTime("", "2012-04-04", "", "14:08:00",
+		assertEquals("Dinner on Wed, Apr 4", c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "2012 04 04 14:08", CrossTime.MARK_FORMAT);
-		assertEquals("2:08PM on Wed, Apr 4",
-				c.getLongLocalTimeSring("+08:00 CST", null));
+		assertEquals("2:08PM on Wed, Apr 4", c.getLongLocalTimeSring(null));
 		c = new CrossTime(
-				new EFTime("", "", "Dinner", "14:08:00", "+08:00 CST"),
+				new EFTime("", "", "Dinner", "06:08:00", "+08:00 CST"),
 				"dinner at 14:08", CrossTime.MARK_FORMAT);
-		assertEquals("Dinner at 2:08PM",
-				c.getLongLocalTimeSring("+08:00 CST", null));
+		assertEquals("Dinner at 2:08PM", c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("This Week", "2012-04-04", "Dinner", "",
 				"+08:00 CST"), "dinner this week 2012-04-04",
 				CrossTime.MARK_FORMAT);
 		assertEquals("Dinner This Week on Wed, Apr 4",
-				c.getLongLocalTimeSring("+08:00 CST", null));
-		c = new CrossTime(new EFTime("This Week", "2012-04-04", "", "14:08:00",
+				c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("This Week", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "14:08 this week 2012-04-04",
 				CrossTime.MARK_FORMAT);
 		assertEquals("2:08PM This Week on Wed, Apr 4",
-				c.getLongLocalTimeSring("+08:00 CST", null));
-		c = new CrossTime(new EFTime("This Week", "", "Dinner", "14:08:00",
+				c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("This Week", "", "Dinner", "06:08:00",
 				"+08:00 CST"), "dinner 14:08 this week", CrossTime.MARK_FORMAT);
 		assertEquals("Dinner at 2:08PM This Week",
-				c.getLongLocalTimeSring("+08:00 CST", null));
+				c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("This Week", "2012-04-04", "Dinner",
-				"14:08:00", "+08:00 CST"), "dinner 14:08 this week 2012-4-4",
+				"06:08:00", "+08:00 CST"), "dinner 14:08 this week 2012-4-4",
 				CrossTime.MARK_FORMAT);
 		assertEquals("Dinner at 2:08PM This Week on Wed, Apr 4",
-				c.getLongLocalTimeSring("+08:00 CST", null));
+				c.getLongLocalTimeSring(null));
 
 		// different target zone format string ??
-		c = new CrossTime(new EFTime("", "2012-04-04", "", "14:08:00",
+		c = new CrossTime(new EFTime("", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "2012-04-04 14:8:00", CrossTime.MARK_FORMAT);
-		assertEquals("2:08PM on Wed, Apr 4",
-				c.getLongLocalTimeSring("+08:00 CST", null));
-		c = new CrossTime(new EFTime("", "2012-04-04", "", "14:08:00",
+		assertEquals("2:08PM on Wed, Apr 4", c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "2012-04-04 14:8:00", CrossTime.MARK_FORMAT);
-		assertEquals("2:08PM on Wed, Apr 4", c.getLongLocalTimeSring("", null));
-		c = new CrossTime(new EFTime("", "2012-04-04", "", "14:08:00",
+		Tool.TIME_ZONE = "";
+		assertEquals("2:08PM on Wed, Apr 4", c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "2012-04-04 14:8:00", CrossTime.MARK_FORMAT);
-		assertEquals("2:08PM on Wed, Apr 4",
-				c.getLongLocalTimeSring("+08:00 PST", null));
+		Tool.TIME_ZONE = "+08:00 PST";
+		assertEquals("2:08PM on Wed, Apr 4", c.getLongLocalTimeSring(null));
 
 		// if Origin, use CrossTime zone
-		c = new CrossTime(new EFTime("", "2012-04-04", "", "14:08:00",
+		c = new CrossTime(new EFTime("", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "2012-04-04 14:8:00", CrossTime.MARK_FORMAT);
+		Tool.TIME_ZONE = "+09:00 PST";
 		assertEquals("3:08PM +09:00 PST on Wed, Apr 4",
-				c.getLongLocalTimeSring("+09:00 PST", null));
-		c = new CrossTime(new EFTime("", "2012-04-04", "", "14:08:00",
+				c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "2012-04-04 14:8:00 abc",
 				CrossTime.MARK_ORIGINAL);
 		assertEquals("2012-04-04 14:8:00 abc +08:00 CST",
-				c.getLongLocalTimeSring("+09:00 PST", null));
+				c.getLongLocalTimeSring(null));
 
 		// Time_word (at) Time Zone Date_word (on) Date
 		// Only show Zone with Time_word or Time
+		Tool.TIME_ZONE = "+09:00 PST";
 		c = new CrossTime(new EFTime("This Week", "", "", "", "+08:00 CST"),
 				"this week", CrossTime.MARK_FORMAT);
-		assertEquals("This Week", c.getLongLocalTimeSring("+09:00 PST", null));
+		assertEquals("This Week", c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("", "2012-04-04", "", "", "+08:00 CST"),
 				"2012-04-04", CrossTime.MARK_FORMAT);
-		assertEquals("Wed, Apr 4", c.getLongLocalTimeSring("+09:00 PST", null));
+		assertEquals("Wed, Apr 4", c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("", "", "Dinner", "", "+08:00 CST"),
 				"dinner", CrossTime.MARK_FORMAT);
-		assertEquals("Dinner +08:00 CST",
-				c.getLongLocalTimeSring("+09:00 PST", null));
-		c = new CrossTime(new EFTime("", "", "", "14:08:00", "+08:00 CST"),
+		assertEquals("Dinner +08:00 CST", c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("", "", "", "06:08:00", "+08:00 CST"),
 				"14:08", CrossTime.MARK_FORMAT);
-		assertEquals("3:08PM +09:00 PST",
-				c.getLongLocalTimeSring("+09:00 PST", null));
+		assertEquals("3:08PM +09:00 PST", c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("This Week", "2012-04-04", "", "",
 				"+08:00 CST"), "this week 2012 4 4", CrossTime.MARK_FORMAT);
-		assertEquals("This Week on Wed, Apr 4",
-				c.getLongLocalTimeSring("+09:00 PST", null));
+		assertEquals("This Week on Wed, Apr 4", c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("This Week", "", "Dinner", "",
 				"+08:00 CST"), "dinner this week", CrossTime.MARK_FORMAT);
 		assertEquals("Dinner +08:00 CST This Week",
-				c.getLongLocalTimeSring("+09:00 PST", null));
-		c = new CrossTime(new EFTime("This Week", "", "", "14:08:00",
+				c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("This Week", "", "", "06:08:00",
 				"+08:00 CST"), "14:08 this week", CrossTime.MARK_FORMAT);
 		assertEquals("3:08PM +09:00 PST This Week",
-				c.getLongLocalTimeSring("+09:00 PST", null));
+				c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("", "2012-04-04", "Dinner", "",
 				"+08:00 CST"), "dinner 2012-04-04", CrossTime.MARK_FORMAT);
 		assertEquals("Dinner +08:00 CST on Wed, Apr 4",
-				c.getLongLocalTimeSring("+09:00 PST", null));
-		c = new CrossTime(new EFTime("", "2012-04-04", "", "14:08:00",
+				c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "2012-04-04 14:08", CrossTime.MARK_FORMAT);
 		assertEquals("3:08PM +09:00 PST on Wed, Apr 4",
-				c.getLongLocalTimeSring("+09:00 PST", null));
+				c.getLongLocalTimeSring(null));
 		c = new CrossTime(
-				new EFTime("", "", "Dinner", "14:08:00", "+08:00 CST"),
+				new EFTime("", "", "Dinner", "06:08:00", "+08:00 CST"),
 				"dinner 14:08", CrossTime.MARK_FORMAT);
 		assertEquals("Dinner at 3:08PM +09:00 PST",
-				c.getLongLocalTimeSring("+09:00 PST", null));
+				c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("This Week", "2012-04-04", "Dinner", "",
 				"+08:00 CST"), "dinner this week 2012-04-04",
 				CrossTime.MARK_FORMAT);
 		assertEquals("Dinner +08:00 CST This Week on Wed, Apr 4",
-				c.getLongLocalTimeSring("+09:00 PST", null));
-		c = new CrossTime(new EFTime("This Week", "2012-04-04", "", "14:08:00",
+				c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("This Week", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "14:08 this week 2012 04 04",
 				CrossTime.MARK_FORMAT);
 		assertEquals("3:08PM +09:00 PST This Week on Wed, Apr 4",
-				c.getLongLocalTimeSring("+09:00 PST", null));
-		c = new CrossTime(new EFTime("This Week", "", "Dinner", "14:08:00",
+				c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("This Week", "", "Dinner", "06:08:00",
 				"+08:00 CST"), "14:08 dinner this week", CrossTime.MARK_FORMAT);
 		assertEquals("Dinner at 3:08PM +09:00 PST This Week",
-				c.getLongLocalTimeSring("+09:00 PST", null));
+				c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("This Week", "2012-04-04", "Dinner",
-				"14:08:00", "+08:00 CST"), "14:08 dinner this week 2012 04 04",
+				"06:08:00", "+08:00 CST"), "14:08 dinner this week 2012 04 04",
 				CrossTime.MARK_FORMAT);
 		assertEquals("Dinner at 3:08PM +09:00 PST This Week on Wed, Apr 4",
-				c.getLongLocalTimeSring("+09:00 PST", null));
+				c.getLongLocalTimeSring(null));
 
 		// different target zone format
-		c = new CrossTime(new EFTime("", "2012-04-04", "", "14:08:00",
+		Tool.TIME_ZONE = "+09:00";
+		c = new CrossTime(new EFTime("", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "2012-04-04 14:8:00", CrossTime.MARK_FORMAT);
 		assertEquals("3:08PM +09:00 on Wed, Apr 4",
-				c.getLongLocalTimeSring("+09:00", null));
-		c = new CrossTime(new EFTime("", "2012-04-04", "", "14:08:00",
+				c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "2012-04-04 14:8:00", CrossTime.MARK_FORMAT);
-		assertEquals("2:08PM on Wed, Apr 4", c.getLongLocalTimeSring("", null));
-		c = new CrossTime(new EFTime("", "2012-04-04", "", "14:08:00",
+		Tool.TIME_ZONE = "";
+		assertEquals("2:08PM on Wed, Apr 4", c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("", "2012-04-04", "", "06:08:00",
 				"+08:00 CST"), "2012-04-04 14:8:00", CrossTime.MARK_FORMAT);
+		Tool.TIME_ZONE = "+09:00 PST";
 		assertEquals("3:08PM +09:00 PST on Wed, Apr 4",
-				c.getLongLocalTimeSring("+09:00 PST", null));
+				c.getLongLocalTimeSring(null));
 
 		// different year
 		// Time_word (at) Time Date_word (on) Date
 		c = new CrossTime(new EFTime("", "2011-04-04", "", "", "+08:00 CST"),
 				"2011-04-04", CrossTime.MARK_FORMAT);
-		assertEquals("Mon, Apr 4, 2011",
-				c.getLongLocalTimeSring("+08:00 CST", null));
+		Tool.TIME_ZONE = "+08:00 CST";
+		assertEquals("Mon, Apr 4, 2011", c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("This Week", "2011-04-04", "", "",
 				"+08:00 CST"), "this week 2011-04-04", CrossTime.MARK_FORMAT);
 		assertEquals("This Week on Mon, Apr 4, 2011",
-				c.getLongLocalTimeSring("+08:00 CST", null));
+				c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("", "2011-04-04", "Dinner", "",
 				"+08:00 CST"), "dinner 2011-04-04", CrossTime.MARK_FORMAT);
 		assertEquals("Dinner on Mon, Apr 4, 2011",
-				c.getLongLocalTimeSring("+08:00 CST", null));
-		c = new CrossTime(new EFTime("", "2011-04-04", "", "14:08:00",
+				c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("", "2011-04-04", "", "06:08:00",
 				"+08:00 CST"), "2011-04-04 14:08", CrossTime.MARK_FORMAT);
 		assertEquals("2:08PM on Mon, Apr 4, 2011",
-				c.getLongLocalTimeSring("+08:00 CST", null));
+				c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("This Week", "2011-04-04", "Dinner", "",
 				"+08:00 CST"), "2011-04-04 dinner this week",
 				CrossTime.MARK_FORMAT);
 		assertEquals("Dinner This Week on Mon, Apr 4, 2011",
-				c.getLongLocalTimeSring("+08:00 CST", null));
-		c = new CrossTime(new EFTime("This Week", "2011-04-04", "", "14:08:00",
+				c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("This Week", "2011-04-04", "", "06:08:00",
 				"+08:00 CST"), "this week 2011-04-04 14:8:00",
 				CrossTime.MARK_FORMAT);
 		assertEquals("2:08PM This Week on Mon, Apr 4, 2011",
-				c.getLongLocalTimeSring("+08:00 CST", null));
+				c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("This Week", "2011-04-04", "Dinner",
-				"14:08:00", "+08:00 CST"), "14:08 this week 2011 04 04",
+				"06:08:00", "+08:00 CST"), "14:08 this week 2011 04 04",
 				CrossTime.MARK_FORMAT);
 		assertEquals("Dinner at 2:08PM This Week on Mon, Apr 4, 2011",
-				c.getLongLocalTimeSring("+08:00 CST", null));
+				c.getLongLocalTimeSring(null));
 
 		// Time Zone & Different year
 		c = new CrossTime(new EFTime("This Week", "2011-12-31", "Dinner",
-				"23:08:00", "+08:00 CST"), "23:08 this week 2011 12 31",
+				"06:08:00", "+08:00 CST"), "Dinner 14:08 this week 2011 12 31",
 				CrossTime.MARK_FORMAT);
-		assertEquals("Dinner at 11:08PM This Week on Sat, Dec 31, 2011",
-				c.getLongLocalTimeSring("+08:00 CST", null));
-		c = new CrossTime(new EFTime("This Week", "2011-12-31", "Dinner",
-				"23:08:00", "-08:00 PST"), "23:08 this week 2011 12 31",
+		assertEquals("Dinner at 2:08PM This Week on Sat, Dec 31, 2011",
+				c.getLongLocalTimeSring(null));
+		c = new CrossTime(new EFTime("This Week", "2011-12-31", "Breakfast",
+				"23:08:00", "-08:00 PST"), "Breakfast 15:08 this week 2011 12 31",
 				CrossTime.MARK_FORMAT);
-		assertEquals("Dinner at 3:08PM +08:00 CST This Week on Sun, Jan 1",
-				c.getLongLocalTimeSring("+08:00 CST", null));
+		assertEquals("Breakfast at 7:08AM +08:00 CST This Week on Sun, Jan 1",
+				c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("This Week", "2012-01-01", "Dinner",
-				"08:08:00", "+08:00 CST"), "23:08 this week 2012 01 01",
+				"06:08:00", "+08:00 CST"), "Dinner 14:08 this week 2012 01 01",
 				CrossTime.MARK_FORMAT);
+		Tool.TIME_ZONE = "-08:00 PST";
 		assertEquals(
-				"Dinner at 4:08PM -08:00 PST This Week on Sat, Dec 31, 2011",
-				c.getLongLocalTimeSring("-08:00 PST", null));
+				"Dinner at 10:08PM -08:00 PST This Week on Sat, Dec 31, 2011",
+				c.getLongLocalTimeSring(null));
 		c = new CrossTime(new EFTime("This Week", "2012-01-01", "Dinner", "",
-				"+08:00 CST"), "23:08 this week 2012 01 01",
+				"+08:00 CST"), "Dinner this week 2012 01 01",
 				CrossTime.MARK_FORMAT);
 		assertEquals("Dinner +08:00 CST This Week on Sun, Jan 1",
-				c.getLongLocalTimeSring("-08:00 PST", null));
+				c.getLongLocalTimeSring(null));
 	}
 
 	public final void testToolXRelativeTime() {
@@ -477,9 +473,7 @@ public class TestEntity extends
 			}
 		}
 		assertNotNull(inv);
-		
 
-		
 		try {
 			Invitation invNew = inv.cloneSelf();
 			int oldMates = inv.getMates();
@@ -488,7 +482,7 @@ public class TestEntity extends
 			Invitation invSaved1 = mModel.getHelper().getInvitationDao()
 					.queryForId(inv.getId());
 			assertEquals(oldMates + 2, invSaved1.getMates());
-			
+
 			invNew.setMates(oldMates + 1);
 			Date d = invNew.getUpdateAt();
 			d.setTime(d.getTime() + 10 * 60 * 1000);
@@ -497,7 +491,7 @@ public class TestEntity extends
 			assertEquals(oldMates + 1, invNew.getMates());
 			int ret = mModel.getHelper().getInvitationDao().update(invNew);
 			// invNew.saveToDao(mModel.getHelper());
-			
+
 			Invitation invSaved2 = mModel.getHelper().getInvitationDao()
 					.queryForId(invNew.getId());
 			assertEquals(oldMates + 1, invSaved2.getMates());

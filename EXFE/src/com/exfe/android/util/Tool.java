@@ -109,147 +109,151 @@ public class Tool {
 	public static final long YEAR = 12 * MONTH;
 
 	public static Date NOW = null;
+	public static String TIME_ZONE = null;
 
-	@Deprecated
-	public static String getRelativeStringFromNow(Date target, Resources res) {
-		if (NOW != null) {
-			return getRelativeString(target, NOW, res);
-		}
-		return getRelativeString(target, new Date(), res);
-	}
+	// @Deprecated
+	// public static String getRelativeStringFromNow(Date target, Resources res)
+	// {
+	// if (NOW != null) {
+	// return getRelativeString(target, NOW, res);
+	// }
+	// return getRelativeString(target, new Date(), res);
+	// }
+	//
+	// @Deprecated
+	// public static String getRelativeString(Date target, Date base, Resources
+	// res) {
+	//
+	// long delta = (target.getTime() - base.getTime()) / 1000;
+	// boolean isNegative = false;
+	// if (delta < 0) {
+	// isNegative = true;
+	// delta = Math.abs(delta);
+	// }
+	//
+	// long t = delta;
+	// int seconds = (int) (t % 60);
+	// t /= 60;
+	// int minues = (int) (t % 60);
+	// t /= 60;
+	// int hours = (int) (t % 24);
+	// t /= 24;
+	// int days = (int) (t % 30);
+	// t /= 30;
+	// int months = (int) (t % 12);
+	// t /= 12;
+	// int years = (int) t;
+	//
+	// String relative = null;
+	// if (delta < 1 * MINUTE) {
+	// if (isNegative) {
+	// relative = res.getQuantityString(R.plurals.seconds_ago,
+	// seconds, seconds);
+	// } else {
+	// relative = res.getQuantityString(R.plurals.seconds_later,
+	// seconds, seconds);
+	// }
+	// } else if (delta < 1 * HOUR) {
+	// if (isNegative) {
+	// relative = res.getQuantityString(R.plurals.minutes_ago, minues,
+	// minues);
+	// } else {
+	// relative = res.getQuantityString(R.plurals.minutes_later,
+	// minues, minues);
+	// }
+	// } else if (delta < 1 * DAY) {
+	// if (isNegative) {
+	// relative = res.getQuantityString(R.plurals.hours_ago, hours,
+	// hours);
+	// } else {
+	// relative = res.getQuantityString(R.plurals.hours_later, hours,
+	// hours);
+	// }
+	// } else if (delta < 1 * MONTH) {
+	// if (isNegative) {
+	// relative = res
+	// .getQuantityString(R.plurals.days_ago, days, days);
+	// } else {
+	// relative = res.getQuantityString(R.plurals.days_later, days,
+	// days);
+	// }
+	// } else if (delta < 1 * YEAR) {
+	// if (isNegative) {
+	// relative = res.getQuantityString(R.plurals.months_ago, months,
+	// months);
+	// } else {
+	// relative = res.getQuantityString(R.plurals.months_later,
+	// months, months);
+	// }
+	// } else {
+	// if (isNegative) {
+	// relative = res.getQuantityString(R.plurals.years_ago, years,
+	// years);
+	// } else {
+	// relative = res.getQuantityString(R.plurals.years_later, years,
+	// years);
+	// }
+	// }
+	// return relative;
+	// }
 
-	@Deprecated
-	public static String getRelativeString(Date target, Date base, Resources res) {
-
-		long delta = (target.getTime() - base.getTime()) / 1000;
-		boolean isNegative = false;
-		if (delta < 0) {
-			isNegative = true;
-			delta = Math.abs(delta);
-		}
-
-		long t = delta;
-		int seconds = (int) (t % 60);
-		t /= 60;
-		int minues = (int) (t % 60);
-		t /= 60;
-		int hours = (int) (t % 24);
-		t /= 24;
-		int days = (int) (t % 30);
-		t /= 30;
-		int months = (int) (t % 12);
-		t /= 12;
-		int years = (int) t;
-
-		String relative = null;
-		if (delta < 1 * MINUTE) {
-			if (isNegative) {
-				relative = res.getQuantityString(R.plurals.seconds_ago,
-						seconds, seconds);
-			} else {
-				relative = res.getQuantityString(R.plurals.seconds_later,
-						seconds, seconds);
-			}
-		} else if (delta < 1 * HOUR) {
-			if (isNegative) {
-				relative = res.getQuantityString(R.plurals.minutes_ago, minues,
-						minues);
-			} else {
-				relative = res.getQuantityString(R.plurals.minutes_later,
-						minues, minues);
-			}
-		} else if (delta < 1 * DAY) {
-			if (isNegative) {
-				relative = res.getQuantityString(R.plurals.hours_ago, hours,
-						hours);
-			} else {
-				relative = res.getQuantityString(R.plurals.hours_later, hours,
-						hours);
-			}
-		} else if (delta < 1 * MONTH) {
-			if (isNegative) {
-				relative = res
-						.getQuantityString(R.plurals.days_ago, days, days);
-			} else {
-				relative = res.getQuantityString(R.plurals.days_later, days,
-						days);
-			}
-		} else if (delta < 1 * YEAR) {
-			if (isNegative) {
-				relative = res.getQuantityString(R.plurals.months_ago, months,
-						months);
-			} else {
-				relative = res.getQuantityString(R.plurals.months_later,
-						months, months);
-			}
-		} else {
-			if (isNegative) {
-				relative = res.getQuantityString(R.plurals.years_ago, years,
-						years);
-			} else {
-				relative = res.getQuantityString(R.plurals.years_later, years,
-						years);
-			}
-		}
-		return relative;
-	}
-
-	@Deprecated
-	public static CharSequence getRelativeShortString(Date target, Resources res) {
-		if (NOW != null) {
-			return getRelativeShortString(target, NOW, res);
-		}
-		return getRelativeShortString(target, new Date(), res);
-	}
-
-	@Deprecated
-	public static CharSequence getRelativeShortString(Date target, Date base,
-			Resources res) {
-
-		long delta = (target.getTime() - base.getTime()) / 1000;
-		boolean isNegative = false;
-		if (delta < 0) {
-			isNegative = true;
-			delta = Math.abs(delta);
-		}
-
-		long t = delta;
-		int seconds = (int) (t % 60);
-		t /= 60;
-		int minutes = (int) (t % 60);
-		t /= 60;
-		int hours = (int) (t % 24);
-		t /= 24;
-		int days = (int) (t % 30);
-		t /= 30;
-		int months = (int) (t % 12);
-		t /= 12;
-		int years = (int) t;
-
-		if (!isNegative) {
-			return "";
-		}
-		if (years > 0) {
-			return String.format("%dy", years);
-		}
-		if (months > 0) {
-			return String.format("%dM", months);
-		}
-		if (days > 0) {
-			return String.format("%dd", days);
-		}
-		if (hours > 0) {
-			return String.format("%dh", hours);
-		}
-		if (minutes > 0) {
-			return String.format("%dm", minutes);
-		}
-		if (seconds > 0) {
-			return String.format("%ds", seconds);
-		}
-
-		return "";
-	}
+	// @Deprecated
+	// public static CharSequence getRelativeShortString(Date target, Resources
+	// res) {
+	// if (NOW != null) {
+	// return getRelativeShortString(target, NOW, res);
+	// }
+	// return getRelativeShortString(target, new Date(), res);
+	// }
+	//
+	// @Deprecated
+	// public static CharSequence getRelativeShortString(Date target, Date base,
+	// Resources res) {
+	//
+	// long delta = (target.getTime() - base.getTime()) / 1000;
+	// boolean isNegative = false;
+	// if (delta < 0) {
+	// isNegative = true;
+	// delta = Math.abs(delta);
+	// }
+	//
+	// long t = delta;
+	// int seconds = (int) (t % 60);
+	// t /= 60;
+	// int minutes = (int) (t % 60);
+	// t /= 60;
+	// int hours = (int) (t % 24);
+	// t /= 24;
+	// int days = (int) (t % 30);
+	// t /= 30;
+	// int months = (int) (t % 12);
+	// t /= 12;
+	// int years = (int) t;
+	//
+	// if (!isNegative) {
+	// return "";
+	// }
+	// if (years > 0) {
+	// return String.format("%dy", years);
+	// }
+	// if (months > 0) {
+	// return String.format("%dM", months);
+	// }
+	// if (days > 0) {
+	// return String.format("%dd", days);
+	// }
+	// if (hours > 0) {
+	// return String.format("%dh", hours);
+	// }
+	// if (minutes > 0) {
+	// return String.format("%dm", minutes);
+	// }
+	// if (seconds > 0) {
+	// return String.format("%ds", seconds);
+	// }
+	//
+	// return "";
+	// }
 
 	public static CharSequence getXRelativeString(Date target, Resources res) {
 		if (NOW != null) {
@@ -258,7 +262,7 @@ public class Tool {
 		return getXRelativeString(target, null, res);
 	}
 
-	public static String getXRelativeString(Date target, Date base,
+	public static CharSequence getXRelativeString(Date target, Date base,
 			Resources res) {
 		if (target == null || res == null) {
 			throw new NullPointerException();
@@ -516,8 +520,15 @@ public class Tool {
 
 	public static boolean isSameWithLocalZone(String zone_string) {
 		TimeZone tz = TimeZone.getDefault();
-		int local_offset = tz.getOffset(System.currentTimeMillis());
+		if (NOW != null && !TextUtils.isEmpty(TIME_ZONE)) {
+			tz = TimeZone.getTimeZone(converTimeZoneId(TIME_ZONE));
+		}
 		TimeZone target = TimeZone.getTimeZone(converTimeZoneId(zone_string));
+		return isSameTimeZone(tz, target);
+	}
+
+	public static boolean isSameTimeZone(TimeZone current, TimeZone target) {
+		int local_offset = current.getOffset(System.currentTimeMillis());
 		int target_offset = target.getRawOffset();
 		return local_offset / (60 * 1000) == target_offset / (60 * 1000);
 	}

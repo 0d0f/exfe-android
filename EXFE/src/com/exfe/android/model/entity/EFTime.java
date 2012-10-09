@@ -14,21 +14,22 @@ import org.json.JSONObject;
 import android.content.res.Resources;
 import android.text.TextUtils;
 
+import com.exfe.android.Const;
 import com.exfe.android.db.DatabaseHelper;
 import com.exfe.android.util.Tool;
 import com.j256.ormlite.dao.Dao;
 
 public class EFTime extends Entity {
 
-	public static final DateFormat sfmt_dt = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ssZ", Locale.US);
-	public static final DateFormat sfmt_d = new SimpleDateFormat("yyyy-MM-ddZ",
-			Locale.US);
-	public static final DateFormat sfmt_t = new SimpleDateFormat("HH:mm:ssZ",
-			Locale.US);
-	static {
-		sfmt_dt.setTimeZone(TimeZone.getTimeZone("UTC"));
-	}
+//	public static final DateFormat sfmt_dt = new SimpleDateFormat(
+//			"yyyy-MM-dd'T'HH:mm:ssZ", Locale.US);
+//	public static final DateFormat sfmt_d = new SimpleDateFormat("yyyy-MM-ddZ",
+//			Locale.US);
+//	public static final DateFormat sfmt_t = new SimpleDateFormat("HH:mm:ssZ",
+//			Locale.US);
+//	static {
+//		sfmt_dt.setTimeZone(TimeZone.getTimeZone("UTC"));
+//	}
 
 	private long mId = NO_ID;
 	private String mDateWord;
@@ -169,22 +170,20 @@ public class EFTime extends Entity {
 		this.mTimezone = timezone;
 	}
 
-	public String getRelativeStringFromNow(Resources res) {
+	public CharSequence getRelativeStringFromNow(Resources res) {
 		boolean hasTime = !TextUtils.isEmpty(mTime);
 		boolean hasDate = !TextUtils.isEmpty(mDate);
 
 		try {
 			if (hasTime && hasDate) {
-				String datetimestr = String.format("%sT%s%s", mDate, mTime,
-						mTimezone);
-				Date target = sfmt_dt.parse(datetimestr);
-				return Tool.getRelativeStringFromNow(target, res);
+				String datetimestr = String.format("%s %s", mDate, mTime);
+				Date target = Const.UTC_DATE_TIME_FORMAT.parse(datetimestr);
+				return Tool.getXRelativeString(target, res);
 			}
 			if (hasDate){
-				String datetimestr = String.format("%s%s", mDate,
-						mTimezone);
-				Date target = sfmt_d.parse(datetimestr);
-				return Tool.getRelativeStringFromNow(target, res);
+				String datetimestr = mDate;
+				Date target = Const.UTC_DATE_FORMAT.parse(datetimestr);
+				return Tool.getXRelativeString(target, res);
 			}
 			if (hasTime){
 				//??

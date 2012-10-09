@@ -712,7 +712,7 @@ public class CrossListFragment extends ListFragment implements Observer {
 			}
 			if (time != null) {
 				if (x.getTime() != null) {
-					time.setText(x.getTime().getLongLocalTimeSring("",
+					time.setText(x.getTime().getLongLocalTimeSring(
 							time.getResources()));
 				} else {
 					time.setText(null);
