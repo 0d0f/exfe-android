@@ -45,7 +45,11 @@ public class EFTime extends Entity {
 		mDate = date;
 		mTimeWord = timeWord;
 		mTime = time;
-		mTimezone = timezone;
+		if (TextUtils.isEmpty(timezone)){
+			mTimezone =  Tool.gmtWalkaround(Tool.localTimeZoneString());
+		}else{
+			mTimezone = timezone;
+		}
 	}
 
 	public EFTime(JSONObject json) {
@@ -61,7 +65,7 @@ public class EFTime extends Entity {
 		mDate = json.optString("date", "");
 		mTimeWord = json.optString("time_word", "");
 		mTime = json.optString("time", "");
-		mTimezone = json.optString("timezone", "");
+		mTimezone = json.optString("timezone",  Tool.gmtWalkaround(Tool.localTimeZoneString()));
 
 	}
 

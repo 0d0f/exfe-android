@@ -111,6 +111,19 @@ public class EntityFactory {
 			// break;
 		}
 	}
+	
+	public static Entity create(String jString){
+		if (!TextUtils.isEmpty(jString)){
+			try {
+				JSONObject json = new JSONObject(jString);
+				return create(json);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
 
 	public static Entity create(JSONObject json) {
 		if (json == null){

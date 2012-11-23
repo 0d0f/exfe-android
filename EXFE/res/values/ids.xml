@@ -4,4 +4,7 @@
     <item name="field_attached" type="id"/>
     <item name="field_time_out" type="id"/>
 
+    
+    <item name="map_venue" type="id"/>
+    <item name="map_bubble" type="id"/>
 </resources>

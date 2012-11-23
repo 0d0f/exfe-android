@@ -37,6 +37,12 @@ public class CrossesModel {
 	private Dao<Cross, Long> getDao() {
 		return mRoot.getHelper().getCrossDao();
 	}
+	
+	public void addCross(Cross x) {
+		List<Cross> xs = new ArrayList<Cross>(1);
+		xs.add(x);
+		addCrosses(xs);
+	}
 
 	public void addCrosses(List<Cross> xs) {
 

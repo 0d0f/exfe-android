@@ -45,7 +45,7 @@ public class ServerAPI1 {
 			.getProperty("line.separator");
 
 	public static String OVERIDE_PROTOCAL = Const.override_domain?"http":null;
-	public static String OVERIDE_DOMAIN = Const.override_domain?"api.0d0f.com":null;
+	public static String OVERIDE_DOMAIN = Const.override_domain?"api.white.0d0f.com":null;
 	public static String OVERIDE_PORT = Const.override_domain?null:null;
 	public static String OVERIDE_PATHROOT = Const.override_domain?"/v1":null;
 

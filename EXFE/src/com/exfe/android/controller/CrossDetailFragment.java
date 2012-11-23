@@ -89,6 +89,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
+		//setHasOptionsMenu(true);
 	}
 
 	/*

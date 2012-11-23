@@ -58,6 +58,13 @@ public class Cross extends Entity {
 
 	public Cross() {
 		mType = EntityFactory.TYPE_CROSS;
+		EFTime et = new EFTime("", "", "", "", "");
+		time = new CrossTime(et, "", 0);
+		place = new Place();
+		exfee = new Exfee();
+		widgets = new ArrayList<Widget>();
+		title = "";
+		description = "";
 	}
 
 	public Cross(JSONObject json) {
@@ -90,7 +97,11 @@ public class Cross extends Entity {
 
 		exfee = (Exfee) EntityFactory.create(json.optJSONObject("exfee"));
 
-		widgets = new ArrayList<Widget>();
+		if (widgets != null) {
+			widgets.clear();
+		} else {
+			widgets = new ArrayList<Widget>();
+		}
 		JSONArray ws = json.optJSONArray("widget");
 		if (ws != null) {
 			for (int i = 0; i < ws.length(); i++) {
@@ -114,14 +125,14 @@ public class Cross extends Entity {
 				if (created_at == null) {
 					json.put("created_at", "");
 				} else {
-					json.put("created_at",
-							Const.UTC_DATE_TIME_TIMEZONE_FORMAT.format(created_at));
+					json.put("created_at", Const.UTC_DATE_TIME_TIMEZONE_FORMAT
+							.format(created_at));
 				}
 				if (updated_at == null) {
 					json.put("updated_at", "");
 				} else {
-					json.put("updated_at",
-							Const.UTC_DATE_TIME_TIMEZONE_FORMAT.format(updated_at));
+					json.put("updated_at", Const.UTC_DATE_TIME_TIMEZONE_FORMAT
+							.format(updated_at));
 				}
 			}
 

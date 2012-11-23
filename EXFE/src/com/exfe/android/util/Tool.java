@@ -20,12 +20,14 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.location.Location;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.util.FloatMath;
 
 import com.exfe.android.Const;
 import com.exfe.android.R;
+import com.google.android.maps.GeoPoint;
 
 public class Tool {
 	private static final String TAG = Tool.class.getSimpleName();
@@ -517,6 +519,17 @@ public class Tool {
 			sb.append(" ");
 		}
 	}
+	
+	public static String localTimeZoneString(){
+		return TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT, Locale.US);
+	}
+
+	public static String gmtWalkaround(String timezone) {
+		if (timezone.startsWith("GMT")) {
+			return timezone.substring(3) + " GMT";
+		}
+		return timezone;
+	}
 
 	public static boolean isSameWithLocalZone(String zone_string) {
 		TimeZone tz = TimeZone.getDefault();
@@ -533,4 +546,75 @@ public class Tool {
 		return local_offset / (60 * 1000) == target_offset / (60 * 1000);
 	}
 
+	public static boolean isSameDay(Calendar cal1, Calendar cal2) {
+		return (cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) && cal1
+				.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR));
+	}
+
+	public static void clearTime(Calendar cal) {
+		cal.clear(Calendar.HOUR);
+		cal.clear(Calendar.MINUTE);
+		cal.clear(Calendar.SECOND);
+		cal.clear(Calendar.MILLISECOND);
+	}
+
+	public static void clearDate(Calendar cal) {
+		cal.clear(Calendar.YEAR);
+		cal.clear(Calendar.MONTH);
+		cal.clear(Calendar.DATE);
+	}
+
+	public static boolean hasTime(Calendar cal) {
+		return cal.isSet(Calendar.HOUR_OF_DAY) && cal.isSet(Calendar.MINUTE)
+				&& cal.isSet(Calendar.SECOND);
+	}
+
+	public static boolean hasDate(Calendar cal) {
+		return cal.isSet(Calendar.YEAR) && cal.isSet(Calendar.MONTH)
+				&& cal.isSet(Calendar.DATE);
+	}
+
+	public static boolean isDateOnly(Calendar cal) {
+		return !cal.isSet(Calendar.HOUR_OF_DAY) && !cal.isSet(Calendar.MINUTE)
+				&& !cal.isSet(Calendar.SECOND);
+	}
+
+	public static boolean isTimeOnly(Calendar cal) {
+		return !cal.isSet(Calendar.YEAR) && !cal.isSet(Calendar.MONTH)
+				&& !cal.isSet(Calendar.DATE);
+	}
+
+	public static boolean isNoDateTime(Calendar cal) {
+		return !cal.isSet(Calendar.YEAR) && !cal.isSet(Calendar.MONTH)
+				&& !cal.isSet(Calendar.DATE)
+				&& !cal.isSet(Calendar.HOUR_OF_DAY)
+				&& !cal.isSet(Calendar.MINUTE) && !cal.isSet(Calendar.SECOND);
+	}
+
+	public static int getE6(double d) {
+		return (int) (d * 1E6);
+	}
+
+	public static GeoPoint getGeoPointFromLocation(Location loc) {
+		return new GeoPoint(getE6(loc.getLatitude()), getE6(loc.getLongitude()));
+	}
+
+	public static Location getLocationFromGeoPoint(GeoPoint geoPoint) {
+		Location location = new Location("CUSTOM");
+		double latitude = geoPoint.getLatitudeE6() / 1000000f;
+		double longitude = geoPoint.getLongitudeE6() / 1000000f;
+
+		location.setLatitude(latitude);
+		location.setLongitude(longitude);
+		return location;
+
+	}
+
+	public static String getQuoted(String value) {
+		return getQuoted(value, "'");
+	}
+
+	public static String getQuoted(String value, String chars) {
+		return String.format("%s%s%s", chars, value, chars);
+	}
 }

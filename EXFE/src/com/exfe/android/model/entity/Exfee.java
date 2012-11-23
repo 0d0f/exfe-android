@@ -33,6 +33,7 @@ public class Exfee extends Entity {
 
 	public Exfee() {
 		mType = EntityFactory.TYPE_EXFEE;
+		invitations = new ArrayList<Invitation>();
 	}
 
 	public Exfee(JSONObject json) {

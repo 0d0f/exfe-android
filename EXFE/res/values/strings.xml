@@ -5,6 +5,8 @@
     <string name="close">Close</string>
     <string name="back">Back</string>
     <string name="home">Home</string>
+    <string name="save">Save</string>
+     <string name="invite">Invite</string>
     <string name="comment">Comment</string>
     <string name="send">Send</string>
     <string name="profile">Profile</string>
@@ -62,6 +64,7 @@
     <string name="two_sentences">%1$s.%2$s.</string>
     <string name="one_sentence">%1$s.</string>
     <string name="xxx_by_xxx">%1$s by %2$s.</string>
+    <string name="meet_xxx">Meet %s</string>
 
     <plurals name="seconds_ago">
         <item quantity="one">1 second ago</item>
@@ -173,5 +176,8 @@
     <string name="tomorrow">Tomorrow</string>
     <string name="the_day_before_yesterday">Two days ago</string>
     <string name="the_day_after_tomorrow">In 2 days</string>
+    
+    <!-- Date time format -->
+    <string name="full_month_and_year">MMMM yyyy</string>
 
 </resources>

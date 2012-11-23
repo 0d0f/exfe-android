@@ -33,4 +33,6 @@
     <string name="the_day_before_yesterday">前天</string>
     <string name="the_day_after_tomorrow">后天</string>
 
+    <!-- Date time format -->
+    <string name="full_month_and_year">yyyy\'年\'MMMM</string>
 </resources>

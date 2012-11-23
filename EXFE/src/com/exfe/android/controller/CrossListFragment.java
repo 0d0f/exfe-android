@@ -81,7 +81,6 @@ public class CrossListFragment extends ListFragment implements Observer {
 				.getModel();
 		mModel.addObserver(this);
 
-		setHasOptionsMenu(true);
 		mImageWorker = new ImageFetcher(mModel.getAppContext(), getResources()
 				.getDimensionPixelSize(R.dimen.small_avatar_width),
 				getResources().getDimensionPixelSize(
@@ -137,6 +136,11 @@ public class CrossListFragment extends ListFragment implements Observer {
 			v.setOnClickListener(mClickListener);
 		}
 
+		v = view.findViewById(R.id.btn_gather);
+		if (v != null) {
+			v.setOnClickListener(mClickListener);
+		}
+
 		v = view.findViewById(R.id.pb_network_hint);
 		if (v != null) {
 			mProgressBarHint = v;
@@ -178,6 +182,7 @@ public class CrossListFragment extends ListFragment implements Observer {
 		setEmptyText("");
 		// We have a menu item to show in action bar.
 		setHasOptionsMenu(true);
+		setMenuVisibility(true);
 
 		View emptyView = getActivity().getLayoutInflater().inflate(
 				R.layout.listitem_cross_empty, getListView(), false);
@@ -370,9 +375,35 @@ public class CrossListFragment extends ListFragment implements Observer {
 				it.setClass(getActivity(), ProfileActivity.class);
 				startActivity(it);
 				break;
+			case R.id.btn_gather:
+				it = new Intent();
+				it.setClass(getActivity(), GatherActivity.class);
+				startActivityForResult(it, GatherActivity.GAHTER_ID);
+				break;
 			}
 		}
 	};
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.support.v4.app.Fragment#onActivityResult(int, int,
+	 * android.content.Intent)
+	 */
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// TODO Auto-generated method stub
+
+		if (requestCode == Activity.RESULT_OK) {
+			switch (requestCode) {
+			case GatherActivity.GAHTER_ID:
+				
+				break;
+			}
+		}
+
+		super.onActivityResult(requestCode, resultCode, data);
+	}
 
 	AbsListView.OnScrollListener listScrollerListener = new AbsListView.OnScrollListener() {
 

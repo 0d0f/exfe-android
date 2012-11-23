@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.TimeZone;
 
@@ -34,8 +35,11 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.os.Build;
+import android.text.TextUtils;
 
 import com.exfe.android.Const;
 import com.exfe.android.debug.Log;
@@ -56,7 +60,7 @@ public class ServerAPI2 {
 
 	public static String OVERIDE_PROTOCAL = Const.override_domain ? "http"
 			: null;
-	public static String OVERIDE_DOMAIN = Const.override_domain ? "api.0d0f.com"
+	public static String OVERIDE_DOMAIN = Const.override_domain ? "api.white.0d0f.com"
 			: null;
 	public static String OVERIDE_PORT = Const.override_domain ? null : null;
 	public static String OVERIDE_PATHROOT = Const.override_domain ? null : null;
@@ -128,16 +132,25 @@ public class ServerAPI2 {
 	}
 
 	protected static void appendBody(StringBuilder query_builder, String key,
-			String value) {
+			String value, boolean needEncoding) {
 		if (query_builder.length() > 0) {
 			query_builder.append("&");
 		}
 		String k;
+		String v;
 		try {
-			k = key.replace("&", URLEncoder.encode("&", "UTF-8")).replace("=",
-					URLEncoder.encode("=", "UTF-8"));
-			String v = value.replace("&", URLEncoder.encode("&", "UTF-8"))
-					.replace("=", URLEncoder.encode("=", "UTF-8"));
+			if (needEncoding) {
+				k = URLEncoder.encode(key, "UTF-8");
+			} else {
+				k = key.replace("&", URLEncoder.encode("&", "UTF-8"))
+						.replace("=", URLEncoder.encode("=", "UTF-8"));
+			}
+
+			if (needEncoding) {
+				v = URLEncoder.encode(value, "UTF-8");
+			} else {
+				v = value;
+			}
 			if (k.length() > 0) {
 				query_builder.append(k);
 				query_builder.append("=");
@@ -279,6 +292,7 @@ public class ServerAPI2 {
 		String result = "";
 		String api_name = "";
 		String type = "application/x-www-form-urlencoded;charset=utf-8";
+		boolean needURLEncoding = true;
 		StringBuilder query_builder = new StringBuilder();
 		StringBuilder body_builder = new StringBuilder();
 
@@ -287,6 +301,8 @@ public class ServerAPI2 {
 				api_name = entry.getValue();
 			} else if (FIELD_CONTECT_TYPE.equalsIgnoreCase(entry.getKey())) {
 				type = entry.getValue();
+				needURLEncoding = type
+						.contains("application/x-www-form-urlencoded");
 			} else if (entry.getKey().startsWith(FIELD_QUERY_PREFEIX)) {
 				String key = entry.getKey().substring(
 						FIELD_QUERY_PREFEIX.length());
@@ -296,7 +312,8 @@ public class ServerAPI2 {
 
 		if (payload != null) {
 			for (Entry<String, String> entry : payload.entrySet()) {
-				appendBody(body_builder, entry.getKey(), entry.getValue());
+				appendBody(body_builder, entry.getKey(), entry.getValue(),
+						needURLEncoding);
 			}
 		}
 
@@ -313,7 +330,7 @@ public class ServerAPI2 {
 			} else {
 				url = new URL(String.format("%s/%s", mServerApiRoot, api_name));
 			}
-			Log.d(TAG, "connect (HTTP PUT) to ( %s )", url);
+			Log.d(TAG, "connect (HTTP POST) to ( %s )", url);
 			Log.d(TAG, "Request Body Length: %d,Body Content: %s",
 					body_builder.length(), body_builder);
 			urlConnection = (HttpURLConnection) url.openConnection();
@@ -415,7 +432,7 @@ public class ServerAPI2 {
 			payload.put("device_token", deviceToken);
 		}
 		if (udid != null) {
-			payload.put("udid", udid);//mModel.getDeviceId()
+			payload.put("udid", udid);// mModel.getDeviceId()
 		}
 		payload.put("os_name", Provider.STR_ANDROID);
 
@@ -502,8 +519,9 @@ public class ServerAPI2 {
 		HashMap<String, String> payload = new LinkedHashMap<String, String>();
 		config.put(FIELD_HTTP_TYPE, "POST");
 		config.put(FIELD_TOKEN, mAppKey);
-		config.put(FIELD_API_NAME, "crosses/add");
-		payload.put("cross", cross.toJSON().toString());
+		config.put(FIELD_API_NAME, "crosses/gather");
+		config.put(FIELD_CONTECT_TYPE, "application/json; charset=utf-8");
+		payload.put("", cross.toJSON().toString());
 		return request(config, payload);
 	}
 
@@ -531,14 +549,58 @@ public class ServerAPI2 {
 		return request(config, payload);
 	}
 
-	public Response getIdentity(String provider, String external_id) {
+	public Response getIdentity(String provider, String external_id,
+			String external_username) {
+
+		List<HashMap<String, String>> idents = new ArrayList<HashMap<String, String>>();
+		HashMap<String, String> map = new HashMap<String, String>();
+		map.put("provider", provider);
+		if (external_id != null) {
+			map.put("external_id", external_id);
+		}
+		if (external_username != null) {
+			map.put("external_username", external_username);
+		}
+		idents.add(map);
+		return getIdentities(idents);
+	}
+
+	public Response getIdentities(List<HashMap<String, String>> list) {
 		HashMap<String, String> config = new LinkedHashMap<String, String>();
 		HashMap<String, String> payload = new LinkedHashMap<String, String>();
 		config.put(FIELD_HTTP_TYPE, "POST");
 		config.put(FIELD_TOKEN, mAppKey);
+		config.put(FIELD_API_NAME, "identities/get");
 
-		config.put(FIELD_API_NAME, "crosses/add");
-		// query.put("identities", cross.toJSON().toString());
+		try {
+			JSONArray array = new JSONArray();
+			JSONObject json = new JSONObject();
+			for (HashMap<String, String> map : list) {
+				String p = map.get("provider");
+				String i = map.get("external_id");
+				String n = map.get("external_username");
+
+				if (!TextUtils.isEmpty(p)) {
+					json.put("provider", p);
+
+					if (i != null) {
+						json.put("external_id", i);
+					} else {
+						json.remove("external_id");
+					}
+					if (n != null) {
+						json.put("external_username", n);
+					} else {
+						json.remove("external_username");
+					}
+					array.put(json);
+				}
+			}
+			payload.put("identities", array.toString(2));
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return request(config, payload);
 	}
 
@@ -598,6 +660,7 @@ public class ServerAPI2 {
 		config.put(FIELD_TOKEN, mAppKey);
 		config.put(FIELD_API_NAME,
 				String.format("conversation/%d/add", exfee_id));
+		config.put(FIELD_CONTECT_TYPE, "application/json; charset=utf-8");
 		payload.put("", post.toJSON(false).toString());
 		return request(config, payload);
 	}
@@ -655,6 +718,32 @@ public class ServerAPI2 {
 		config.put(FIELD_API_NAME, "users/getRegistrationFlag");
 		payload.put("external_username", external_username);
 		payload.put("provider", provider);
+		return request(config, payload);
+	}
+
+	public Response searchIdentities(String keyword) {
+		HashMap<String, String> config = new HashMap<String, String>();
+		HashMap<String, String> payload = new HashMap<String, String>();
+		config.put(FIELD_HTTP_TYPE, "GET");
+		config.put(FIELD_TOKEN, mAppKey);
+		config.put(FIELD_API_NAME, "identities/complete");
+		payload.put("key", keyword.trim());
+		return request(config, payload);
+	}
+
+	public Response formatTime(String rawTime) {
+		return formatTime(rawTime,
+				Tool.gmtWalkaround(Tool.localTimeZoneString()));
+	}
+
+	public Response formatTime(String rawTime, String timezone) {
+		HashMap<String, String> config = new HashMap<String, String>();
+		HashMap<String, String> payload = new HashMap<String, String>();
+		config.put(FIELD_HTTP_TYPE, "POST");
+		// config.put(FIELD_TOKEN, mAppKey);
+		config.put(FIELD_API_NAME, "time/recognize");
+		payload.put("time_string", rawTime.trim());
+		payload.put("timezone", timezone.trim());
 		return request(config, payload);
 	}
 

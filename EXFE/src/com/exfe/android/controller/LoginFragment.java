@@ -215,7 +215,7 @@ public class LoginFragment extends Fragment implements Observer {
 		mQueryStatus = REG_QUERY_NONE;
 		setUiMode(UI_MODE_SIGN_IN);
 
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+		if (Build.VERSION.SDK_INT >= 14 /*Build.VERSION_CODES.ICE_CREAM_SANDWICH*/) {
 			getLoaderManager().initLoader(QUERY_ID_PROFILE, null,
 					mQueryLoaderHandler);
 		} else {
@@ -265,7 +265,7 @@ public class LoginFragment extends Fragment implements Observer {
 
 	LoaderManager.LoaderCallbacks<Cursor> mQueryLoaderHandler = new LoaderManager.LoaderCallbacks<Cursor>() {
 		final String[] PROJECTION = {
-				ContactsContract.CommonDataKinds.Email.ADDRESS,
+				"data1" /*ContactsContract.CommonDataKinds.Email.ADDRESS*/,
 				ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
 				ContactsContract.CommonDataKinds.Photo.PHOTO };
 		static final int ADDRESS = 0;
@@ -279,7 +279,7 @@ public class LoginFragment extends Fragment implements Observer {
 				return new CursorLoader(
 						getActivity(),
 						Uri.withAppendedPath(
-								ContactsContract.Profile.CONTENT_URI,
+								Uri.parse("content://com.android.contacts/profile") /*ContactsContract.Profile.CONTENT_URI*/,
 								ContactsContract.Contacts.Data.CONTENT_DIRECTORY),
 						PROJECTION,
 						ContactsContract.Contacts.Data.MIMETYPE + " = ?",

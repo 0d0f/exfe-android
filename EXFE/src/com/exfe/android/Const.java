@@ -6,6 +6,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.regex.Pattern;
 
 import android.text.TextUtils;
 
@@ -16,7 +17,7 @@ public class Const {
 	public static final String FLURRY_APP_ID = "4B9VJPB4DC7VPTTCS3G6";
 	public static final String PUSH_PROJECT_ID = override_domain ? "313001677673"
 			: "905549742932";
-	public static final String PUSH_SERVER_ACCOUNT = "stony@exfe.com";
+	// public static final String PUSH_SERVER_ACCOUNT = "stony@exfe.com";
 
 	public static final String GCM_FIELD_APP = "app";
 	public static final String GCM_FIELD_SENDER = "sender";
@@ -33,8 +34,9 @@ public class Const {
 			Locale.US);
 	public static final DateFormat UTC_Time_HHMM_FORMAT = new SimpleDateFormat(
 			"HH:mm", Locale.US);
-	public static final DateFormat UTC_TIME_HHMMSS_FORMAT = new SimpleDateFormat("HH:mm:ss", Locale.US);
-	
+	public static final DateFormat UTC_TIME_HHMMSS_FORMAT = new SimpleDateFormat(
+			"HH:mm:ss", Locale.US);
+
 	static {
 		TimeZone tz = TimeZone.getTimeZone("UTC");
 		UTC_DATE_TIME_FORMAT.setTimeZone(tz);
@@ -47,10 +49,14 @@ public class Const {
 
 	public static final DateFormat LOCAL_DATE_FORMAT = new SimpleDateFormat(
 			"MMM dd, yyyy", Locale.US);
+	public static final DateFormat LOCAL_DATE_MMM_DD_FORMAT = new SimpleDateFormat(
+			"MMM dd", Locale.US);
 	public static final DateFormat LOCAL_TIME_FORMAT = new SimpleDateFormat(
 			"hh:mm a", Locale.US);
-	public static final DateFormat LOCAL_TIME_DATE_FORMAT = new SimpleDateFormat(
+	public static final DateFormat LOCAL_TIME_DATE_MMM_DD_FORMAT = new SimpleDateFormat(
 			"hh:mm a, MMM dd", Locale.US);
+	public static final DateFormat LOCAL_TIME_DATE_FORMAT = new SimpleDateFormat(
+			"hh:mm a, MMM dd yyyy", Locale.US);
 	public static final DateFormat LOCAL_FULL_FORMAT = new SimpleDateFormat(
 			"ccc MMM dd hh:mm:ss a z yyyy", Locale.US);
 
@@ -64,16 +70,16 @@ public class Const {
 	public static final String DEFAULT_API_SERVER_PORT = "";
 	public static final String DEFAULT_API_SERVER_ROOT_PATH = "/v2";
 
-	public static final String DEFAULT_IMG_DEFAULT_URL = Const.override_domain ? "http://img.dev.0d0f.com/web/80_80_%s"
+	public static final String DEFAULT_IMG_DEFAULT_URL = Const.override_domain ? "http://img.white.0d0f.com/web/80_80_%s"
 			: "http://img.exfe.com/web/80_80_%s";
-	public static final String DEFAULT_IMG_POOL_URL = Const.override_domain ? "http://img.dev.0d0f.com/%c/%c/80_80_%s"
+	public static final String DEFAULT_IMG_POOL_URL = Const.override_domain ? "http://img.white.0d0f.com/%c/%c/80_80_%s"
 			: "http://img.exfe.com/%c/%c/80_80_%s";
 
-	public static final String DEFAULT_IMG_WIDGET_URL = Const.override_domain ? "http://dev.0d0f.com/static/img/xbg"
+	public static final String DEFAULT_IMG_WIDGET_URL = Const.override_domain ? "http://white.0d0f.com/static/img/xbg"
 			: "http://exfe.com/static/img/xbg";
 
 	public static final String DEFAULT_OAUTH_PROTOCAL = "http";
-	public static final String DEFAULT_OAUTH_SERVER_DOMAIN = Const.override_domain ? "dev.0d0f.com"
+	public static final String DEFAULT_OAUTH_SERVER_DOMAIN = Const.override_domain ? "white.0d0f.com"
 			: "exfe.com";
 	public static final String DEFAULT_OAUTH_SERVER_PORT = "";
 	public static final String DEFAULT_OAUTH_SERVER_ROOT_PATH = "/oAuth";

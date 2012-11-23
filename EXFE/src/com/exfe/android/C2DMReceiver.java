@@ -140,7 +140,7 @@ public class C2DMReceiver extends BroadcastReceiver {
 				notifyIntent
 						.putExtra(CrossDetailActivity.FIELD_CROSS_SIDE, false);
 				// need refresh conversation
-			}if (type.equals("r")) {
+			}else if (type.equals("r")) {
 				// no access to the cross
 				// need refresh cross list
 			}
@@ -148,7 +148,7 @@ public class C2DMReceiver extends BroadcastReceiver {
 				notifyIntent = new Intent(context, CrossDetailActivity.class);
 				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_ID, cid);
 				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_SIDE, true);
-				// need refresh cross detail
+				notifyIntent.putExtra(CrossDetailActivity.FIELD_REFRESH_CROSS, true);
 			}
 		}
 

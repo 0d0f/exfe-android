@@ -52,9 +52,10 @@ public class Utils {
      */
     @SuppressLint("NewApi")
     public static int getBitmapSize(Bitmap bitmap) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
-            return bitmap.getByteCount();
-        }
+    	// TODO NEWAPI
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
+        //    return bitmap.getByteCount();
+        //}
         // Pre HC-MR1
         return bitmap.getRowBytes() * bitmap.getHeight();
     }
@@ -141,6 +142,6 @@ public class Utils {
      * @return
      */
     public static boolean hasActionBar() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB;
+        return Build.VERSION.SDK_INT >= 11; //Build.VERSION_CODES.HONEYCOMB;
     }
 }

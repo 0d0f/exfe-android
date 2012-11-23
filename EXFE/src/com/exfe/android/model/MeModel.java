@@ -12,6 +12,7 @@ import android.os.Bundle;
 
 import com.exfe.android.PrefKeys;
 import com.exfe.android.model.entity.EntityFactory;
+import com.exfe.android.model.entity.Identity;
 import com.exfe.android.model.entity.Provider;
 import com.exfe.android.model.entity.Response;
 import com.exfe.android.model.entity.User;
@@ -174,20 +175,20 @@ public class MeModel {
 		try {
 			if (profile != null) {
 
-//				User current = mRoot.Me().getProfile();
-//				if (current == null || 
-//						profile.getLatestModify().getTime() > 
-//				current.getLatestModify().getTime()) {
-					profile.saveToDao(mRoot.getHelper());
-					getDao().createOrUpdate(profile);
-					setUserId(profile.getId());
-					
-					mRoot.setChanged();
-					Bundle data = new Bundle();
-					data.putInt(Model.OBSERVER_FIELD_TYPE,
-							ACTION_TYPE_UPDATE_MY_PROFILE);
-					mRoot.notifyObservers(data);
-//				}
+				// User current = mRoot.Me().getProfile();
+				// if (current == null ||
+				// profile.getLatestModify().getTime() >
+				// current.getLatestModify().getTime()) {
+				profile.saveToDao(mRoot.getHelper());
+				getDao().createOrUpdate(profile);
+				setUserId(profile.getId());
+
+				mRoot.setChanged();
+				Bundle data = new Bundle();
+				data.putInt(Model.OBSERVER_FIELD_TYPE,
+						ACTION_TYPE_UPDATE_MY_PROFILE);
+				mRoot.notifyObservers(data);
+				// }
 			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -239,5 +240,18 @@ public class MeModel {
 		Thread th = new Thread(run);
 		th.start();
 
+	}
+
+	public Identity getDefaultIdentity() {
+		Identity identity = null;
+		User u = getProfile();
+		if (u != null) {
+			for (Identity id : u.getIdentities()) {
+				if (id.getExternalId().equalsIgnoreCase(getExternalId())){
+					identity = id;
+				}
+			}
+		}
+		return identity;
 	}
 }

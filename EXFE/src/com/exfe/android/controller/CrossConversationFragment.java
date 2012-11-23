@@ -328,7 +328,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 						if (Tool.isInSame(Calendar.YEAR, post.getCreatedAt())) {
 							rel.setText(Tool.getXRelativeString(
 									post.getCreatedAt(), getResources()));
-							time.setText(Const.LOCAL_TIME_DATE_FORMAT
+							time.setText(Const.LOCAL_TIME_DATE_MMM_DD_FORMAT
 									.format(post.getCreatedAt()));
 						} else {
 							rel.setText(Const.LOCAL_TIME_FORMAT.format(post

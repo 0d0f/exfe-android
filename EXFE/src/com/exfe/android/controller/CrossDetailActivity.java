@@ -18,6 +18,7 @@ public class CrossDetailActivity extends Activity implements Observer {
 
 	public static final String FIELD_CROSS_ID = "cross_id";
 	public static final String FIELD_CROSS_SIDE = "cross_side";
+	public static final String FIELD_REFRESH_CROSS = "cross_need_fresh";
 
 	private long mCrossId = 0;
 	private boolean mSideA = true;
@@ -32,6 +33,7 @@ public class CrossDetailActivity extends Activity implements Observer {
 		Intent it = getIntent();
 		mCrossId = it.getLongExtra(FIELD_CROSS_ID, 0L);
 		mSideA = it.getBooleanExtra(FIELD_CROSS_SIDE, true);
+		boolean needRefresh = it.getBooleanExtra(FIELD_REFRESH_CROSS, false);
 
 		View v = findViewById(R.id.nav_btn_back);
 		if (v != null) {
@@ -50,8 +52,12 @@ public class CrossDetailActivity extends Activity implements Observer {
 			if (x != null) {
 				tv.setText(x.getTitle());
 			}else{
-				mModel.Crosses().fetchCross(mCrossId);
+				needRefresh = true;	
 			}
+		}
+		
+		if (needRefresh){
+			mModel.Crosses().fetchCross(mCrossId);
 		}
 
 		showFragment(mSideA);

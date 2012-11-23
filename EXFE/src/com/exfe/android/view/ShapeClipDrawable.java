@@ -119,69 +119,35 @@ public class ShapeClipDrawable extends Drawable implements Drawable.Callback {
 
 	// overrides from Drawable.Callback
 
-	@SuppressLint("NewApi")
 	public void invalidateDrawable(Drawable who) {
-		Drawable.Callback cb = null;
-		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
-			cb = getCallback();
-		} else {
-			// cb = mCallback;
-			Field f;
-			try {
-				f = Drawable.class.getDeclaredField("mCallback");
-				cb = (Callback) f.get(this);
-			} catch (NoSuchFieldException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-		}
+		Drawable.Callback cb = getCBCompact();
 		if (cb != null) {
 			cb.invalidateDrawable(this);
 		}
 	}
 
-	@SuppressLint("NewApi")
 	public void scheduleDrawable(Drawable who, Runnable what, long when) {
-
-		Drawable.Callback cb = null;
-		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
-			cb = getCallback();
-		} else {
-			// cb = mCallback;
-			Field f;
-			try {
-				f = Drawable.class.getDeclaredField("mCallback");
-				cb = (Callback) f.get(this);
-			} catch (NoSuchFieldException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-		}
+		Drawable.Callback cb = getCBCompact();
 		if (cb != null) {
 			cb.scheduleDrawable(this, what, when);
 		}
 	}
 
-	@SuppressLint("NewApi")
 	public void unscheduleDrawable(Drawable who, Runnable what) {
+		Drawable.Callback cb = getCBCompact();
+		
+		if (cb != null) {
+			cb.unscheduleDrawable(this, what);
+		}
+	}
+	
+	@SuppressLint("NewApi")
+	private Drawable.Callback getCBCompact(){
 		Drawable.Callback cb = null;
-		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
-			cb = getCallback();
-		} else {
+		// TODO NEWAPI
+		//if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
+		//	cb = getCallback();
+		//} else {
 			// cb = mCallback;
 			Field f;
 			try {
@@ -198,10 +164,8 @@ public class ShapeClipDrawable extends Drawable implements Drawable.Callback {
 				e.printStackTrace();
 			}
 
-		}
-		if (cb != null) {
-			cb.unscheduleDrawable(this, what);
-		}
+		//}
+		return cb;
 	}
 
 	// overrides from Drawable

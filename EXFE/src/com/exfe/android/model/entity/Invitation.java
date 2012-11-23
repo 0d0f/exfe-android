@@ -68,8 +68,16 @@ public class Invitation extends Entity {
 		JSONObject json = super.toJSON(deep);
 		try {
 			json.put("id", mId);
-			json.put("identity", identity.toJSON());
-			json.put("by_identity", by_identity.toJSON());
+			if (identity != null) {
+				json.put("identity", identity.toJSON());
+			} else {
+				json.put("identity", null);
+			}
+			if (by_identity != null) {
+				json.put("by_identity", by_identity.toJSON());
+			} else {
+				json.put("by_identity", null);
+			}
 			json.put("rsvp_status", Rsvp.getRsvpStatusString(rsvp_status));
 			json.put("via", via);
 			json.put("host", host);
@@ -77,12 +85,14 @@ public class Invitation extends Entity {
 			if (created_at == null) {
 				json.put("created_at", "");
 			} else {
-				json.put("created_at", Const.UTC_DATE_TIME_TIMEZONE_FORMAT.format(created_at));
+				json.put("created_at",
+						Const.UTC_DATE_TIME_TIMEZONE_FORMAT.format(created_at));
 			}
 			if (updated_at == null) {
 				json.put("updated_at", "");
 			} else {
-				json.put("updated_at", Const.UTC_DATE_TIME_TIMEZONE_FORMAT.format(updated_at));
+				json.put("updated_at",
+						Const.UTC_DATE_TIME_TIMEZONE_FORMAT.format(updated_at));
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();

@@ -20,6 +20,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -31,147 +32,194 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
+
+import org.apache.http.client.utils.URLEncodedUtils;
 
 /**
- * A simple subclass of {@link ImageResizer} that fetches and resizes images fetched from a URL.
+ * A simple subclass of {@link ImageResizer} that fetches and resizes images
+ * fetched from a URL.
  */
 public class ImageFetcher extends ImageResizer {
-    private static final String TAG = "ImageFetcher";
-    private static final int HTTP_CACHE_SIZE = 10 * 1024 * 1024; // 10MB
-    public static final String HTTP_CACHE_DIR = "http";
+	private static final String TAG = "ImageFetcher";
+	private static final int HTTP_CACHE_SIZE = 10 * 1024 * 1024; // 10MB
+	public static final String HTTP_CACHE_DIR = "http";
 
-    /**
-     * Initialize providing a target image width and height for the processing images.
-     *
-     * @param context
-     * @param imageWidth
-     * @param imageHeight
-     */
-    public ImageFetcher(Context context, int imageWidth, int imageHeight) {
-        super(context, imageWidth, imageHeight);
-        init(context);
-    }
+	/**
+	 * Initialize providing a target image width and height for the processing
+	 * images.
+	 * 
+	 * @param context
+	 * @param imageWidth
+	 * @param imageHeight
+	 */
+	public ImageFetcher(Context context, int imageWidth, int imageHeight) {
+		super(context, imageWidth, imageHeight);
+		init(context);
+	}
 
-    /**
-     * Initialize providing a single target image size (used for both width and height);
-     *
-     * @param context
-     * @param imageSize
-     */
-    public ImageFetcher(Context context, int imageSize) {
-        super(context, imageSize);
-        init(context);
-    }
+	/**
+	 * Initialize providing a single target image size (used for both width and
+	 * height);
+	 * 
+	 * @param context
+	 * @param imageSize
+	 */
+	public ImageFetcher(Context context, int imageSize) {
+		super(context, imageSize);
+		init(context);
+	}
 
-    private void init(Context context) {
-        checkConnection(context);
-    }
+	private void init(Context context) {
+		checkConnection(context);
+	}
 
-    /**
-     * Simple network connection check.
-     *
-     * @param context
-     */
-    private void checkConnection(Context context) {
-        final ConnectivityManager cm =
-                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        final NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-        if (networkInfo == null || !networkInfo.isConnectedOrConnecting()) {
-            Toast.makeText(context, "No network connection found.", Toast.LENGTH_LONG).show();
-            Log.e(TAG, "checkConnection - no connection found");
-        }
-    }
+	/**
+	 * Simple network connection check.
+	 * 
+	 * @param context
+	 */
+	private void checkConnection(Context context) {
+		final ConnectivityManager cm = (ConnectivityManager) context
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
+		final NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+		if (networkInfo == null || !networkInfo.isConnectedOrConnecting()) {
+			Toast.makeText(context, "No network connection found.",
+					Toast.LENGTH_LONG).show();
+			Log.e(TAG, "checkConnection - no connection found");
+		}
+	}
 
-    /**
-     * The main process method, which will be called by the ImageWorker in the AsyncTask background
-     * thread.
-     *
-     * @param data The data to load the bitmap, in this case, a regular http URL
-     * @return The downloaded and resized bitmap
-     */
-    private Bitmap processBitmap(String data) {
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "processBitmap - " + data);
-        }
+	/**
+	 * The main process method, which will be called by the ImageWorker in the
+	 * AsyncTask background thread.
+	 * 
+	 * @param data
+	 *            The data to load the bitmap, in this case, a regular http URL
+	 * @return The downloaded and resized bitmap
+	 */
+	private Bitmap processBitmap(String data) {
+		if (BuildConfig.DEBUG) {
+			Log.d(TAG, "processBitmap - " + data);
+		}
 
-        // Download a bitmap, write it to a file
-        final File f = downloadBitmap(mContext, data);
+		// Download a bitmap, write it to a file
+		final File f = downloadBitmap(mContext, data);
 
-        if (f != null) {
-            // Return a sampled down version
-            return decodeSampledBitmapFromFile(f.toString(), mImageWidth, mImageHeight);
-        }
+		if (f != null) {
+			// Return a sampled down version
+			return decodeSampledBitmapFromFile(f.toString(), mImageWidth,
+					mImageHeight);
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    @Override
-    protected Bitmap processBitmap(Object data) {
-        return processBitmap(String.valueOf(data));
-    }
+	static String pathEncoding(String path) {
+		String[] folder = path.split("/");
+		boolean endingSlash = path.endsWith("/");
+		StringBuilder sb = new StringBuilder();
+		int i = 0;
+		for (String str : folder) {
+			if (str != null) {
+				sb.append(URLEncoder.encode(str));
+			}
+			if (i < folder.length - 1 || endingSlash) {
+				sb.append("/");
+			}
+			i++;
+		}
+		return sb.toString();
+	}
 
-    /**
-     * Download a bitmap from a URL, write it to a disk and return the File pointer. This
-     * implementation uses a simple disk cache.
-     *
-     * @param context The context to use
-     * @param urlString The URL to fetch
-     * @return A File pointing to the fetched bitmap
-     */
-    public static File downloadBitmap(Context context, String urlString) {
-        final File cacheDir = DiskLruCache.getDiskCacheDir(context, HTTP_CACHE_DIR);
+	@Override
+	protected Bitmap processBitmap(Object data) {
+		return processBitmap(String.valueOf(data));
+	}
 
-        final DiskLruCache cache =
-                DiskLruCache.openCache(context, cacheDir, HTTP_CACHE_SIZE);
+	/**
+	 * Download a bitmap from a URL, write it to a disk and return the File
+	 * pointer. This implementation uses a simple disk cache.
+	 * 
+	 * @param context
+	 *            The context to use
+	 * @param urlString
+	 *            The URL to fetch
+	 * @return A File pointing to the fetched bitmap
+	 */
+	public static File downloadBitmap(Context context, String urlString) {
+		final File cacheDir = DiskLruCache.getDiskCacheDir(context,
+				HTTP_CACHE_DIR);
 
-        final File cacheFile = new File(cache.createFilePath(urlString));
+		final DiskLruCache cache = DiskLruCache.openCache(context, cacheDir,
+				HTTP_CACHE_SIZE);
 
-        if (cache.containsKey(urlString)) {
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "downloadBitmap - found in http cache - " + urlString);
-            }
-            return cacheFile;
-        }
+		final File cacheFile = new File(cache.createFilePath(urlString));
 
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "downloadBitmap - downloading - " + urlString);
-        }
+		if (cache.containsKey(urlString)) {
+			if (BuildConfig.DEBUG) {
+				Log.d(TAG, "downloadBitmap - found in http cache - "
+						+ urlString);
+			}
+			return cacheFile;
+		}
 
-        Utils.disableConnectionReuseIfNecessary();
-        HttpURLConnection urlConnection = null;
-        BufferedOutputStream out = null;
+		if (BuildConfig.DEBUG) {
+			Log.d(TAG, "downloadBitmap - downloading - " + urlString);
+		}
 
-        try {
-            final URL url = new URL(urlString);
-            urlConnection = (HttpURLConnection) url.openConnection();
-            final InputStream in =
-                    new BufferedInputStream(urlConnection.getInputStream(), Utils.IO_BUFFER_SIZE);
-            out = new BufferedOutputStream(new FileOutputStream(cacheFile), Utils.IO_BUFFER_SIZE);
+		Utils.disableConnectionReuseIfNecessary();
+		HttpURLConnection urlConnection = null;
+		BufferedOutputStream out = null;
 
-            int b;
-            while ((b = in.read()) != -1) {
-                out.write(b);
-            }
+		try {
+			URL url = new URL(urlString);
+			
+			String path = url.getPath();
+			String enPath = pathEncoding(path);
+			if (enPath.length() > path.length()) {
+				String pro = url.getProtocol();
+				if (!TextUtils.isEmpty(pro)) {
+					int idx = urlString.indexOf(path,
+							pro.length() + "://".length());
+					url = new URL(urlString.substring(0, idx) + enPath
+							+ urlString.substring(idx + path.length()));
+				}
+			}
 
-            return cacheFile;
+			urlConnection = (HttpURLConnection) url.openConnection();
+			final InputStream in = new BufferedInputStream(
+					urlConnection.getInputStream(), Utils.IO_BUFFER_SIZE);
+			out = new BufferedOutputStream(new FileOutputStream(cacheFile),
+					Utils.IO_BUFFER_SIZE);
 
-        } catch (final IOException e) {
-            Log.e(TAG, "Error in downloadBitmap - " + e);
-        } finally {
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (final IOException e) {
-                    Log.e(TAG, "Error in downloadBitmap - " + e);
-                }
-            }
-        }
+			int b;
+			while ((b = in.read()) != -1) {
+				out.write(b);
+			}
 
-        return null;
-    }
+			return cacheFile;
+
+		} catch (final IOException e) {
+			Log.e(TAG, "Error in downloadBitmap - " + e);
+		} finally {
+			if (urlConnection != null) {
+				urlConnection.disconnect();
+			}
+			if (out != null) {
+				try {
+					out.close();
+				} catch (final IOException e) {
+					Log.e(TAG, "Error in downloadBitmap - " + e);
+				}
+			}
+		}
+
+		return null;
+	}
 }

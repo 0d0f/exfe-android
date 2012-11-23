@@ -50,8 +50,7 @@
             android:layout_height="@dimen/nav_btn_height"
             android:layout_gravity="center_vertical"
             android:layout_marginRight="@dimen/base_small_margin"
-            android:contentDescription="User profile button"
-            android:visibility="gone" />
+            android:contentDescription="Gather button"/>
     </LinearLayout>
 
     <FrameLayout
