@@ -24,9 +24,11 @@ import android.location.Location;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.util.FloatMath;
+import android.view.View;
 
 import com.exfe.android.Const;
 import com.exfe.android.R;
+import com.exfe.android.debug.Log;
 import com.google.android.maps.GeoPoint;
 
 public class Tool {
@@ -519,9 +521,10 @@ public class Tool {
 			sb.append(" ");
 		}
 	}
-	
-	public static String localTimeZoneString(){
-		return TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT, Locale.US);
+
+	public static String localTimeZoneString() {
+		return TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT,
+				Locale.US);
 	}
 
 	public static String gmtWalkaround(String timezone) {
@@ -595,6 +598,11 @@ public class Tool {
 		return (int) (d * 1E6);
 	}
 
+	public static GeoPoint getGeoPointFromLatLong(double latitude,
+			double longtitude) {
+		return new GeoPoint(getE6(latitude), getE6(longtitude));
+	}
+
 	public static GeoPoint getGeoPointFromLocation(Location loc) {
 		return new GeoPoint(getE6(loc.getLatitude()), getE6(loc.getLongitude()));
 	}
@@ -617,4 +625,62 @@ public class Tool {
 	public static String getQuoted(String value, String chars) {
 		return String.format("%s%s%s", chars, value, chars);
 	}
+
+	public static void showForSeconds(final View v, final int seconds,
+			final Runnable hideAction) {
+		if (v != null) {
+			// v.setVisibility(View.VISIBLE);
+			Object tag = v.getTag(R.id.field_time_out);
+			Date until = new Date(System.currentTimeMillis() + seconds * 1000);
+			v.setTag(R.id.field_time_out, until);
+			final long interval = seconds * 1000 * 1 / 10;
+			if (tag == null) {
+				v.postDelayed(new Runnable() {
+
+					@Override
+					public void run() {
+						Object obj = v.getTag(R.id.field_time_out);
+						if (obj != null) {
+							Date until = (Date) obj;
+							long now = System.currentTimeMillis();
+							long tobe = until.getTime() - now;
+							if (tobe > 0) {
+								// wait again
+								long sleep = tobe * 8 / 10;
+								v.postDelayed(this, Math.max(sleep, interval));
+								return;
+							}
+						}
+
+						// if (v.getVisibility() == View.VISIBLE) {
+						// v.setVisibility(View.INVISIBLE);
+						v.post(hideAction);
+						v.setTag(R.id.field_time_out, null);
+						// }
+					}
+				}, seconds * 1000 * 8 / 10);
+			}
+		}
+	}
+
+	public static Rect getStatusBarRect(View v) {
+		Rect r = new Rect();
+		v.getRootView().getWindowVisibleDisplayFrame(r);
+		return r;
+	}
+
+	private static Rect r = new Rect();
+
+	public static boolean hasIME(View v) {
+		v.getRootView().getWindowVisibleDisplayFrame(r);
+		int root_height = v.getRootView().getHeight();
+		int v_height = r.height();
+		Log.d(TAG, "view height: %d, WindowVisibleDisplayFrame: %d (%d to %d)",
+				root_height, v_height, r.top, r.bottom);
+		if (root_height - r.bottom > v.getResources().getDisplayMetrics().density * 35) {
+			return true;
+		}
+		return false;
+	}
+
 }

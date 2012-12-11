@@ -94,7 +94,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="@string/add_comments"
-            android:imeOptions="actionSearch"
+            android:imeOptions="actionSend"
             android:inputType="text"
             android:maxLines="3"
             android:textSize="14sp" />
@@ -102,12 +102,13 @@
         <Button
             android:id="@+id/x_add_post"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="30dp"
             android:text="@string/send"
             android:background="@drawable/btn_blue_round_bg"
             android:textColor="@color/gray_7"
             android:paddingLeft="8dp"
-            android:paddingRight="8dp" />
+            android:paddingRight="8dp"
+            android:minEms="4" />
     </LinearLayout>
 
 </LinearLayout>

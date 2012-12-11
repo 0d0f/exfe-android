@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:grid="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/activity_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/background_light"
@@ -9,15 +9,29 @@
     <LinearLayout
         android:id="@+id/navigation_bar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/nav_bar_height"
-        android:background="@drawable/navbar" >
+        android:layout_height="@dimen/nav_bar2_height"
+        android:background="@color/rich_month_background"
+        android:paddingRight="@dimen/base_small_margin" >
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="24dp"
+            android:layout_height="match_parent"
+            android:layout_margin="0dp"
+            android:background="@drawable/back_btn_bg"
+            android:contentDescription="@string/back"
+            android:src="@drawable/back_btn_fg" />
 
         <EditText
             android:id="@+id/place_input"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_margin="@dimen/base_small_margin"
             android:layout_weight="1"
+            android:background="@drawable/edit_text_bg"
+            android:drawableLeft="@drawable/textfield_place"
             android:ellipsize="end"
+            android:hint="@string/enter_place"
             android:imeOptions="actionSearch"
             android:padding="4dp"
             android:singleLine="true"
@@ -28,30 +42,91 @@
         <Button
             android:id="@+id/btn_action"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/nav_btn_height"
+            android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
-            android:layout_marginRight="@dimen/base_small_margin"
-            android:background="@drawable/btn_dark_bg"
-            android:text="Save" />
+            android:layout_margin="@dimen/base_small_margin"
+            android:background="@drawable/btn_blue_bg"
+            android:minEms="4"
+            android:paddingLeft="@dimen/base_margin"
+            android:paddingRight="@dimen/base_margin"
+            android:text="@string/done"
+            android:textColor="@color/gray_8"
+            android:textStyle="bold" />
     </LinearLayout>
 
-    <com.google.android.maps.MapView
-        android:id="@+id/mapview"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:apiKey="0B-JFunXsuiA-74xiQ6UF45VNWTonrvX3Ko0MCA"
-        android:clickable="true"
-        android:minHeight="100dp" >
-        
-        
-    </com.google.android.maps.MapView>
+        android:layout_weight="1" >
+
+        <com.google.android.maps.MapView
+            android:id="@+id/mapview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:apiKey="0B-JFunXsuiA-74xiQ6UF45VNWTonrvX3Ko0MCA"
+            android:clickable="true"
+            android:minHeight="100dp" >
+        </com.google.android.maps.MapView>
+
+        <LinearLayout
+            android:id="@+id/venue_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:background="@color/venue_overlay_bakground"
+            android:orientation="vertical"
+            android:paddingBottom="8dp"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:paddingTop="8dp"
+            android:visibility="gone" >
+
+            <EditText
+                android:id="@+id/venue_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:background="@android:color/transparent"
+                android:ems="10"
+                android:hint="@string/place_title"
+                android:imeOptions="actionNext"
+                android:singleLine="true"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginTop="8dp"
+                android:background="@color/white" />
+
+            <EditText
+                android:id="@+id/venue_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:background="@android:color/transparent"
+                android:ems="10"
+                android:gravity="top|left"
+                android:hint="@string/place_info"
+                android:inputType="textMultiLine"
+                android:minLines="3"
+                android:textColor="@color/white"
+                android:textSize="14sp" />
+        </LinearLayout>
+    </FrameLayout>
 
     <ListView
         android:id="@+id/exfee_search_result"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2" >
-    </ListView>
+        android:layout_weight="2"
+        android:descendantFocusability="blocksDescendants"
+        android:divider="@color/list_place_divider"
+        android:dividerHeight="2dp" />
 
 </LinearLayout>

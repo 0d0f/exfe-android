@@ -1,15 +1,22 @@
 package com.exfe.android.maps;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 
+import com.google.android.maps.GeoPoint;
+import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 
-public class ItemizedOverlay<T extends OverlayItem> extends
-		com.google.android.maps.ItemizedOverlay<T> {
+public class ItemizedOverlay<T extends ItemizedOverlay.IOverlayItem> extends
+		com.google.android.maps.ItemizedOverlay<OverlayItem> {
+
+	public interface IOverlayItem {
+		OverlayItem getOverlayItem();
+	}
 
 	protected List<T> mOverlays = new ArrayList<T>();
 	protected Context mContext = null;
@@ -21,8 +28,8 @@ public class ItemizedOverlay<T extends OverlayItem> extends
 	}
 
 	@Override
-	protected T createItem(int i) {
-		return mOverlays.get(i);
+	protected OverlayItem createItem(int i) {
+		return mOverlays.get(i).getOverlayItem();
 	}
 
 	@Override
@@ -35,6 +42,13 @@ public class ItemizedOverlay<T extends OverlayItem> extends
 		populate();
 	}
 
+	public T getListItem(int location) {
+		if (mOverlays.size() > 0) {
+			return mOverlays.get(location);
+		}
+		return null;
+	}
+
 	public void removeItem(T item) {
 		int index = mOverlays.indexOf(item);
 		if (index >= 0 && getLastFocusedIndex() == index) {
@@ -44,7 +58,7 @@ public class ItemizedOverlay<T extends OverlayItem> extends
 		populate();
 	}
 
-	public void addAll(List<T> list) {
+	public void addAll(Collection<? extends T> list) {
 		mOverlays.addAll(list);
 		populate();
 	}

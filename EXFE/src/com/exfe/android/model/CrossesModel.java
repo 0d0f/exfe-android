@@ -24,6 +24,10 @@ public class CrossesModel {
 
 	public static final int ACTION_TYPE_UPDATE_CROSSES = Model.ACTION_TYPE_CROSSES_BASE + 1;
 	public static final int ACTION_TYPE_CROSSES_UPDATE_MILESTONE = Model.ACTION_TYPE_CROSSES_BASE + 2;
+	public static final int ACTION_TYPE_REMOVE_CROSS = Model.ACTION_TYPE_CROSSES_BASE + 3;
+	
+	public static final String FIELD_CHANGE_ID = "change_id";
+	public static final String FIELD_CHANGED_ID_LIST = "change_id_list";
 
 	private Model mRoot = null;
 
@@ -37,7 +41,7 @@ public class CrossesModel {
 	private Dao<Cross, Long> getDao() {
 		return mRoot.getHelper().getCrossDao();
 	}
-	
+
 	public void addCross(Cross x) {
 		List<Cross> xs = new ArrayList<Cross>(1);
 		xs.add(x);
@@ -52,13 +56,6 @@ public class CrossesModel {
 				if (x != null /* && x.getByIdentitiy() != null */) {
 					x.saveToDao(mRoot.getHelper());
 					update.add(x.getId());
-					if (update.size() % 5 == 4){
-						mRoot.setChanged();
-						Bundle data = new Bundle();
-						data.putInt(Model.OBSERVER_FIELD_TYPE,
-								ACTION_TYPE_CROSSES_UPDATE_MILESTONE);
-						mRoot.notifyObservers(data);
-					}
 				}
 			}
 			if (update.size() > 0) {
@@ -70,8 +67,7 @@ public class CrossesModel {
 				for (int i = 0; i < value.length; i++) {
 					value[i] = update.get(i);
 				}
-
-				data.putLongArray("update", value);
+				data.putLongArray(FIELD_CHANGED_ID_LIST, value);
 				mRoot.notifyObservers(data);
 			}
 		}
@@ -107,6 +103,28 @@ public class CrossesModel {
 		this.mLastUpdateQuery = lastUpdateQuery;
 	}
 
+	public void deleteCrossById(Long crossId){
+		// delete the cross
+		try {
+			getDao().deleteById(crossId);
+			
+			// notify UI
+			mRoot.setChanged();
+			Bundle data = new Bundle();
+			data.putInt(Model.OBSERVER_FIELD_TYPE, ACTION_TYPE_REMOVE_CROSS);
+			data.putLong(FIELD_CHANGE_ID, crossId);
+			mRoot.notifyObservers(data);
+			// cross: finishactivity
+			// crosslist refresh list	
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+	}
+	
 	public void clearCrosses() {
 		try {
 			getDao().delete(getDao().queryForAll());
@@ -143,8 +161,8 @@ public class CrossesModel {
 		}
 		return null;
 	}
-	
-	public void saveCross(Cross x){
+
+	public void saveCross(Cross x) {
 		try {
 			getDao().createOrUpdate(x);
 		} catch (SQLException e) {
@@ -170,13 +188,17 @@ public class CrossesModel {
 
 		}
 	}
-
+	
 	public void fetchCross(final long crossId) {
+		fetchCross(crossId, null);
+	}
+
+	public void fetchCross(final long crossId, final Date lastUpdate) {
 		Runnable run = new Runnable() {
 
 			@Override
 			public void run() {
-				Response result = mRoot.getServer().getCrossById(crossId);
+				Response result = mRoot.getServer().getCrossById(crossId, lastUpdate);
 				int code = result.getCode();
 				@SuppressWarnings("unused")
 				int http_category = code % 100;
@@ -194,6 +216,8 @@ public class CrossesModel {
 					break;
 				case HttpStatus.SC_UNAUTHORIZED:
 					// mRoot.signOut();
+				case HttpStatus.SC_FORBIDDEN:
+					deleteCrossById(crossId);
 				case HttpStatus.SC_INTERNAL_SERVER_ERROR:
 					// retry
 					break;
@@ -213,7 +237,7 @@ public class CrossesModel {
 		}
 	}
 
-	class FetchCrossesTask extends AsyncTask<Integer, Integer, Response> {
+	class FetchCrossesTask extends AsyncTask<Integer, Integer, Integer> {
 
 		private Date mLastQueryTime = null;
 		private Date mThisQueryTime = null;
@@ -231,19 +255,17 @@ public class CrossesModel {
 		}
 
 		@Override
-		protected Response doInBackground(Integer... params) {
+		protected Integer doInBackground(Integer... params) {
 			mThisQueryTime = new Date();
-			return mRoot.getServer().getNewCrossesAfter(mLastQueryTime);
-		}
-
-		@Override
-		protected void onPostExecute(Response result) {
+			Response result = mRoot.getServer().getNewCrossesAfter(
+					mLastQueryTime);
 			int code = result.getCode();
 			@SuppressWarnings("unused")
 			int http_category = code % 100;
 			mRoot.stopNetworkQuery();
-			switch (code) {
-			case HttpStatus.SC_OK:
+
+			if (code == HttpStatus.SC_OK) {
+				mRoot.startWaiting();
 				List<Cross> xs = new ArrayList<Cross>();
 				JSONObject res = result.getResponse();
 				JSONArray array = res.optJSONArray("crosses");
@@ -258,6 +280,15 @@ public class CrossesModel {
 				}
 				setLastUpdateQuery(mThisQueryTime);
 				addCrosses(xs);
+				mRoot.stopWaiting();
+			}
+			return code;
+		}
+
+		@Override
+		protected void onPostExecute(Integer code) {
+			switch (code) {
+			case HttpStatus.SC_OK:
 				break;
 			case HttpStatus.SC_UNAUTHORIZED:
 				mRoot.signOut();

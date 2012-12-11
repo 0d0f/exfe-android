@@ -257,5 +257,19 @@ public class Model extends Observable {
 		data.putInt(Model.OBSERVER_FIELD_TYPE, ACTION_TYPE_STOP_NETWROK_QUERY);
 		notifyObservers(data);
 	}
+	
+	public void startWaiting(){
+		setChanged();
+		Bundle data = new Bundle();
+		data.putInt(Model.OBSERVER_FIELD_TYPE, ACTION_TYPE_START_NETWROK_QUERY);
+		notifyObservers(data);
+	}
+	
+	public void stopWaiting(){
+		setChanged();
+		Bundle data = new Bundle();
+		data.putInt(Model.OBSERVER_FIELD_TYPE, ACTION_TYPE_STOP_NETWROK_QUERY);
+		notifyObservers(data);
+	}
 
 }

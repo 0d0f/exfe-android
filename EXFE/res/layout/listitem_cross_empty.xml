@@ -26,19 +26,14 @@
             android:textColor="@color/gray_69"
             android:textSize="@dimen/list_main_text_size" />
 
-        <TextView
+        <ImageView
             android:id="@+id/cross_detail"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
             android:paddingRight="@dimen/base_small_margin"
             android:paddingTop="@dimen/base_small_margin"
-            android:shadowColor="@color/white"
-            android:shadowDy="2"
-            android:shadowRadius="1"
-            android:text="@string/please_go_to_exfe_to_gather"
-            android:textColor="@color/gray_5"
-            android:textSize="@dimen/list_alternative_text_size" />
+			android:src="@drawable/gather_blue"/>
     </LinearLayout>
 
     <View

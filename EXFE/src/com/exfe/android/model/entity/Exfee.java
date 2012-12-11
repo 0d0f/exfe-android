@@ -4,6 +4,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -172,11 +176,36 @@ public class Exfee extends Entity {
 	public void saveToDao(DatabaseHelper dbhelper) {
 		try {
 			Dao<Exfee, Long> dao = dbhelper.getCachedDao(getClass());
-			dao.createOrUpdate(this);
-			for (Invitation inv : this.invitations) {
-				inv.saveToDao(dbhelper);
-			}
+			Exfee ex = dao.queryForId(getId());
+			if (ex == null) {
+				dao.create(this);
+			} else {
+				HashMap<Long, Boolean> existFlag = new HashMap<Long, Boolean>();
 
+				for (Invitation inv : ex.invitations) {
+					existFlag.put(inv.getId(), Boolean.FALSE);
+				}
+
+				for (Invitation inv : this.invitations) {
+					if (inv.getRsvpStatus() != Rsvp.REMOVED) {
+						if (existFlag.containsKey(inv.getId())) {
+							existFlag.put(inv.getId(), Boolean.TRUE);
+						}
+						inv.saveToDao(dbhelper);
+					}
+				}
+
+				for (Map.Entry<Long, Boolean> entry : existFlag.entrySet()) {
+					if (entry.getValue() == false) {
+						Dao<Invitation, Long> invDao = dbhelper
+								.getCachedDao(Invitation.class);
+						Invitation inv = invDao.queryForId(entry.getKey());
+						if (inv != null) {
+							inv.removeFromDao(dbhelper);
+						}
+					}
+				}
+			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -2,24 +2,20 @@ package com.exfe.android.controller;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
 import org.apache.http.HttpStatus;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -31,6 +27,7 @@ import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.exfe.android.Activity;
 import com.exfe.android.Const;
@@ -39,12 +36,9 @@ import com.exfe.android.debug.Log;
 import com.exfe.android.model.entity.CrossTime;
 import com.exfe.android.model.entity.EFTime;
 import com.exfe.android.model.entity.EntityFactory;
-import com.exfe.android.model.entity.Identity;
-import com.exfe.android.model.entity.Provider;
 import com.exfe.android.model.entity.Response;
 import com.exfe.android.util.Tool;
 import com.exfe.android.view.OneDaySelector;
-import com.flurry.android.FlurryAgent;
 
 public class SetTimeActivity extends Activity implements Observer {
 
@@ -131,39 +125,23 @@ public class SetTimeActivity extends Activity implements Observer {
 		super.onCreate(savedInstanceState);
 		mModel.addObserver(this);
 		setContentView(R.layout.activity_set_time);
+		
+		mNow.setTimeInMillis(System.currentTimeMillis());
 
 		fmt_MMMM_yyyy = new SimpleDateFormat(getResources().getString(
 				R.string.full_month_and_year));
 
 		Intent it = getIntent();
-		Calendar cal = (Calendar) it.getSerializableExtra("start");
 
 		CrossTime ct = (CrossTime) EntityFactory.create(it
 				.getStringExtra(SetTimeActivity.RESULT_FIELD_CROSS_TIME));
 
-		if (cal == null) {
-			cal = Calendar.getInstance();
-			mBaseDate = (Calendar) cal.clone();
-			mBaseDate.clear();
-			mBaseDate.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
-					cal.get(Calendar.DATE));
-			Log.d(TAG, "1. mBaseDate  %s  ", mBaseDate.getTime());
-
-			Calendar selcal = (Calendar) cal.clone();
-			selcal.clear();
-			setSelectedDate(selcal);
-		} else {
-			mBaseDate = cal;
-			// mSelectedDate = cal;
-			Tool.clearTime(cal);
-			setSelectedDate(cal);
-			Log.d(TAG, "2. mBaseDate  %s  ", mBaseDate.getTime());
-			Log.d(TAG, "2. selectedDate  %s  ", mSelectedDate.getTime());
-		}
-		Log.d(TAG, " mBaseDate == mSelectedDate %b  ",
-				mBaseDate == mSelectedDate);
-
 		View v = findViewById(R.id.btn_action);
+		if (v != null) {
+			v.setOnClickListener(mClickListener);
+		}
+
+		v = findViewById(R.id.btn_back);
 		if (v != null) {
 			v.setOnClickListener(mClickListener);
 		}
@@ -199,16 +177,6 @@ public class SetTimeActivity extends Activity implements Observer {
 		v = findViewById(R.id.month);
 		if (v != null) {
 			mMonthText = (TextView) v;
-			if (Tool.hasDate(mSelectedDate)) {
-				Log.d(TAG, "3. mBaseDate  %s  ", mBaseDate.getTime());
-				Log.d(TAG, "3. mSelectedDate  %s  ", mSelectedDate.getTime());
-				updateMonth(mSelectedDate);
-			} else {
-				Log.d(TAG, "4. mBaseDate  %s  ", mBaseDate.getTime());
-				Log.d(TAG, "4. mSelectedDate  %s  ", mSelectedDate.getTime());
-				updateMonth(mBaseDate);
-			}
-
 		}
 
 		v = findViewById(R.id.time_selector);
@@ -247,6 +215,68 @@ public class SetTimeActivity extends Activity implements Observer {
 
 		mDateSelector = (ListView) findViewById(R.id.date_selector);
 
+		Calendar cal = null;
+
+		if (ct != null) {
+			EFTime eftime = ct.getBeginAt();
+			if (eftime != null) {
+				int type = eftime.getDateTimeType();
+				Date target = eftime.getLocalDateTime();
+
+				if (target != null) {
+					Log.d(TAG, "1.3. target  %s  ", target);
+					cal = Calendar.getInstance();
+					cal.setTime(target);
+					mBaseDate = cal;
+					if (type == EFTime.DATETIME_TYPE_DATE_ONLY) {
+						Tool.clearTime(cal);
+					}
+					setSelectedDate(cal);
+					if (type == EFTime.DATETIME_TYPE_FULL) {
+						if (mTimeSelector != null) {
+							mTimeSelector.setCurrentDate(cal);
+							setSelectedTime(mBaseDate);
+						}
+					}
+					Log.d(TAG, "1.3. mBaseDate  %s  ", mBaseDate.getTime());
+					Log.d(TAG, "1.3. selectedDate  %s  ",
+							mSelectedDate.getTime());
+				}
+
+			}
+			if (mInputTime != null) {
+				mInputTime.setText(ct.getOrigin());
+			}
+
+		}
+
+		if (cal == null) {
+			cal = Calendar.getInstance();
+			mBaseDate = (Calendar) cal.clone();
+			mBaseDate.clear();
+			mBaseDate.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH),
+					cal.get(Calendar.DATE));
+			Log.d(TAG, "1.1.1. mBaseDate  %s  ", mBaseDate.getTime());
+
+			Calendar selcal = (Calendar) cal.clone();
+			selcal.clear();
+			setSelectedDate(selcal);
+		}
+		Log.d(TAG, " mBaseDate == mSelectedDate %b  ",
+				mBaseDate == mSelectedDate);
+
+		if (mMonthText != null) {
+			if (Tool.hasDate(mSelectedDate)) {
+				Log.d(TAG, "2.1. mBaseDate  %s  ", mBaseDate.getTime());
+				Log.d(TAG, "2.1. mSelectedDate  %s  ", mSelectedDate.getTime());
+				updateMonth(mSelectedDate);
+			} else {
+				Log.d(TAG, "2.2. mBaseDate  %s  ", mBaseDate.getTime());
+				Log.d(TAG, "2.2. mSelectedDate  %s  ", mSelectedDate.getTime());
+				updateMonth(mBaseDate);
+			}
+		}
+
 		mAdapter = new DateAdapter(this, R.layout.listitem_rich_date);
 		mDateSelector.setChoiceMode(AbsListView.CHOICE_MODE_SINGLE);
 		mDateSelector.setAdapter(mAdapter);
@@ -261,7 +291,23 @@ public class SetTimeActivity extends Activity implements Observer {
 			}
 		});
 		mDateSelector.setOnItemClickListener(mListener);
+		mDateSelector.setOnScrollListener(new AbsListView.OnScrollListener() {
 
+			@Override
+			public void onScroll(AbsListView view, int firstVisibleItem,
+					int visibleItemCount, int totalItemCount) {
+				if (mAdapter != null) {
+					Calendar mid = mAdapter.getItem(firstVisibleItem + visibleItemCount / 2);
+					updateMonth(mid);
+				}
+			}
+
+			@Override
+			public void onScrollStateChanged(AbsListView view, int scrollState) {
+				// TODO Auto-generated method stub
+
+			}
+		});
 	}
 
 	private void updateMonth(Calendar date) {
@@ -320,6 +366,13 @@ public class SetTimeActivity extends Activity implements Observer {
 
 	}
 
+	private void saveResultAndFinish(String abc) {
+		Intent data = new Intent();
+		data.putExtra(RESULT_FIELD_CROSS_TIME, abc);
+		setResult(Activity.RESULT_OK, data);
+		finish();
+	}
+
 	View.OnClickListener mClickListener = new View.OnClickListener() {
 
 		@Override
@@ -329,61 +382,68 @@ public class SetTimeActivity extends Activity implements Observer {
 			switch (id) {
 			case R.id.btn_action:
 				if (mInputTime != null) {
-					// isUserInput
-					Runnable run = new Runnable() {
+					final String raw = mInputTime.getText().toString().trim();
+					if (TextUtils.isEmpty(raw)) {
+						saveResultAndFinish(null);
+					} else {
+						// isUserInput
+						Runnable run = new Runnable() {
 
-						@Override
-						public void run() {
-							String raw = mInputTime.getText().toString().trim();
-							Response result = mModel.getServer()
-									.formatTime(raw);
+							@Override
+							public void run() {
+								Response result = mModel.getServer()
+										.formatTime(raw);
 
-							if (result != null) {
-								int code = result.getCode();
-								switch (code) {
-								case HttpStatus.SC_OK:
-									JSONObject resp = result.getResponse();
-									final JSONObject time = resp
-											.optJSONObject("cross_time");
-									if (time != null) {
-										CrossTime ct = (CrossTime) EntityFactory
-												.create(time);
-										if (ct != null) {
-											mModel.mHandler
-													.post(new Runnable() {
+								postInUI(hideProgressBar);
+								if (result != null) {
+									int code = result.getCode();
+									switch (code) {
+									case HttpStatus.SC_OK:
+										JSONObject resp = result.getResponse();
+										final JSONObject time = resp
+												.optJSONObject("cross_time");
+										if (time != null) {
+											CrossTime ct = (CrossTime) EntityFactory
+													.create(time);
+											if (ct != null) {
+												postInUI(new Runnable() {
 
-														@Override
-														public void run() {
+													@Override
+													public void run() {
 
-															Intent data = new Intent();
-															data.putExtra(
-																	RESULT_FIELD_CROSS_TIME,
-																	time.toString());
-															setResult(
-																	Activity.RESULT_OK,
-																	data);
-															finish();
-														}
-													});
+														saveResultAndFinish(time
+																.toString());
+													}
+												});
+											}
 										}
+										break;
+									case HttpStatus.SC_NOT_FOUND:
+										postInUI(createToastMessage("API not found."));
+										break;
+									default:
+										postInUI(createToastMessage("Unhandled error."));
+										break;
 									}
-									break;
-								case HttpStatus.SC_NOT_FOUND:
-									break;
-								default:
-									break;
+								} else {
+									postInUI(createToastMessage("Bad response."));
 								}
 							}
-						}
-					};
-
-					new Thread(run).start();
+						};
+						showProgressBar("Parsing", "Analyzing time text...");
+						new Thread(run).start();
+					}
 				}
+				break;
+			case R.id.btn_back:
+				setResult(Activity.RESULT_CANCELED, null);
+				finish();
 				break;
 			default:
 				break;
 			}
 		}
+
 	};
 
 	class DateAdapter extends BaseAdapter {
@@ -395,7 +455,8 @@ public class SetTimeActivity extends Activity implements Observer {
 		private static final int MAX_CACHE_SIZE = 200;
 
 		private SimpleDateFormat sDD_FORMATTER = new SimpleDateFormat("dd");
-		private SimpleDateFormat sWEEKDAY_FORMATTER = new SimpleDateFormat("E");
+		private SimpleDateFormat sWEEKDAY_FORMATTER = new SimpleDateFormat(
+				"EEEE");
 
 		private int mBasePosition;
 		private int mAllCount;
@@ -463,6 +524,7 @@ public class SetTimeActivity extends Activity implements Observer {
 			SparseArray<View> holder = new SparseArray<View>();
 			holder.put(R.id.text1, v.findViewById(R.id.text1));
 			holder.put(R.id.text2, v.findViewById(R.id.text2));
+			holder.put(R.id.root, v.findViewById(R.id.root));
 			v.setTag(holder);
 			return v;
 		}
@@ -471,6 +533,7 @@ public class SetTimeActivity extends Activity implements Observer {
 			SparseArray<View> holder = (SparseArray<View>) view.getTag();
 			TextView tv1 = (TextView) holder.get(R.id.text1);
 			TextView tv2 = (TextView) holder.get(R.id.text2);
+			View root = holder.get(R.id.root);
 			Calendar cal = getItem(position);
 			boolean selected = false;
 
@@ -486,12 +549,16 @@ public class SetTimeActivity extends Activity implements Observer {
 				} else {
 					tv1.setText(sDD_FORMATTER.format(cal.getTime()));
 				}
-				if (selected) {
-					tv1.append("*");
-				}
+				tv1.setSelected(selected);
 			}
 			if (tv2 != null) {
 				tv2.setText(sWEEKDAY_FORMATTER.format(cal.getTime()));
+				tv2.setSelected(selected);
+			}
+			if (root != null) {
+				root.setBackgroundColor(mContext.getResources().getColor(
+						selected ? R.color.rich_time_background
+								: R.color.rich_date_background));
 			}
 		}
 

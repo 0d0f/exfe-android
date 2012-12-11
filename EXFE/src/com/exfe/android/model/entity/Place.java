@@ -6,6 +6,9 @@ import java.util.Date;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.location.Location;
+import android.text.TextUtils;
+
 import com.exfe.android.Const;
 import com.exfe.android.db.DatabaseHelper;
 import com.exfe.android.util.Tool;
@@ -16,8 +19,8 @@ public class Place extends Entity {
 	private long mId;
 	private String mTitle;
 	private String mDescription;
-	private String mLng;
-	private String mLat;
+	private Double mLng;
+	private Double mLat;
 	private String mProvider;
 	private String mExternalId;
 	private Date mCreatedAt;
@@ -28,8 +31,8 @@ public class Place extends Entity {
 		mId = 0;
 		mTitle = "";
 		mDescription = "";
-		mLng = "";
-		mLng = "";
+		mLng = null;
+		mLat = null;
 		mProvider = "";
 		mExternalId = "";
 
@@ -47,8 +50,27 @@ public class Place extends Entity {
 		mId = json.optLong("id", 0);
 		mTitle = json.optString("title", "");
 		mDescription = json.optString("description", "");
-		mLng = json.optString("lng", "");
-		mLat = json.optString("lat", "");
+
+		String str = json.optString("lng", "");
+		if (TextUtils.isEmpty(str)) {
+			mLng = null;
+		} else {
+			try {
+				mLng = Double.valueOf(str);
+			} catch (NumberFormatException e) {
+				mLng = null;
+			}
+		}
+		str = json.optString("lat", "");
+		if (TextUtils.isEmpty(str)) {
+			mLat = null;
+		} else {
+			try {
+				mLat = Double.valueOf(str);
+			} catch (NumberFormatException e) {
+				mLat = null;
+			}
+		}
 		mProvider = json.optString("provider", "");
 		mExternalId = json.optString("external_id", "");
 		mCreatedAt = Tool.parseDate(json, "created_at");
@@ -61,8 +83,16 @@ public class Place extends Entity {
 			json.put("id", mId);
 			json.put("title", mTitle);
 			json.put("description", mDescription);
-			json.put("lng", mLng);
-			json.put("lat", mLat);
+			if (mLng == null) {
+				json.put("lng", "");
+			} else {
+				json.put("lng", String.valueOf(mLng));
+			}
+			if (mLat == null) {
+				json.put("lat", "");
+			} else {
+				json.put("lat", String.valueOf(mLat));
+			}
 			json.put("provider", mProvider);
 			json.put("external_id", mExternalId);
 			if (deep) {
@@ -134,7 +164,7 @@ public class Place extends Entity {
 	/**
 	 * @return the lng
 	 */
-	public String getLng() {
+	public Double getLng() {
 		return this.mLng;
 	}
 
@@ -142,14 +172,14 @@ public class Place extends Entity {
 	 * @param lng
 	 *            the lng to set
 	 */
-	public void setLng(String lng) {
+	public void setLng(Double lng) {
 		this.mLng = lng;
 	}
 
 	/**
 	 * @return the lat
 	 */
-	public String getLat() {
+	public Double getLat() {
 		return this.mLat;
 	}
 
@@ -157,7 +187,7 @@ public class Place extends Entity {
 	 * @param lat
 	 *            the lat to set
 	 */
-	public void setLat(String lat) {
+	public void setLat(Double lat) {
 		this.mLat = lat;
 	}
 
@@ -235,5 +265,32 @@ public class Place extends Entity {
 	public void loadFromDao(DatabaseHelper dbhelper) {
 		// TODO Auto-generated method stub
 
+	}
+
+	public boolean hasGeo() {
+		return mLat != null && mLng != null;
+	}
+
+	public Location getLocation() {
+		Location loc = new Location(mProvider);
+		if (hasGeo()) {
+			loc.setTime(System.currentTimeMillis());
+			loc.setLatitude(mLat);
+			loc.setLongitude(mLng);
+		}
+		return loc;
+	}
+	
+	public void clearGeo(){
+		mLat = null;
+		mLng = null;
+	}
+	
+	public void clear(){
+		mTitle = "";
+		mDescription = "";
+		mProvider = "";
+		mExternalId = "";
+		clearGeo();
 	}
 }

@@ -3,10 +3,12 @@ package com.exfe.android.controller;
 import java.util.Observable;
 import java.util.Observer;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 
 import com.exfe.android.Activity;
+import com.exfe.android.Const;
 import com.exfe.android.Fragment;
 import com.exfe.android.R;
 import com.exfe.android.debug.Log;
@@ -32,7 +34,7 @@ public class LandingActivity extends Activity implements Observer,
 		super.onCreate(savedInstanceState);
 		mModel.addObserver(this);
 		setContentView(R.layout.activity_landing);
-
+		
 		// Intent it = getIntent();
 		showFragment(null);
 	}
@@ -98,6 +100,8 @@ public class LandingActivity extends Activity implements Observer,
 				Log.d(TAG, "Jump to Cross");
 				fragment = new CrossListFragment();
 				FlurryAgent.logEvent("Fragment_cross_list");
+				//Intent it = getIntent();
+				//boolean needRefresh = it.getBooleanExtra(Const.PUSH_FIELD_SOURCE_PUSH, false);				
 				Bundle args = new Bundle();
 				fragment.setArguments(args);
 			} else {

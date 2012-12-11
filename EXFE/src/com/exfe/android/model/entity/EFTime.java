@@ -21,15 +21,10 @@ import com.j256.ormlite.dao.Dao;
 
 public class EFTime extends Entity {
 
-//	public static final DateFormat sfmt_dt = new SimpleDateFormat(
-//			"yyyy-MM-dd'T'HH:mm:ssZ", Locale.US);
-//	public static final DateFormat sfmt_d = new SimpleDateFormat("yyyy-MM-ddZ",
-//			Locale.US);
-//	public static final DateFormat sfmt_t = new SimpleDateFormat("HH:mm:ssZ",
-//			Locale.US);
-//	static {
-//		sfmt_dt.setTimeZone(TimeZone.getTimeZone("UTC"));
-//	}
+	public static final int DATETIME_TYPE_UNKNOWN = 0;
+	public static final int DATETIME_TYPE_FULL = 1;
+	public static final int DATETIME_TYPE_DATE_ONLY = 2;
+	public static final int DATETIME_TYPE_TIME_ONLY = 3;
 
 	private long mId = NO_ID;
 	private String mDateWord;
@@ -45,9 +40,9 @@ public class EFTime extends Entity {
 		mDate = date;
 		mTimeWord = timeWord;
 		mTime = time;
-		if (TextUtils.isEmpty(timezone)){
-			mTimezone =  Tool.gmtWalkaround(Tool.localTimeZoneString());
-		}else{
+		if (TextUtils.isEmpty(timezone)) {
+			mTimezone = Tool.gmtWalkaround(Tool.localTimeZoneString());
+		} else {
 			mTimezone = timezone;
 		}
 	}
@@ -65,7 +60,8 @@ public class EFTime extends Entity {
 		mDate = json.optString("date", "");
 		mTimeWord = json.optString("time_word", "");
 		mTime = json.optString("time", "");
-		mTimezone = json.optString("timezone",  Tool.gmtWalkaround(Tool.localTimeZoneString()));
+		mTimezone = json.optString("timezone",
+				Tool.gmtWalkaround(Tool.localTimeZoneString()));
 
 	}
 
@@ -174,31 +170,6 @@ public class EFTime extends Entity {
 		this.mTimezone = timezone;
 	}
 
-	public CharSequence getRelativeStringFromNow(Resources res) {
-		boolean hasTime = !TextUtils.isEmpty(mTime);
-		boolean hasDate = !TextUtils.isEmpty(mDate);
-
-		try {
-			if (hasTime && hasDate) {
-				String datetimestr = String.format("%s %s", mDate, mTime);
-				Date target = Const.UTC_DATE_TIME_FORMAT.parse(datetimestr);
-				return Tool.getXRelativeString(target, res);
-			}
-			if (hasDate){
-				String datetimestr = mDate;
-				Date target = Const.UTC_DATE_FORMAT.parse(datetimestr);
-				return Tool.getXRelativeString(target, res);
-			}
-			if (hasTime){
-				//??
-			}
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return "";
-	}
-
 	@Override
 	public void saveToDao(DatabaseHelper dbhelper) {
 		try {
@@ -213,5 +184,62 @@ public class EFTime extends Entity {
 	public void loadFromDao(DatabaseHelper dbhelper) {
 		// TODO Auto-generated method stub
 
+	}
+
+	public int getDateTimeType() {
+		boolean hasTime = !TextUtils.isEmpty(mTime);
+		boolean hasDate = !TextUtils.isEmpty(mDate);
+		if (hasDate && hasTime) {
+			return DATETIME_TYPE_FULL;
+		}
+		if (hasDate && !hasTime) {
+			return DATETIME_TYPE_DATE_ONLY;
+		}
+		if (!hasDate && hasTime) {
+			return DATETIME_TYPE_TIME_ONLY;
+		}
+		return DATETIME_TYPE_UNKNOWN;
+	}
+
+	public CharSequence getRelativeStringFromNow(Resources res) {
+		Date target = getUTCDateTime();
+		if (target != null){
+			return Tool.getXRelativeString(target, res);
+		}
+		return "";
+	}
+
+	public Date getLocalDateTime() {
+		int type = getDateTimeType();
+		Date target_utc = getUTCDateTime();
+		if (target_utc != null){
+			Date target = new Date();
+			target.setTime(target_utc.getTime());
+			return target;
+		}
+		return null;
+	}
+	
+	public Date getUTCDateTime() {
+		int type = getDateTimeType();
+		try {
+			if (type == DATETIME_TYPE_FULL) {
+				String datetimestr = String.format("%s %s", mDate, mTime);
+				Date target = Const.UTC_DATE_TIME_FORMAT.parse(datetimestr);
+				return target;
+			}
+			if (type == DATETIME_TYPE_DATE_ONLY) {
+				String datetimestr = mDate;
+				Date target = Const.UTC_DATE_FORMAT.parse(datetimestr);
+				return target;
+			}
+			if (type == DATETIME_TYPE_TIME_ONLY) {
+				return null;
+			}
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 }

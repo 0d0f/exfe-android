@@ -186,7 +186,8 @@ public class CrossListFragment extends ListFragment implements Observer {
 
 		View emptyView = getActivity().getLayoutInflater().inflate(
 				R.layout.listitem_cross_empty, getListView(), false);
-		getListView().addFooterView(emptyView, null, false);
+		emptyView.setOnClickListener(mClickListener);
+		getListView().addFooterView(emptyView);
 		mAdapter = new CrossIteratorAdapter(getActivity(),
 				R.layout.listitem_cross, null);
 		setListAdapter(mAdapter);
@@ -273,91 +274,100 @@ public class CrossListFragment extends ListFragment implements Observer {
 	@Override
 	public void update(Observable observable, Object data) {
 
-		if (observable instanceof Model) {
+		final Bundle bundle = (Bundle) data;
+		int type = bundle.getInt(Model.OBSERVER_FIELD_TYPE);
+		switch (type) {
+		case CrossesModel.ACTION_TYPE_UPDATE_CROSSES:
+			mModel.mHandler.post(new Runnable() {
 
-			Bundle bundle = (Bundle) data;
-			int type = bundle.getInt(Model.OBSERVER_FIELD_TYPE);
-			switch (type) {
-			case CrossesModel.ACTION_TYPE_UPDATE_CROSSES:
-				mModel.mHandler.post(new Runnable() {
+				@Override
+				public void run() {
+					getLoaderManager().restartLoader(LOADER_QUERY_LOCAL, null,
+							mQueryLoaderHandler);
+				}
+			});
+			break;
+		case CrossesModel.ACTION_TYPE_REMOVE_CROSS:
+			mModel.mHandler.post(new Runnable() {
 
-					@Override
-					public void run() {
-						getLoaderManager().restartLoader(LOADER_QUERY_LOCAL,
-								null, mQueryLoaderHandler);
+				@Override
+				public void run() {
+					long cross_id = bundle
+							.getLong(CrossesModel.FIELD_CHANGE_ID);
+					getLoaderManager().restartLoader(LOADER_QUERY_LOCAL, null,
+							mQueryLoaderHandler);
+				}
+			});
+			break;
+		case MeModel.ACTION_TYPE_UPDATE_MY_PROFILE:
+			final User u = mModel.Me().getProfile();
+			mModel.mHandler.post(new Runnable() {
+
+				@Override
+				public void run() {
+					loadHead(u);
+				}
+			});
+			break;
+		case Model.ACTION_TYPE_SIGN_OUT:
+			mModel.mHandler.post(new Runnable() {
+
+				@Override
+				public void run() {
+					AlertDialog.Builder builder = new AlertDialog.Builder(
+							getActivity());
+					builder.setMessage(
+							"The token is invalid. Do you want to sign out?")
+							.setPositiveButton(R.string.sign_out,
+									new DialogInterface.OnClickListener() {
+
+										@Override
+										public void onClick(
+												DialogInterface dialog,
+												int which) {
+											dialog.dismiss();
+											((Activity) getActivity())
+													.signOut();
+										}
+									})
+							.setNegativeButton(R.string.cancel,
+									new DialogInterface.OnClickListener() {
+
+										@Override
+										public void onClick(
+												DialogInterface dialog,
+												int which) {
+											dialog.cancel();
+										}
+									});
+					builder.create().show();
+				}
+			});
+
+			break;
+
+		case Model.ACTION_TYPE_START_NETWROK_QUERY:
+			mModel.mHandler.post(new Runnable() {
+
+				@Override
+				public void run() {
+					if (mProgressBarHint != null) {
+						mProgressBarHint.setVisibility(View.VISIBLE);
 					}
-				});
-				break;
-			case MeModel.ACTION_TYPE_UPDATE_MY_PROFILE:
-				final User u = mModel.Me().getProfile();
-				mModel.mHandler.post(new Runnable() {
+				}
+			});
+			break;
+		case Model.ACTION_TYPE_STOP_NETWROK_QUERY:
+			mModel.mHandler.post(new Runnable() {
 
-					@Override
-					public void run() {
-						loadHead(u);
+				@Override
+				public void run() {
+					if (mProgressBarHint != null) {
+						mProgressBarHint.setVisibility(View.GONE);
 					}
-				});
-				break;
-			case Model.ACTION_TYPE_SIGN_OUT:
-				mModel.mHandler.post(new Runnable() {
-
-					@Override
-					public void run() {
-						AlertDialog.Builder builder = new AlertDialog.Builder(
-								getActivity());
-						builder.setMessage(
-								"The token is invalid. Do you want to sign out?")
-								.setPositiveButton(R.string.sign_out,
-										new DialogInterface.OnClickListener() {
-
-											@Override
-											public void onClick(
-													DialogInterface dialog,
-													int which) {
-												dialog.dismiss();
-												((Activity) getActivity())
-														.signOut();
-											}
-										})
-								.setNegativeButton(R.string.cancel,
-										new DialogInterface.OnClickListener() {
-
-											@Override
-											public void onClick(
-													DialogInterface dialog,
-													int which) {
-												dialog.cancel();
-											}
-										});
-						builder.create().show();
-					}
-				});
-
-				break;
-
-			case Model.ACTION_TYPE_START_NETWROK_QUERY:
-				mModel.mHandler.post(new Runnable() {
-
-					@Override
-					public void run() {
-						if (mProgressBarHint != null) {
-							mProgressBarHint.setVisibility(View.VISIBLE);
-						}
-					}
-				});
-				break;
-			case Model.ACTION_TYPE_STOP_NETWROK_QUERY:
-				mModel.mHandler.post(new Runnable() {
-
-					@Override
-					public void run() {
-						if (mProgressBarHint != null) {
-							mProgressBarHint.setVisibility(View.GONE);
-						}
-					}
-				});
-				break;
-			}
+				}
+			});
+			break;
 		}
 	}
 
@@ -375,6 +385,7 @@ public class CrossListFragment extends ListFragment implements Observer {
 				it.setClass(getActivity(), ProfileActivity.class);
 				startActivity(it);
 				break;
+			case R.id.list_cross_root:
 			case R.id.btn_gather:
 				it = new Intent();
 				it.setClass(getActivity(), GatherActivity.class);
@@ -397,7 +408,7 @@ public class CrossListFragment extends ListFragment implements Observer {
 		if (requestCode == Activity.RESULT_OK) {
 			switch (requestCode) {
 			case GatherActivity.GAHTER_ID:
-				
+
 				break;
 			}
 		}

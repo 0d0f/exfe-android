@@ -16,7 +16,8 @@ import android.os.Environment;
 
 public class Log {
 	public static boolean DEBUG = BuildConfig.DEBUG;
-	public static int LOG_LEVEL = DEBUG?android.util.Log.VERBOSE:android.util.Log.WARN;
+	public static int LOG_LEVEL = DEBUG ? android.util.Log.VERBOSE
+			: android.util.Log.WARN;
 
 	public static void v(Class<?> tag, String msg, Object... args) {
 		v(tag.getSimpleName(), msg, args);
@@ -227,7 +228,7 @@ public class Log {
 			}
 		}
 	}
-	
+
 	public static void wtf(Class<?> tag, String msg, Object... args) {
 		wtf(tag.getSimpleName(), msg, args);
 	}
@@ -246,7 +247,8 @@ public class Log {
 		wtf(tag, null, debugOn, msg, args);
 	}
 
-	public static void wtf(Class<?> tag, Throwable tr, String msg, Object... args) {
+	public static void wtf(Class<?> tag, Throwable tr, String msg,
+			Object... args) {
 		wtf(tag.getSimpleName(), tr, msg, args);
 	}
 
@@ -259,8 +261,8 @@ public class Log {
 		wtf(tag.getSimpleName(), tr, debugOn, msg, args);
 	}
 
-	public static void wtf(String tag, Throwable tr, boolean debugOn, String msg,
-			Object... args) {
+	public static void wtf(String tag, Throwable tr, boolean debugOn,
+			String msg, Object... args) {
 		if (android.util.Log.ASSERT >= LOG_LEVEL || debugOn) {
 			if (tr != null) {
 				android.util.Log.wtf(tag, String.format(msg, args), tr);
@@ -275,7 +277,8 @@ public class Log {
 	}
 
 	public static boolean isLoggable(Class<?> tag, int level) {
-		return android.util.Log.isLoggable(tag.getSimpleName(), level) && level >= LOG_LEVEL ;
+		return android.util.Log.isLoggable(tag.getSimpleName(), level)
+				&& level >= LOG_LEVEL;
 	}
 
 	public static void println(int priority, Class<?> tag, String msg,

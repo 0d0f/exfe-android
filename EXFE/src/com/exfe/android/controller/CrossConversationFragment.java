@@ -167,6 +167,7 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		// or start a new one.
 		getLoaderManager().initLoader(LOADER_QUERY_LOCAL, null,
 				mQueryLoaderHandler);
+
 	}
 
 	/*
@@ -214,6 +215,8 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		// TODO Auto-generated method stub
 		super.onStart();
 
+		// getLoaderManager().initLoader(LOADER_QUERY_NETWORK, null,
+		// mQueryLoaderHandler);
 		if (mCross != null) {
 			mModel.Conversations().refreshPosts(mCross);
 		}
@@ -347,9 +350,23 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		public void onScrollStateChanged(AbsListView view, int scrollState) {
 
 			Log.d(TAG, "scroll: %d", scrollState);
+			if (scrollState != SCROLL_STATE_IDLE) {
+				if (view.getFirstVisiblePosition() == 0
+						|| view.getLastVisiblePosition() + 1 == view
+								.getAdapter().getCount()) {
+					// getLoaderManager().restartLoader(LOADER_QUERY_NETWORK,
+					// null,
+					// mQueryLoaderHandler);
+					if (mCross != null) {
+						mModel.Conversations().refreshPosts(mCross);
+					}
+				}
+			}
+
 			if (scrollState != SCROLL_STATE_IDLE && !allShown) {
 				showForSeconds(mScrollTopTime, 1);
 			}
+
 		}
 	};
 

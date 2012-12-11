@@ -39,6 +39,15 @@ public class Invitation extends Entity {
 
 	public Invitation() {
 		mType = EntityFactory.TYPE_INVITATION;
+		mId = 0;
+		identity = null;
+		by_identity = null;
+		rsvp_status = Rsvp.NORESPONSE;
+		via = "";
+		host = false;
+		mates = 0;
+		created_at = new Date();
+		updated_at = created_at;
 	}
 
 	public Invitation(JSONObject json) {
@@ -127,6 +136,19 @@ public class Invitation extends Entity {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void removeFromDao(DatabaseHelper dbhelper) {
+		try {
+			Dao<Invitation, Long> dao = dbhelper.getCachedDao(getClass());
+			if (getId() != NO_ID && dao.idExists(getId())) {
+				dao.delete(this);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 	/**

@@ -14,10 +14,14 @@
         <Button
             android:id="@+id/nav_btn_back"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="30dp"
             android:layout_gravity="center_vertical"
             android:layout_marginLeft="@dimen/base_small_margin"
             android:background="@drawable/btn_back_bg"
+            android:paddingBottom="0dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="@dimen/base_margin"
+            android:paddingTop="0dp"
             android:text="@string/home"
             android:textColor="@color/gray_8"
             android:textSize="@dimen/button_text_size"
@@ -30,6 +34,7 @@
             android:layout_weight="1"
             android:ellipsize="end"
             android:gravity="center"
+            android:padding="4dp"
             android:shadowColor="@color/black"
             android:shadowDx="0"
             android:shadowDy="1"
@@ -37,18 +42,19 @@
             android:singleLine="true"
             android:textColor="@color/bav_bar_title"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:padding="4dp" />
+            android:textStyle="bold" />
 
         <ImageButton
             android:id="@+id/nav_btn_action"
-            android:layout_width="@dimen/nav_btn_width"
-            android:layout_height="@dimen/nav_btn_height"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
             android:layout_gravity="center_vertical"
             android:layout_marginRight="@dimen/base_small_margin"
+            android:background="@drawable/btn_dark_bg"
             android:contentDescription="comment button"
-            android:src="@drawable/conv_navbarbtn"
-            android:background="@drawable/btn_dark_bg" />
+            android:minHeight="@dimen/nav_btn_height"
+            android:minWidth="@dimen/nav_btn_width"
+            android:src="@drawable/conv_navbarbtn" />
     </LinearLayout>
 
     <FrameLayout

@@ -96,12 +96,12 @@
             android:exported="false"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateHidden|adjustUnspecified" >
+            android:windowSoftInputMode="stateHidden|adjustPan" >
             <intent-filter>
             </intent-filter>
         </activity>
         <activity
-            android:name=".controller.SearchPlaceActivity"
+            android:name="com.exfe.android.controller.SearchPlaceActivity"
             android:exported="false"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"

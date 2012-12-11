@@ -9,16 +9,28 @@
     <LinearLayout
         android:id="@+id/navigation_bar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/nav_bar_height"
-        android:background="@drawable/navbar" >
+        android:layout_height="@dimen/nav_bar2_height"
+        android:background="@color/rich_month_background"
+        android:paddingRight="@dimen/base_small_margin" >
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="24dp"
+            android:layout_height="match_parent"
+            android:layout_margin="0dp"
+            android:background="@drawable/back_btn_bg"
+            android:src="@drawable/back_btn_fg" 
+            android:contentDescription="@string/back"/>
 
         <EditText
             android:id="@+id/exfee_list_input"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_margin="@dimen/base_small_margin"
             android:layout_weight="1"
+            android:background="@drawable/edit_text_bg"
             android:ellipsize="end"
-            android:hint="exfee's Identity here"
+            android:hint="@string/enter_email_or_name"
             android:imeOptions="actionSearch"
             android:padding="4dp"
             android:singleLine="true"
@@ -29,11 +41,16 @@
         <Button
             android:id="@+id/btn_invite"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/nav_btn_height"
+            android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
-            android:layout_marginRight="@dimen/base_small_margin"
-            android:background="@drawable/btn_dark_bg"
-            android:text="@string/invite" />
+            android:layout_margin="@dimen/base_small_margin"
+            android:background="@drawable/btn_blue_bg"
+            android:minEms="4"
+            android:paddingLeft="@dimen/base_margin"
+            android:paddingRight="@dimen/base_margin"
+            android:text="@string/invite"
+            android:textColor="@color/gray_8"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <ListView

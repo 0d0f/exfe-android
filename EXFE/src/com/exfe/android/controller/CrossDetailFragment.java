@@ -1,7 +1,6 @@
 package com.exfe.android.controller;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -11,11 +10,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -33,6 +34,7 @@ import android.widget.TextView;
 
 import com.example.android.bitmapfun.util.ImageFetcher;
 import com.example.android.bitmapfun.util.ImageWorker;
+import com.exfe.android.Activity;
 import com.exfe.android.Const;
 import com.exfe.android.Fragment;
 import com.exfe.android.R;
@@ -40,6 +42,8 @@ import com.exfe.android.debug.Log;
 import com.exfe.android.model.CrossesModel;
 import com.exfe.android.model.Model;
 import com.exfe.android.model.entity.Cross;
+import com.exfe.android.model.entity.CrossTime;
+import com.exfe.android.model.entity.EFTime;
 import com.exfe.android.model.entity.EntityFactory;
 import com.exfe.android.model.entity.Exfee;
 import com.exfe.android.model.entity.Identity;
@@ -55,6 +59,10 @@ import com.exfe.android.view.CountControls;
 public class CrossDetailFragment extends Fragment implements Observer {
 
 	public static final String FIELD_CROSS_ID = "cross_id";
+
+	public static final int GATHER_TIME_REQUEST = 55001;
+	public static final int GATHER_PLACE_REQUEST = 55002;
+	public static final int GATHER_EXFEE_REQUEST = 55003;
 
 	private DisplayMetrics mDm = null;
 	private long mCrossId = 0;
@@ -72,7 +80,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 
 	private ImageWorker mImageWorker = null;
 
-	private Handler mHandler = new Handler();
+	// private Handler mHandler = new Handler();
 
 	/** Called when the activity is first created. */
 	@Override
@@ -89,7 +97,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		//setHasOptionsMenu(true);
+		// setHasOptionsMenu(true);
 	}
 
 	/*
@@ -167,6 +175,37 @@ public class CrossDetailFragment extends Fragment implements Observer {
 			mDrawMatrix.postTranslate(dx, dy);
 			bgView.setScaleType(ScaleType.MATRIX);
 			bgView.setImageMatrix(mDrawMatrix);
+		}
+
+		v = getActivity().findViewById(R.id.exfee_root);
+		if (v != null) {
+			// v.setOnClickListener(mClickListener);
+		}
+
+		v = getActivity().findViewById(R.id.x_rel_date);
+		if (v != null) {
+			v.setOnClickListener(mClickListener);
+		}
+		v = getActivity().findViewById(R.id.x_time_date);
+		if (v != null) {
+			v.setOnClickListener(mClickListener);
+		}
+		v = getActivity().findViewById(R.id.x_zone);
+		if (v != null) {
+			v.setOnClickListener(mClickListener);
+		}
+
+		v = getActivity().findViewById(R.id.x_addr_title);
+		if (v != null) {
+			v.setOnClickListener(mClickListener);
+		}
+		v = getActivity().findViewById(R.id.x_addr_desc);
+		if (v != null) {
+			v.setOnClickListener(mClickListener);
+		}
+		v = getActivity().findViewById(R.id.x_map);
+		if (v != null) {
+			v.setOnClickListener(mClickListener);
 		}
 
 		// bar me
@@ -274,11 +313,19 @@ public class CrossDetailFragment extends Fragment implements Observer {
 					String.format("/%d", cross.getExfee().getTotal()));
 
 			if (cross.getTime() != null) {
-				fillText(R.id.x_rel_date, cross.getTime().getBeginAt()
-						.getRelativeStringFromNow(getResources()),
-						getText(R.string.sometime));
-				fillText(R.id.x_time_date, cross.getTime()
-						.getLongLocalTimeSring(false, getResources()));
+
+				if (cross.getTime().getOriginMarkType() == CrossTime.MARK_ORIGINAL) {
+					fillText(R.id.x_rel_date, cross.getTime()
+							.getLongLocalTimeSring(false, getResources()),
+							getText(R.string.sometime));
+					fillText(R.id.x_time_date, "", View.GONE);
+				} else {
+					fillText(R.id.x_rel_date, cross.getTime().getBeginAt()
+							.getRelativeStringFromNow(getResources()),
+							getText(R.string.sometime));
+					fillText(R.id.x_time_date, cross.getTime()
+							.getLongLocalTimeSring(false, getResources()));
+				}
 
 				if (Tool.isSameWithLocalZone(cross.getTime().getBeginAt()
 						.getTimezone())) {
@@ -310,8 +357,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 			View mvf = getActivity().findViewById(R.id.x_map_frame);
 			if (mv != null) {
 				Place p = cross.getPlace();
-				if (p != null && !TextUtils.isEmpty(p.getLat())
-						&& !TextUtils.isEmpty(p.getLng())) {
+				if (p != null && p.hasGeo()) {
 					if (mvf != null) {
 						mvf.setVisibility(View.VISIBLE);
 					}
@@ -361,6 +407,12 @@ public class CrossDetailFragment extends Fragment implements Observer {
 					if (row.getVisibility() != View.VISIBLE) {
 						row.setVisibility(View.VISIBLE);
 					}
+					int ci = 0;
+					while (ci < row.getChildCount()) {
+						View av = row.getChildAt(ci);
+						av.setVisibility(View.INVISIBLE);
+						ci++;
+					}
 				} else {
 					row = new TableRow(group.getContext());
 
@@ -382,6 +434,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 			} else {
 				vg = inflater.inflate(R.layout.comp_avatar, row, false);
 				vg.setOnClickListener(mAvatarClickListener);
+				vg.setOnLongClickListener(mAvatarLongClickListener);
 				row.addView(vg);
 			}
 
@@ -625,22 +678,20 @@ public class CrossDetailFragment extends Fragment implements Observer {
 				final int confirmed_count = c_count;
 				final int all_count = a_count;
 
-				if (mHandler != null) {
-					mHandler.post(new Runnable() {
+				mModel.mHandler.post(new Runnable() {
 
-						@Override
-						public void run() {
-							fillText(R.id.x_attendee_count,
-									String.valueOf(confirmed_count));
-							fillText(R.id.x_attendee_all,
-									String.format("/%d", all_count));
-							showDropdown(getAnchorView());
-							fillAvatars(mCross);
-							showToolBar();
-						}
-					});
+					@Override
+					public void run() {
+						fillText(R.id.x_attendee_count,
+								String.valueOf(confirmed_count));
+						fillText(R.id.x_attendee_all,
+								String.format("/%d", all_count));
+						showDropdown(getAnchorView());
+						fillAvatars(mCross);
+						showToolBar();
+					}
+				});
 
-				}
 			}
 		};
 		new Thread(run).start();
@@ -671,7 +722,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 				newExfee.saveToDao(mModel.getHelper());
 
 				if (mSelectedView != null) {
-					mSelectedView.post(new Runnable() {
+					mModel.mHandler.post(new Runnable() {
 
 						@Override
 						public void run() {
@@ -689,6 +740,72 @@ public class CrossDetailFragment extends Fragment implements Observer {
 	private ViewGroup getAnchorView() {
 		return (ViewGroup) mSelectedView;
 	}
+
+	private View.OnLongClickListener mAvatarLongClickListener = new View.OnLongClickListener() {
+
+		@Override
+		public boolean onLongClick(final View v) {
+
+			Object obj = v.getTag();
+			if (obj != null) {
+				final Invitation inv = (Invitation) obj;
+				boolean selected = containInv(inv);
+				Log.d(TAG, "avatar long clicked: %s", inv.getId());
+
+				if (selected) {
+					removeInv(inv);
+					if (!isSelectedInvEmpty()) {
+						showDropdown(getAnchorView());
+					} else {
+						hideDropdown(getAnchorView());
+					}
+					showToolBar();
+				} else {
+					if (inv.isHost()) {
+						addNewIdentity();
+					} else {
+						Resources res = v.getContext().getResources();
+						CharSequence[] aa = new CharSequence[] {
+								res.getText(R.string.add_new),
+								res.getString(R.string.remove_xx, inv
+										.getIdentity().getName()) };
+
+						DialogInterface.OnClickListener l = new DialogInterface.OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								switch (which) {
+								case 0:
+									addNewIdentity();
+									break;
+								case 1:
+									Cross x = mCross.cloneSelf();
+									Exfee ex = x.getExfee();
+									for (Invitation in : ex.getInvitations()) {
+										if (in.getId() == inv.getId()) {
+											in.setRsvpStatus(Rsvp.REMOVED);
+										}
+									}
+									submitExfee(ex);
+									break;
+								}
+							}
+						};
+
+						AlertDialog.Builder builder = new AlertDialog.Builder(
+								v.getContext());
+						AlertDialog dialog = builder.setItems(aa, l).create();
+						dialog.show();
+					}
+				}
+
+				return true;
+			}
+			return false;
+		}
+
+	};
 
 	private View.OnClickListener mAvatarClickListener = new View.OnClickListener() {
 
@@ -817,8 +934,16 @@ public class CrossDetailFragment extends Fragment implements Observer {
 		mPopupView.getBackground().setLevel(type);
 		getActivity().getWindowManager().addView(mPopupView, params);
 		mPopupView.setTag(R.id.field_attached, Boolean.TRUE);
-		showForSeconds(mPopupView, 6);
+		Tool.showForSeconds(mPopupView, 6, hideDropdownRunnable);
 	}
+
+	protected Runnable hideDropdownRunnable = new Runnable() {
+
+		@Override
+		public void run() {
+			hideDropdown(null);
+		}
+	};
 
 	protected void hideDropdown(View v) {
 		if (mPopupView != null) {
@@ -826,39 +951,6 @@ public class CrossDetailFragment extends Fragment implements Observer {
 			if (obj != null && (Boolean) obj == true) {
 				getActivity().getWindowManager().removeView(mPopupView);
 				mPopupView.setTag(R.id.field_attached, Boolean.FALSE);
-			}
-		}
-	}
-
-	protected void showForSeconds(final View v, final int seconds) {
-		if (v != null) {
-			// v.setVisibility(View.VISIBLE);
-			Object tag = v.getTag(R.id.field_time_out);
-			Date until = new Date(System.currentTimeMillis() + seconds * 1000);
-			v.setTag(R.id.field_time_out, until);
-			if (tag == null) {
-				v.postDelayed(new Runnable() {
-
-					@Override
-					public void run() {
-						Object obj = v.getTag(R.id.field_time_out);
-						if (obj != null) {
-							Date until = (Date) obj;
-							if (until.getTime() >= System.currentTimeMillis()) {
-								// wait again
-								v.postDelayed(this,
-										(long) (seconds * 1000 * 0.1));
-								return;
-							}
-						}
-
-						// if (v.getVisibility() == View.VISIBLE) {
-						// v.setVisibility(View.INVISIBLE);
-						hideDropdown(null);
-						v.setTag(R.id.field_time_out, null);
-						// }
-					}
-				}, (long) (seconds * 1000 * 0.8));
 			}
 		}
 	}
@@ -946,7 +1038,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 
 	@Override
 	public void update(Observable observable, Object data) {
-		Bundle bundle = (Bundle) data;
+		final Bundle bundle = (Bundle) data;
 		int type = bundle.getInt(Model.OBSERVER_FIELD_TYPE);
 		switch (type) {
 		case CrossesModel.ACTION_TYPE_UPDATE_CROSSES:
@@ -954,7 +1046,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 
 				@Override
 				public void run() {
-					if (mCross == null && mCrossId != 0) {
+					if (mCrossId != Cross.NO_ID) {
 						mCross = mModel.Crosses().getCrossById(mCrossId);
 						if (mCross != null) {
 							showCross(mCross);
@@ -966,6 +1058,224 @@ public class CrossDetailFragment extends Fragment implements Observer {
 			break;
 		}
 
+	}
+
+	View.OnClickListener mClickListener = new View.OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			int id = v.getId();
+			Intent data = new Intent();
+			switch (id) {
+			// case R.id.exfee_root:
+			// data.setClass(getActivity(), SearchExfeeActivity.class);
+			// startActivityForResult(data, GATHER_EXFEE_REQUEST);
+			// break;
+			case R.id.x_rel_date:
+			case R.id.x_time_date:
+			case R.id.x_zone:
+				data.setClass(getActivity(), SetTimeActivity.class);
+				if (mCross != null && mCross.getTime() != null) {
+					data.putExtra(SetTimeActivity.RESULT_FIELD_CROSS_TIME,
+							mCross.getTime().toJSON().toString());
+				}
+				startActivityForResult(data, GATHER_TIME_REQUEST);
+				break;
+			case R.id.x_addr_title:
+			case R.id.x_addr_desc:
+			case R.id.x_map:
+				data.setClass(getActivity(), SearchPlaceActivity.class);
+				if (mCross != null && mCross.getPlace() != null) {
+					data.putExtra(SearchPlaceActivity.RESULT_FIELD_PLACE,
+							mCross.getPlace().toJSON().toString());
+				}
+				startActivityForResult(data, GATHER_PLACE_REQUEST);
+				break;
+			default:
+				break;
+			}
+		}
+	};
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.support.v4.app.Fragment#onActivityResult(int, int,
+	 * android.content.Intent)
+	 */
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		boolean flag = false;
+		if (resultCode == Activity.RESULT_OK) {
+			switch (requestCode) {
+			case GATHER_EXFEE_REQUEST:
+				Log.d(TAG, "add identity");
+				if (data != null) {
+					String abc = data
+							.getStringExtra(SearchExfeeActivity.RESULT_FIELD_IDENTITY);
+					if (!TextUtils.isEmpty(abc) && Tool.isJson(abc)) {
+						Identity ident = (Identity) EntityFactory.create(abc);
+						if (ident != null) {
+							Log.d(TAG, "Select identity: %s", ident.getName());
+							// add identity
+							if (mCross != null
+									&& mCross.getExfee() != null
+									&& mCross.getExfee().getInvitations() != null) {
+								Cross x = mCross.cloneSelf();
+								Invitation inv = new Invitation();
+								inv.setIdentity(ident);
+								inv.setRsvpStatus(Rsvp.NORESPONSE);
+								inv.setByIdentity(mMyInvitation.getIdentity());
+								x.getExfee().getInvitations().add(inv);
+								submitExfee(x.getExfee());
+							}
+						}
+					}
+				}
+				flag = true;
+				break;
+			case GATHER_TIME_REQUEST:
+				Log.d(TAG, "select time");
+				if (data != null) {
+					String abc = data
+							.getStringExtra(SetTimeActivity.RESULT_FIELD_CROSS_TIME);
+					CrossTime ct = null;
+					if (!TextUtils.isEmpty(abc) && Tool.isJson(abc)) {
+						ct = (CrossTime) EntityFactory.create(abc);
+						Log.d(TAG, "Select time: %s", ct.getOrigin());
+
+					} else {
+						EFTime et = new EFTime("", "", "", "", "");
+						ct = new CrossTime(et, "", CrossTime.MARK_ORIGINAL);
+					}
+					// add place
+					if (mCross != null) {
+						Cross x = mCross.cloneSelf();
+						x.setTime(ct);
+						submitCross(x);
+					}
+				}
+				flag = true;
+				break;
+			case GATHER_PLACE_REQUEST:
+				Log.d(TAG, "select place");
+				if (data != null) {
+					String abc = data
+							.getStringExtra(SearchPlaceActivity.RESULT_FIELD_PLACE);
+					Place place = null;
+					if (!TextUtils.isEmpty(abc) && Tool.isJson(abc)) {
+						place = (Place) EntityFactory.create(abc);
+						Log.d(TAG, "Select place: %s", place.getTitle());
+					}
+					// add place
+					if (mCross != null) {
+						Cross x = mCross.cloneSelf();
+						if (place != null) {
+							x.setPlace(place);
+						} else {
+							x.setPlace(new Place());
+						}
+						submitCross(x);
+					}
+				}
+				flag = true;
+				break;
+			default:
+
+			}
+		}
+
+		if (!flag) {
+			super.onActivityResult(requestCode, resultCode, data);
+		}
+	}
+
+	private void submitCross(final Cross x) {
+		Runnable run = new Runnable() {
+
+			@Override
+			public void run() {
+				Response result = mModel.getServer().editCross(x);
+
+				if (result != null) {
+					int code = result.getCode();
+					switch (code) {
+					case HttpStatus.SC_OK:
+						JSONObject resp = result.getResponse();
+						final JSONObject cross = resp.optJSONObject("cross");
+						if (cross != null) {
+							final Cross x = (Cross) EntityFactory.create(cross);
+							if (x != null) {
+								mModel.Crosses().addCross(x);
+								mModel.mHandler.post(new Runnable() {
+
+									@Override
+									public void run() {
+										showCross(x);
+									}
+								});
+							}
+						}
+						break;
+					case HttpStatus.SC_NOT_FOUND:
+						break;
+					default:
+						break;
+					}
+				}
+
+			}
+		};
+		new Thread(run).start();
+	}
+
+	private void submitExfee(final Exfee exfee) {
+		Runnable run = new Runnable() {
+
+			@Override
+			public void run() {
+
+				Response result = mModel.getServer().editExfee(
+						mMyInvitation.getIdentity(), exfee);
+				if (result != null) {
+					int code = result.getCode();
+					switch (code) {
+					case HttpStatus.SC_OK:
+						JSONObject resp = result.getResponse();
+						final JSONObject e = resp.optJSONObject("exfee");
+						if (e != null) {
+							Exfee newExfee = (Exfee) EntityFactory.create(e);
+							if (newExfee != null) {
+								//exfee.trimDao(mModel.getHelper());
+								newExfee.saveToDao(mModel.getHelper());
+								final Cross x = mCross.cloneSelf();
+								x.setExfee(newExfee);
+								mModel.Crosses().addCross(x);
+								// mModel.mHandler.post(new Runnable() {
+								//
+								// @Override
+								// public void run() {
+								// showCross(x);
+								// }
+								// });
+							}
+						}
+						break;
+					case HttpStatus.SC_NOT_FOUND:
+						break;
+					default:
+						break;
+					}
+				}
+			}
+		};
+		new Thread(run).start();
+	}
+
+	private void addNewIdentity() {
+		Intent data = new Intent();
+		data.setClass(getActivity(), SearchExfeeActivity.class);
+		startActivityForResult(data, GATHER_EXFEE_REQUEST);
 	}
 
 }

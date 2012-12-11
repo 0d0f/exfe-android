@@ -6,7 +6,9 @@
     <string name="back">Back</string>
     <string name="home">Home</string>
     <string name="save">Save</string>
-     <string name="invite">Invite</string>
+    <string name="done">Done</string>
+    <string name="gather">Gather</string>
+    <string name="invite">Invite</string>
     <string name="comment">Comment</string>
     <string name="send">Send</string>
     <string name="profile">Profile</string>
@@ -42,8 +44,21 @@
     <string name="sometime">Sometime</string>
     <string name="somewhere">Somewhere</string>
     <string name="gather_a_cross">Gather a ·X·</string>
-    <string name="please_go_to_exfe_to_gather">Gathering on Android will soon to be supported, please use EXFE.com instead, sorry. </string>
-
+    <string name="enter_date_and_time">Enter date and time</string>
+    <string name="tap_here_to_set_place">Tap here to set place</string>
+    <string name="edit_description">Edit description</string>
+    <string name="tap_here_to_set_time">Tap here to set time</string>
+    <string name="enter_email_or_name">Enter email or name</string>
+    <string name="add_new">Add new</string>
+    <string name="enter_place">Enter Place</string>
+    <string name="remove_xx">Remove %s</string>
+    <string name="place_info">Place info such as address, phone and so on.</string>
+	<string name="place_title">Place title</string>
+	<string name="place_title_or_location_is_needed">Place title or location is needed</string>
+    <string name="warning">Warning</string>
+	<string name="i_see">I see</string>
+	<string name="you_hove_no_access_to_the_private_x">You have no access to this private &lt;font color="#0000ff">·X·&lt;/font>.</string>
+	
     <!-- function string -->
     <string name="app_name">EXFE</string>
     <string name="key_word_exfee">EXFE</string>
@@ -176,7 +191,7 @@
     <string name="tomorrow">Tomorrow</string>
     <string name="the_day_before_yesterday">Two days ago</string>
     <string name="the_day_after_tomorrow">In 2 days</string>
-    
+
     <!-- Date time format -->
     <string name="full_month_and_year">MMMM yyyy</string>
 

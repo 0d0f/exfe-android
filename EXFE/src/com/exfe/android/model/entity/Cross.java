@@ -59,7 +59,7 @@ public class Cross extends Entity {
 	public Cross() {
 		mType = EntityFactory.TYPE_CROSS;
 		EFTime et = new EFTime("", "", "", "", "");
-		time = new CrossTime(et, "", 0);
+		time = new CrossTime(et, "", CrossTime.MARK_ORIGINAL);
 		place = new Place();
 		exfee = new Exfee();
 		widgets = new ArrayList<Widget>();

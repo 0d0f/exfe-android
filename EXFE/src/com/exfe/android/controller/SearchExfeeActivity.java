@@ -13,10 +13,14 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -32,6 +36,7 @@ import android.widget.TextView;
 import com.example.android.bitmapfun.util.ImageFetcher;
 import com.example.android.bitmapfun.util.ImageWorker;
 import com.exfe.android.Activity;
+import com.exfe.android.Const;
 import com.exfe.android.R;
 import com.exfe.android.controller.CrossListFragment.OrmLiteCursorLoader;
 import com.exfe.android.controller.ProfileActivity.IdentityAdpater;
@@ -42,26 +47,105 @@ import com.exfe.android.model.entity.Identity;
 import com.exfe.android.model.entity.Provider;
 import com.exfe.android.model.entity.Response;
 import com.exfe.android.model.entity.User;
+import com.exfe.android.net.ReverseGeocodingTask;
 import com.flurry.android.FlurryAgent;
 import com.j256.ormlite.dao.CloseableIterator;
 import com.j256.ormlite.stmt.QueryBuilder;
 
 public class SearchExfeeActivity extends Activity implements Observer {
 
-	// public static final int GAHTER_ID = 41234;
 	public static final String RESULT_FIELD_IDENTITY = "identity";
 
 	static final int LOADER_QUERY_LOCAL = 1;
 	static final int LOADER_QUERY_NETWORK = 2;
 
-	private Cross mCross = null;
+	private static final int MSG_ID_TRIGGER_SERACH = 1;
+
 	private ImageWorker mImageWorker = null;
 	private IdentityAdpater mIdentityAdapter = null;
 	private ListView mList = null;
 	private TextView mInput = null;
 
+	private Handler mHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+
+			switch (msg.what) {
+			case MSG_ID_TRIGGER_SERACH:
+				searchIdentity(msg.obj.toString());
+				break;
+			default:
+				super.handleMessage(msg);
+				break;
+			}
+		}
+
+	};
+
 	public SearchExfeeActivity() {
 		// TODO Auto-generated constructor stub
+	}
+
+	private void searchIdentity(final String keyword) {
+		Runnable run = new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					Response result = mModel.getServer().searchIdentities(
+							keyword);
+					if (result != null) {
+						int code = result.getCode();
+						switch (code) {
+						case HttpStatus.SC_OK:
+
+							JSONObject resp = result.getResponse();
+							JSONArray idents = resp.getJSONArray("identities");
+
+							final List<Identity> l = new ArrayList<Identity>();
+							for (int i = 0; i < idents.length(); i++) {
+								JSONObject json = idents.getJSONObject(i);
+								Identity ident = (Identity) EntityFactory
+										.create(json);
+								if (ident != null) {
+									l.add(ident);
+								}
+							}
+
+							Message.obtain(mHandler, new Runnable() {
+
+								@Override
+								public void run() {
+									// fill result
+									if (mIdentityAdapter != null) {
+										mIdentityAdapter
+												.setNotifyOnChange(false);
+										mIdentityAdapter.clear();
+										for (Identity id : l) {
+											mIdentityAdapter.add(id);
+										}
+										mIdentityAdapter
+												.setNotifyOnChange(true);
+										mIdentityAdapter.notifyDataSetChanged();
+									}
+								}
+							}).sendToTarget();
+							break;
+						case HttpStatus.SC_NOT_FOUND:
+							break;
+						default:
+							break;
+						}
+					}
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			}
+
+		};
+		new Thread(run).start();
 	}
 
 	/** Called when the activity is first created. */
@@ -84,91 +168,54 @@ public class SearchExfeeActivity extends Activity implements Observer {
 			v.setOnClickListener(mClickListener);
 		}
 
+		v = findViewById(R.id.btn_back);
+		if (v != null) {
+			v.setOnClickListener(mClickListener);
+		}
+
 		v = findViewById(R.id.exfee_list_input);
 		if (v != null) {
 			mInput = (TextView) v;
 			mInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 
 				@Override
-				public boolean onEditorAction(final TextView v, int actionId,
+				public boolean onEditorAction(TextView v, int actionId,
 						KeyEvent event) {
 
-					if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-
-						Runnable run = new Runnable() {
-
-							@Override
-							public void run() {
-								final List<PlaceResult> list;
-								final String keyword = v.getText().toString();
-
-								Response result = mModel.getServer()
-										.searchIdentities(keyword);
-								if (result != null) {
-									try {
-										int code = result.getCode();
-										switch (code) {
-										case HttpStatus.SC_OK:
-
-											JSONObject resp = result
-													.getResponse();
-											JSONArray idents = resp
-													.getJSONArray("identities");
-
-											final List<Identity> l = new ArrayList<Identity>();
-											for (int i = 0; i < idents.length(); i++) {
-												JSONObject json = idents
-														.getJSONObject(i);
-												Identity ident = (Identity) EntityFactory
-														.create(json);
-												if (ident != null) {
-													l.add(ident);
-												}
-											}
-
-											mModel.mHandler
-													.post(new Runnable() {
-
-														@Override
-														public void run() {
-															// fill result
-															if (mIdentityAdapter != null) {
-																mIdentityAdapter
-																		.setNotifyOnChange(false);
-																mIdentityAdapter
-																		.clear();
-																for (Identity id : l) {
-																	mIdentityAdapter
-																			.add(id);
-																}
-																mIdentityAdapter
-																		.setNotifyOnChange(true);
-																mIdentityAdapter
-																		.notifyDataSetChanged();
-															}
-														}
-													});
-											break;
-										case HttpStatus.SC_NOT_FOUND:
-											break;
-										default:
-											break;
-										}
-									} catch (JSONException e) {
-										// TODO Auto-generated catch block
-										e.printStackTrace();
-									}
-								}
-
-							}
-
-						};
-						new Thread(run).start();
-
+					if (actionId == EditorInfo.IME_ACTION_SEARCH
+							|| actionId == EditorInfo.IME_ACTION_DONE) {
+						mHandler.removeMessages(MSG_ID_TRIGGER_SERACH);
+						searchIdentity(v.getText().toString());
 						return true;
 					}
 
 					return false;
+				}
+			});
+
+			mInput.addTextChangedListener(new TextWatcher() {
+
+				@Override
+				public void afterTextChanged(Editable s) {
+					mHandler.removeMessages(MSG_ID_TRIGGER_SERACH);
+					Message msg = Message.obtain(mHandler,
+							MSG_ID_TRIGGER_SERACH, s.toString());
+					msg.getTarget().sendMessageDelayed(msg,
+							Const.SEARCH_TRIGGER_DELAY_IN_MS);
+				}
+
+				@Override
+				public void beforeTextChanged(CharSequence s, int start,
+						int count, int after) {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public void onTextChanged(CharSequence s, int start,
+						int before, int count) {
+					// TODO Auto-generated method stub
+
 				}
 			});
 		}
@@ -220,23 +267,23 @@ public class SearchExfeeActivity extends Activity implements Observer {
 												}
 
 												if (l != null && l.size() > 0) {
-													final Identity ident = l.get(0);
-													mModel.mHandler
-															.post(new Runnable() {
+													final Identity ident = l
+															.get(0);
+													mHandler.post(new Runnable() {
 
-																@Override
-																public void run() {
+														@Override
+														public void run() {
 
-																	Intent data = new Intent();
-																	data.putExtra(
-																			RESULT_FIELD_IDENTITY,
-																			ident.toString());
-																	setResult(
-																			Activity.RESULT_OK,
-																			data);
-																	finish();
-																}
-															});
+															Intent data = new Intent();
+															data.putExtra(
+																	RESULT_FIELD_IDENTITY,
+																	ident.toString());
+															setResult(
+																	Activity.RESULT_OK,
+																	data);
+															finish();
+														}
+													});
 												}
 												break;
 											case HttpStatus.SC_NOT_FOUND:
@@ -282,7 +329,6 @@ public class SearchExfeeActivity extends Activity implements Observer {
 			});
 		}
 
-		mCross = new Cross();
 
 	}
 
@@ -310,6 +356,10 @@ public class SearchExfeeActivity extends Activity implements Observer {
 				// data.putExtra("cross", mCross.toString());
 				// setResult(Activity.RESULT_OK, data);
 				setResult(Activity.RESULT_CANCELED, data);
+				finish();
+				break;
+			case R.id.btn_back:
+				setResult(Activity.RESULT_CANCELED, null);
 				finish();
 				break;
 			default:

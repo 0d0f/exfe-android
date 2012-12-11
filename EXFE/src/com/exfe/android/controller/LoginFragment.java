@@ -215,7 +215,9 @@ public class LoginFragment extends Fragment implements Observer {
 		mQueryStatus = REG_QUERY_NONE;
 		setUiMode(UI_MODE_SIGN_IN);
 
-		if (Build.VERSION.SDK_INT >= 14 /*Build.VERSION_CODES.ICE_CREAM_SANDWICH*/) {
+		if (Build.VERSION.SDK_INT >= 14 /*
+										 * Build.VERSION_CODES.ICE_CREAM_SANDWICH
+										 */) {
 			getLoaderManager().initLoader(QUERY_ID_PROFILE, null,
 					mQueryLoaderHandler);
 		} else {
@@ -264,8 +266,10 @@ public class LoginFragment extends Fragment implements Observer {
 	};
 
 	LoaderManager.LoaderCallbacks<Cursor> mQueryLoaderHandler = new LoaderManager.LoaderCallbacks<Cursor>() {
-		final String[] PROJECTION = {
-				"data1" /*ContactsContract.CommonDataKinds.Email.ADDRESS*/,
+		final String[] PROJECTION = { "data1" /*
+											 * ContactsContract.CommonDataKinds.
+											 * Email.ADDRESS
+											 */,
 				ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
 				ContactsContract.CommonDataKinds.Photo.PHOTO };
 		static final int ADDRESS = 0;
@@ -279,7 +283,13 @@ public class LoginFragment extends Fragment implements Observer {
 				return new CursorLoader(
 						getActivity(),
 						Uri.withAppendedPath(
-								Uri.parse("content://com.android.contacts/profile") /*ContactsContract.Profile.CONTENT_URI*/,
+								Uri.parse("content://com.android.contacts/profile") /*
+																					 * ContactsContract
+																					 * .
+																					 * Profile
+																					 * .
+																					 * CONTENT_URI
+																					 */,
 								ContactsContract.Contacts.Data.CONTENT_DIRECTORY),
 						PROJECTION,
 						ContactsContract.Contacts.Data.MIMETYPE + " = ?",
@@ -514,7 +524,13 @@ public class LoginFragment extends Fragment implements Observer {
 
 				Response resp = getModel().getServer().getRegistrationFlag(
 						external_name, Provider.STR_EMAIL);
+				getModel().mHandler.post(new Runnable() {
 
+					@Override
+					public void run() {
+						pbAvatar.setVisibility(View.INVISIBLE);
+					}
+				});
 				final int status = mQueryStatus;
 				mQueryStatus = REG_QUERY_QUERIED;
 				int code = resp.getCode();
@@ -543,7 +559,6 @@ public class LoginFragment extends Fragment implements Observer {
 
 									setUiMode(UI_MODE_SIGN_IN);
 									ivAvatar.setVisibility(View.VISIBLE);
-									pbAvatar.setVisibility(View.INVISIBLE);
 									mImageWorker.loadImage(
 											ident.getAvatarFilename(), ivAvatar);
 									if (status == REG_QUERY_QUERY_POST) {
@@ -562,7 +577,6 @@ public class LoginFragment extends Fragment implements Observer {
 
 							@Override
 							public void run() {
-								pbAvatar.setVisibility(View.INVISIBLE);
 								setUiMode(UI_MODE_SIGN_UP);
 								// mImageWorker.loadImage(num,
 								// ivAvatar);
@@ -571,6 +585,9 @@ public class LoginFragment extends Fragment implements Observer {
 								}
 							}
 						});
+
+					} else {
+						// "verifing" and others
 
 					}
 					break;

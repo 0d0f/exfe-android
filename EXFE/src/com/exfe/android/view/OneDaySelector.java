@@ -6,14 +6,20 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 
+import com.exfe.android.R;
 import com.exfe.android.debug.Log;
 import com.exfe.android.util.Tool;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.Align;
 import android.graphics.PointF;
+import android.graphics.Rect;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.text.GetChars;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -23,7 +29,7 @@ import android.view.View;
 import android.widget.Scroller;
 
 public class OneDaySelector extends View {
-	
+
 	protected final String TAG = getClass().getSimpleName();
 
 	private static final long ONE_MINUTE = 60 * 1000;
@@ -39,19 +45,24 @@ public class OneDaySelector extends View {
 	private static final float SCROLL_PADDING = 20;
 
 	private static final SimpleDateFormat sHH_MM_FORMATTER = new SimpleDateFormat(
-			"kk:mm, dd");
+			"h:mm a", Locale.US);
 	private static final SimpleDateFormat sHH_AM_FORMATTER = new SimpleDateFormat(
 			"hh a", Locale.US);
+	private static final SimpleDateFormat sKK_AM_FORMATTER = new SimpleDateFormat(
+			"KK a", Locale.US);
 
-	public static final boolean DEBUG_MODE = true;
+	public static final boolean DEBUG_MODE = false;
 
 	private float mBaseY = 0.0f;
 	private Calendar mDrawCalendar = Calendar.getInstance();
 	private Date mTempTime = new Date();
 	private Date mDownTime = new Date();
 	private boolean isSelecting = false;
-	private Paint mPaint = null;
+	private Paint mPaintPopup = null;
+	private Paint mPaintGraduation = null;
+	private Paint mPaintDebug = null;
 	private float mDensity = 1f;
+	private float mScaleDensity = 1f;
 	private float mBarHeightPerHour = 0;
 	private Scroller mScroller = null;
 	private float mMaxScrollX = 0.0f;
@@ -60,6 +71,8 @@ public class OneDaySelector extends View {
 	private float mMaxTouchTop = 0.0f;
 	private float mMaxTouchBottom = 0.0f;
 	private float mScrollYPadding = 0.0f;
+	private Rect mStartTimeBounds = new Rect();
+	private Drawable mPopupBg = null;
 
 	private PointF mCurrentPoint = new PointF();
 	private PointF mDownPoint = new PointF();
@@ -90,14 +103,34 @@ public class OneDaySelector extends View {
 	}
 
 	private void init() {
-		mPaint = new Paint();
-		mScroller = new Scroller(getContext());
-		DisplayMetrics dm = getContext().getResources().getDisplayMetrics();
+		Resources res = getContext().getResources();
+		mPopupBg = res.getDrawable(R.drawable.cal_thumb);
+		mPopupBg.setBounds(0, 0, mPopupBg.getIntrinsicWidth(),
+				mPopupBg.getIntrinsicHeight());
+
+		DisplayMetrics dm = res.getDisplayMetrics();
 		mDensity = dm.density;
+		mScaleDensity = dm.scaledDensity;
+
+		mPaintPopup = new Paint();
+		mPaintPopup.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+		mPaintPopup.setTextSize(22f * mScaleDensity);
+		mPaintPopup.setColor(Color.rgb(0x3a, 0x6e, 0xa5));
+		mPaintPopup.setTextAlign(Align.CENTER);
+		mPaintPopup.setAntiAlias(true);
+
+		mPaintGraduation = new Paint();
+		mPaintGraduation.setTextSize(12f * mScaleDensity);
+		mPaintGraduation.setAntiAlias(true);
+
+		mPaintDebug = new Paint();
+
+		mScroller = new Scroller(getContext());
+
 		mMaxScrollX = 0;
 		mScrollYPadding = SCROLL_PADDING * mDensity;
 		mDetector.setIsLongpressEnabled(false);
-		
+
 		mCurrentDate = (Calendar) mNow.clone();
 		mCurrentDate.clear();
 		mCurrentDate.set(mNow.get(Calendar.YEAR), mNow.get(Calendar.MONDAY),
@@ -114,14 +147,14 @@ public class OneDaySelector extends View {
 		if (day == null) {
 			return;
 		}
-		boolean hasTime = Tool.hasTime(day);
+		boolean hasT = Tool.hasTime(day);
 		mCurrentDate.set(day.get(Calendar.YEAR), day.get(Calendar.MONDAY),
 				day.get(Calendar.DATE));
 		Log.d(TAG, "set mCurrentDate: %s from day %s", mCurrentDate.getTime(),
 				day.getTime());
 		mStartTime.clear();
 		hasTime = false;
-		if (hasTime) {
+		if (hasT) {
 			hasTime = true;
 			mStartTime.set(day.get(Calendar.YEAR), day.get(Calendar.MONDAY),
 					day.get(Calendar.DATE), day.get(Calendar.HOUR_OF_DAY),
@@ -339,18 +372,18 @@ public class OneDaySelector extends View {
 
 			if (isSelecting == false) {
 				isSelecting = true;
-				
+
 				hasTime = true;
 
 				long delta = ((long) Math
 						.round((e.getY() + getScrollY() - mBaseY) / mHeight
 								* LARGE_FULL_RANGE))
 						/ LARGE_STEP * LARGE_STEP;
-				
+
 				long time = mCurrentDate.getTimeInMillis() + delta;
 				mDownTime.setTime(time);
 				mTempTime.setTime(time);
-				
+
 				mPressPoint.x = e.getX();
 				mPressPoint.y = e.getY();
 
@@ -478,76 +511,108 @@ public class OneDaySelector extends View {
 
 				boolean isWhite = hour_of_day >= 6 && hour_of_day <= 18;
 				if (hour_of_day % 3 == 0) {
-					mPaint.setColor(Color.DKGRAY);
-					canvas.drawText(
-							sHH_AM_FORMATTER.format(mDrawCalendar.getTime()),
-							0, getYPositionFromRelative((i) * ONE_HOUR)
-									- (mPaint.ascent() + mPaint.descent()) / 2,
-							mPaint);
-					if (hour_of_day % 6 == 0) {
-						mPaint.setColor(Color.LTGRAY);
-						canvas.drawLine(30 * mDensity,
-								getYPositionFromRelative((i) * ONE_HOUR),
-								width,
-								getYPositionFromRelative((i) * ONE_HOUR),
-								mPaint);
+					mPaintGraduation.setColor(Color.rgb(0x77, 0x77, 0x77));
+					String hour_str = sHH_AM_FORMATTER.format(mDrawCalendar.getTime());
+					if (i == 0){
+						hour_str = sKK_AM_FORMATTER.format(mDrawCalendar.getTime());
 					}
+					canvas.drawText(
+							hour_str,
+							12 * mDensity,
+							getYPositionFromRelative((i) * ONE_HOUR)
+									- (mPaintGraduation.ascent() + mPaintGraduation
+											.descent()) / 2, mPaintGraduation);
+
+				}
+				if (hour_of_day % 1 == 0) {
+					mPaintGraduation.setColor(Color.rgb(0xba, 0xba, 0xba));
+					canvas.drawLine(0,
+							getYPositionFromRelative((i) * ONE_HOUR),
+							6 * mDensity, getYPositionFromRelative((i)
+									* ONE_HOUR), mPaintGraduation);
 				}
 
 			}
 
 			if (mStartTime != null && hasTime) {
-				mPaint.setColor(Color.BLACK);
-				canvas.drawLine(0, getYPositionFromTime(mStartTime.getTime()),
-						width, getYPositionFromTime(mStartTime.getTime()),
-						mPaint);
-				canvas.drawText(sHH_MM_FORMATTER.format(mStartTime.getTime()),
-						20 * mDensity, 140 * mDensity + getScrollY(), mPaint);
+
+				String startTime = null;
+				float startY = 0;
+				if (isSelecting) {
+					startTime = sHH_MM_FORMATTER.format(mTempTime);
+					startY = getYPositionFromTime(mTempTime);
+				} else {
+					startTime = sHH_MM_FORMATTER.format(mStartTime.getTime());
+					startY = getYPositionFromTime(mStartTime.getTime());
+				}
+
+				mPaintPopup.getTextBounds(startTime, 0, startTime.length(),
+						mStartTimeBounds);
+				float center = width / 2;
+
+				// Rect dr = mPopupBg.getBounds();
+				// dr.offsetTo((int) center - mPopupBg.getIntrinsicWidth()/ 2,
+				// (int) startY - mPopupBg.getIntrinsicHeight());
+				// mPopupBg.setBounds(dr);
+
+				mPopupBg.setBounds((int) center - mPopupBg.getIntrinsicWidth()
+						/ 2, (int) startY - mPopupBg.getIntrinsicHeight(),
+						(int) center + mPopupBg.getIntrinsicWidth() / 2,
+						(int) startY);
+
+				mPopupBg.draw(canvas);
+
+				canvas.drawLine(0, startY, width, startY, mPaintPopup);
+				canvas.drawText(startTime, center, startY
+						- mStartTimeBounds.bottom - 36 * mDensity, mPaintPopup);
+
 			}
 
-			if (Tool.isSameDay(mCurrentDate, mNow)) {
-				mPaint.setColor(Color.BLACK);
-				float y = getYPositionFromTime(mNow.getTime());
-				canvas.drawText("Now->", getWidth() - 30 * mDensity, y, mPaint);
-			}
+			// if (Tool.isSameDay(mCurrentDate, mNow)) {
+			// mPaint.setColor(Color.BLACK);
+			// float y = getYPositionFromTime(mNow.getTime());
+			// canvas.drawText("Now->", getWidth() - 30 * mDensity, y, mPaint);
+			// }
 		}
 
 		if (DEBUG_MODE) {
 			if (isSelecting) {
-				mPaint.setColor(Color.RED);
+				mPaintDebug.setColor(Color.RED);
 				canvas.drawText(sHH_MM_FORMATTER.format(mTempTime),
-						20 * mDensity, 120 * mDensity + getScrollY(), mPaint);
+						20 * mDensity, 120 * mDensity + getScrollY(),
+						mPaintDebug);
 				canvas.drawLine(0, getYPositionFromTime(mTempTime), width,
-						getYPositionFromTime(mTempTime), mPaint);
+						getYPositionFromTime(mTempTime), mPaintDebug);
 
-				mPaint.setColor(Color.BLUE);
+				mPaintDebug.setColor(Color.BLUE);
 				canvas.drawText(sHH_MM_FORMATTER.format(mDownTime),
-						20 * mDensity, 100 * mDensity + getScrollY(), mPaint);
+						20 * mDensity, 100 * mDensity + getScrollY(),
+						mPaintDebug);
 
 				if (mDownPoint.x > 0 && mDownPoint.y > 0) {
-					mPaint.setColor(Color.BLUE);
+					mPaintDebug.setColor(Color.BLUE);
 					canvas.drawLine(mDownPoint.x, 0 + getScrollY(),
-							mDownPoint.x, height + getScrollY(), mPaint);
+							mDownPoint.x, height + getScrollY(), mPaintDebug);
 					canvas.drawLine(0, mDownPoint.y + getScrollY(), width,
-							mDownPoint.y + getScrollY(), mPaint);
+							mDownPoint.y + getScrollY(), mPaintDebug);
 				}
 				if (mPressPoint.x > 0 && mPressPoint.y > 0) {
-					mPaint.setColor(Color.BLUE);
+					mPaintDebug.setColor(Color.BLUE);
 					canvas.drawCircle(mPressPoint.x, mPressPoint.y
-							+ getScrollY(), 6 * mDensity, mPaint);
+							+ getScrollY(), 6 * mDensity, mPaintDebug);
 				}
 
 				if (mCurrentPoint.x > 0 && mCurrentPoint.y > 0) {
-					mPaint.setColor(Color.GREEN);
+					mPaintDebug.setColor(Color.GREEN);
 					canvas.drawLine(mCurrentPoint.x, 0 + getScrollY(),
-							mCurrentPoint.x, height + getScrollY(), mPaint);
+							mCurrentPoint.x, height + getScrollY(), mPaintDebug);
 					canvas.drawText(String.valueOf(mDeltaMinor / ONE_MINUTE),
 							mCurrentPoint.x, 20 * mDensity + getScrollY(),
-							mPaint);
+							mPaintDebug);
 					canvas.drawLine(0, mCurrentPoint.y + getScrollY(), width,
-							mCurrentPoint.y + getScrollY(), mPaint);
+							mCurrentPoint.y + getScrollY(), mPaintDebug);
 					canvas.drawText(String.valueOf(mDeltaMajor / ONE_MINUTE),
-							0, mCurrentPoint.y + getScrollY(), mPaint);
+							0, mCurrentPoint.y + getScrollY(), mPaintDebug);
 				}
 			}
 		}

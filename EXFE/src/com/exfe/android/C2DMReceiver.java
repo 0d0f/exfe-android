@@ -139,7 +139,7 @@ public class C2DMReceiver extends BroadcastReceiver {
 				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_ID, cid);
 				notifyIntent
 						.putExtra(CrossDetailActivity.FIELD_CROSS_SIDE, false);
-				// need refresh conversation
+				notifyIntent.putExtra(Const.PUSH_FIELD_SOURCE_PUSH, true);
 			}else if (type.equals("r")) {
 				// no access to the cross
 				// need refresh cross list
@@ -148,12 +148,13 @@ public class C2DMReceiver extends BroadcastReceiver {
 				notifyIntent = new Intent(context, CrossDetailActivity.class);
 				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_ID, cid);
 				notifyIntent.putExtra(CrossDetailActivity.FIELD_CROSS_SIDE, true);
-				notifyIntent.putExtra(CrossDetailActivity.FIELD_REFRESH_CROSS, true);
+				notifyIntent.putExtra(Const.PUSH_FIELD_SOURCE_PUSH, true);
 			}
 		}
 
 		if (notifyIntent == null) {
 			notifyIntent = new Intent(context, LandingActivity.class);
+			notifyIntent.putExtra(Const.PUSH_FIELD_SOURCE_PUSH, true);
 		}
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, -1,
 				notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);

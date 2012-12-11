@@ -15,11 +15,9 @@
     <color name="gray_7">#FFE6E6E6</color>
     <color name="gray_8">#FFFAFAFA</color>
     <color name="blue_0">#FF3A6EA5</color>
-    
     <color name="gray_69">#FF454545</color>
     <color name="gray_100">#FF646464</color>
     <color name="gray_233">#FFE9E9E9</color>
-
     <color name="bav_bar_title">@color/gray_8</color>
     <color name="body_background">#FFF0F0F0</color>
     <color name="list_item_background">#FFF0F0F0</color>
@@ -30,5 +28,24 @@
     <color name="cross_important_text_color">@color/blue_0</color>
     <color name="cross_minor_text_color">@color/gray_1</color>
     <color name="x_attend">#FFCCE4FF</color>
+    
+    <color name="rich_date_background">#FFFAFAFA</color>
+    <color name="rich_time_background">#FFE0DFD7</color>
+    <color name="rich_month_background">#FFDDDDDD</color>
+    <color name="list_place_divider">#FFDDDDDD</color>
+    
+    <color name="date_main_text_color_selected">#FF3B98FA</color>
+    <color name="date_main_text_color_normal">#FF444444</color>
+    <color name="date_alt_text_color_selected">#FF3B98FA</color>
+    <color name="date_alt_text_color_normal">#FF999999</color>
+    <color name="date_input_text_color">#FF666666</color>
+    <color name="date_month_text_color">#FF4F5D6C</color>
+	<color name="time_zone_text_color">#FF888888</color>
+	<color name="back_btn_pressed">#FF007BFF</color>
+	<color name="back_btn_normal">#FF404040</color>
+	
+	<color name="list_place_item_bg_selected">#FF4694e8</color>
+	<color name="list_place_item_bg_normal">#FFF7F7F7</color>
+	<color name="venue_overlay_bakground">#CC000000</color>
 
 </resources>

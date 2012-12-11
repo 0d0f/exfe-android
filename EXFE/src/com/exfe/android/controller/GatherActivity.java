@@ -8,13 +8,20 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.PixelFormat;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.text.Editable;
+import android.text.Html;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.DisplayMetrics;
+import android.util.SparseArray;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TableLayout;
@@ -24,20 +31,20 @@ import android.widget.TextView;
 import com.example.android.bitmapfun.util.ImageFetcher;
 import com.example.android.bitmapfun.util.ImageWorker;
 import com.exfe.android.Activity;
-import com.exfe.android.Const;
 import com.exfe.android.R;
 import com.exfe.android.debug.Log;
 import com.exfe.android.model.entity.Cross;
 import com.exfe.android.model.entity.CrossTime;
+import com.exfe.android.model.entity.EFTime;
 import com.exfe.android.model.entity.EntityFactory;
 import com.exfe.android.model.entity.Identity;
 import com.exfe.android.model.entity.Invitation;
 import com.exfe.android.model.entity.Place;
+import com.exfe.android.model.entity.Provider;
 import com.exfe.android.model.entity.Response;
 import com.exfe.android.model.entity.Rsvp;
-import com.exfe.android.model.entity.Widget;
 import com.exfe.android.util.Tool;
-import com.flurry.android.FlurryAgent;
+import com.exfe.android.view.CountControls;
 
 public class GatherActivity extends Activity implements Observer {
 
@@ -50,7 +57,15 @@ public class GatherActivity extends Activity implements Observer {
 
 	private ImageWorker mImageWorker = null;
 
+	private DisplayMetrics mDm = null;
 	private boolean isUpdating = false;
+	// private Invitation mMyInvitation = null;
+	private View mPopupView = null;
+	private final WindowManager.LayoutParams mParams = new WindowManager.LayoutParams();
+
+	private ViewGroup mToolBar = null;
+	private Invitation mSelectedInv = null;
+	private View mSelectedView = null;
 
 	private Cross mCross = null;
 
@@ -68,6 +83,8 @@ public class GatherActivity extends Activity implements Observer {
 		mImageWorker = new ImageFetcher(mModel.getAppContext(), -1, -1);
 		mImageWorker.setImageCache(mModel.ImageCache().ImageCache());
 		mImageWorker.setImageFadeIn(false);
+
+		mDm = getResources().getDisplayMetrics();
 
 		View v = findViewById(R.id.nav_btn_back);
 		if (v != null) {
@@ -120,7 +137,7 @@ public class GatherActivity extends Activity implements Observer {
 					if (!isUpdating) {
 						if (mCross != null) {
 							mCross.setDescription(s.toString());
-							Log.d(TAG, "save title %s", mCross.getDescription());
+							Log.d(TAG, "save desc %s", mCross.getDescription());
 						}
 					}
 				}
@@ -143,7 +160,7 @@ public class GatherActivity extends Activity implements Observer {
 
 		v = findViewById(R.id.exfee_root);
 		if (v != null) {
-			v.setOnClickListener(mClickListener);
+			// v.setOnClickListener(mClickListener);
 		}
 
 		v = findViewById(R.id.x_rel_date);
@@ -172,6 +189,30 @@ public class GatherActivity extends Activity implements Observer {
 			v.setOnClickListener(mClickListener);
 		}
 
+		v = findViewById(R.id.x_rsvp_action_bar);
+		if (v != null) {
+			mToolBar = (ViewGroup) v;
+
+			v = mToolBar.findViewById(R.id.x_rsvp_others_accept);
+			if (v != null) {
+				v.setOnClickListener(mToolBarClickListener);
+			}
+			v = mToolBar.findViewById(R.id.x_rsvp_others_ignore);
+			if (v != null) {
+				v.setOnClickListener(mToolBarClickListener);
+			}
+			v = mToolBar.findViewById(R.id.x_rsvp_others_remove);
+			if (v != null) {
+				v.setOnClickListener(mToolBarClickListener);
+			}
+			v = mToolBar.findViewById(R.id.x_rsvp_others_change_mate);
+			if (v != null) {
+				CountControls cc = (CountControls) v;
+				cc.setOnZoomInClickListener(mToolBarClickListener);
+				cc.setOnZoomOutClickListener(mToolBarClickListener);
+			}
+		}
+
 		mCross = new Cross();
 		mCross.setTitle(getResources().getString(R.string.meet_xxx,
 				mModel.Me().getProfile().getName()));
@@ -185,11 +226,23 @@ public class GatherActivity extends Activity implements Observer {
 			inv.setHost(true);
 			inv.setByIdentity(ident);
 			mCross.getExfee().getInvitations().add(inv);
+			mCross.getExfee().getInvitations().add(null);
 		}
 
 		showCross(mCross);
 		// fillExfee(mCross.getExfee());
 
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.support.v4.app.FragmentActivity#onPause()
+	 */
+	@Override
+	protected void onPause() {
+		hideDropdown(null);
+		super.onPause();
 	}
 
 	private void fillText(int id, CharSequence text, int visibility) {
@@ -252,12 +305,19 @@ public class GatherActivity extends Activity implements Observer {
 					String.format("/%d", cross.getExfee().getTotal()));
 
 			if (cross.getTime() != null) {
-				fillText(R.id.x_rel_date, cross.getTime().getBeginAt()
-						.getRelativeStringFromNow(getResources()),
-						getText(R.string.sometime));
-				fillText(R.id.x_time_date, cross.getTime()
-						.getLongLocalTimeSring(false, getResources()));
 
+				if (cross.getTime().getOriginMarkType() == CrossTime.MARK_ORIGINAL) {
+					fillText(R.id.x_rel_date, cross.getTime()
+							.getLongLocalTimeSring(false, getResources()),
+							getText(R.string.sometime));
+					fillText(R.id.x_time_date, "", View.GONE);
+				} else {
+					fillText(R.id.x_rel_date, cross.getTime().getBeginAt()
+							.getRelativeStringFromNow(getResources()),
+							getText(R.string.sometime));
+					fillText(R.id.x_time_date, cross.getTime()
+							.getLongLocalTimeSring(false, getResources()));
+				}
 				if (Tool.isSameWithLocalZone(cross.getTime().getBeginAt()
 						.getTimezone())) {
 					fillText(R.id.x_zone, "", View.INVISIBLE);
@@ -288,8 +348,7 @@ public class GatherActivity extends Activity implements Observer {
 			View mvf = findViewById(R.id.x_map_frame);
 			if (mv != null) {
 				Place p = cross.getPlace();
-				if (p != null && !TextUtils.isEmpty(p.getLat())
-						&& !TextUtils.isEmpty(p.getLng())) {
+				if (p != null && p.hasGeo()) {
 					if (mvf != null) {
 						mvf.setVisibility(View.VISIBLE);
 					}
@@ -325,13 +384,11 @@ public class GatherActivity extends Activity implements Observer {
 		LayoutInflater inflater = getLayoutInflater();
 		int column = 6;
 		int i = 0;
+
 		for (Invitation inv : cross.getExfee().getInvitations()) {
-			if (inv.getRsvpStatus() == Rsvp.NOTIFICATION) {
+			if (inv != null && inv.getRsvpStatus() == Rsvp.NOTIFICATION) {
 				continue;
 			}
-
-			Log.d(TAG, "Fill user: %s %s", inv.getIdentity()
-					.getExternalUsername(), inv.getIdentity().getExternalId());
 
 			// start a now row if need.
 			if (row == null) {
@@ -340,6 +397,12 @@ public class GatherActivity extends Activity implements Observer {
 					row = (TableRow) group.getChildAt(ri);
 					if (row.getVisibility() != View.VISIBLE) {
 						row.setVisibility(View.VISIBLE);
+					}
+					int ci = 0;
+					while (ci < row.getChildCount()) {
+						View av = row.getChildAt(ci);
+						av.setVisibility(View.INVISIBLE);
+						ci++;
 					}
 				} else {
 					row = new TableRow(group.getContext());
@@ -351,7 +414,6 @@ public class GatherActivity extends Activity implements Observer {
 				}
 			}
 
-			Identity idet = inv.getIdentity();
 			View vg = null;
 			int ci = i % column;
 			if (row.getChildCount() > ci) {
@@ -361,9 +423,26 @@ public class GatherActivity extends Activity implements Observer {
 				}
 			} else {
 				vg = inflater.inflate(R.layout.comp_avatar, row, false);
-				// vg.setOnClickListener(mAvatarClickListener);
 				row.addView(vg);
 			}
+			ImageView iv = (ImageView) vg.findViewById(R.id.x_exfer_icon);
+			TextView tv = (TextView) vg.findViewById(R.id.x_exfer_name);
+			ImageView frameImage = (ImageView) vg
+					.findViewById(R.id.x_exfer_cover);
+			if (inv == null) {
+				vg.setOnClickListener(mAddExfeeClickListener);
+				// fill image
+				iv.setImageResource(R.drawable.exfee_add);
+				tv.setText("");
+				frameImage.setImageLevel(0);
+				continue;
+			}
+			vg.setOnClickListener(mAvatarClickListener);
+
+			Log.d(TAG, "Fill user: %s %s", inv.getIdentity()
+					.getExternalUsername(), inv.getIdentity().getExternalId());
+
+			Identity idet = inv.getIdentity();
 
 			vg.setTag(inv);
 			int status = inv.getRsvpStatus();
@@ -374,7 +453,6 @@ public class GatherActivity extends Activity implements Observer {
 				rsvpImage.setImageLevel(status);
 			}
 
-			ImageView iv = (ImageView) vg.findViewById(R.id.x_exfer_icon);
 			mImageWorker.loadImage(idet.getAvatarFilename(), iv);
 			if (status != Rsvp.ACCEPTED) {
 				iv.setAlpha(96);
@@ -382,11 +460,8 @@ public class GatherActivity extends Activity implements Observer {
 				iv.setAlpha(255);
 			}
 
-			TextView tv = (TextView) vg.findViewById(R.id.x_exfer_name);
 			tv.setText(idet.getName());
 
-			ImageView frameImage = (ImageView) vg
-					.findViewById(R.id.x_exfer_cover);
 			if (frameImage != null) {
 				int matesLevel = inv.getMates();
 				if (matesLevel == 0 && inv.isHost()) {
@@ -430,6 +505,16 @@ public class GatherActivity extends Activity implements Observer {
 
 	}
 
+	View.OnClickListener mAddExfeeClickListener = new View.OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			Intent data = new Intent();
+			data.setClass(GatherActivity.this, SearchExfeeActivity.class);
+			startActivityForResult(data, GATHER_EXFEE_REQUEST);
+		}
+	};
+
 	View.OnClickListener mClickListener = new View.OnClickListener() {
 
 		@Override
@@ -443,7 +528,7 @@ public class GatherActivity extends Activity implements Observer {
 				break;
 			case R.id.nav_btn_action:
 				if (mCross != null) {
-
+					mCross.getExfee().getInvitations().remove(null);
 					Runnable run = new Runnable() {
 
 						@Override
@@ -558,7 +643,9 @@ public class GatherActivity extends Activity implements Observer {
 								Invitation inv = new Invitation();
 								inv.setIdentity(ident);
 								inv.setRsvpStatus(Rsvp.NORESPONSE);
+								mCross.getExfee().getInvitations().remove(null);
 								mCross.getExfee().getInvitations().add(inv);
+								mCross.getExfee().getInvitations().add(null);
 								showCross(mCross);
 							}
 
@@ -575,23 +662,18 @@ public class GatherActivity extends Activity implements Observer {
 				if (data != null) {
 					String abc = data
 							.getStringExtra(SetTimeActivity.RESULT_FIELD_CROSS_TIME);
+					CrossTime ct = null;
 					if (!TextUtils.isEmpty(abc) && Tool.isJson(abc)) {
-						JSONObject json = null;
-						try {
-							json = new JSONObject(abc);
-							CrossTime ct = (CrossTime) EntityFactory
-									.create(json);
-							Log.d(TAG, "Select time: %s", ct.getOrigin());
-							// add place
-							if (mCross != null) {
-								mCross.setTime(ct);
-								showCross(mCross);
-							}
-
-						} catch (JSONException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+						ct = (CrossTime) EntityFactory.create(abc);
+						Log.d(TAG, "Select time: %s", ct.getOrigin());
+					} else {
+						EFTime et = new EFTime("", "", "", "", "");
+						ct = new CrossTime(et, "", CrossTime.MARK_ORIGINAL);
+					}
+					// add place
+					if (mCross != null) {
+						mCross.setTime(ct);
+						showCross(mCross);
 					}
 				}
 				break;
@@ -600,21 +682,20 @@ public class GatherActivity extends Activity implements Observer {
 				if (data != null) {
 					String abc = data
 							.getStringExtra(SearchPlaceActivity.RESULT_FIELD_PLACE);
+					Place place = null;
 					if (!TextUtils.isEmpty(abc) && Tool.isJson(abc)) {
-						JSONObject json = null;
-						try {
-							json = new JSONObject(abc);
-							Place place = (Place) EntityFactory.create(json);
-							Log.d(TAG, "Select place: %s", place.getTitle());
-							// add place
-							if (mCross != null) {
-								mCross.setPlace(place);
-								showCross(mCross);
-							}
-						} catch (JSONException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+						place = (Place) EntityFactory.create(abc);
+						Log.d(TAG, "Select place: %s", place.getTitle());
+
+					}
+					// add place
+					if (mCross != null) {
+						if (place != null) {
+							mCross.setPlace(place);
+						} else {
+							mCross.setPlace(new Place());
 						}
+						showCross(mCross);
 					}
 				}
 
@@ -623,5 +704,293 @@ public class GatherActivity extends Activity implements Observer {
 				super.onActivityResult(requestCode, resultCode, data);
 			}
 		}
+	}
+
+	private ViewGroup getAnchorView() {
+		return (ViewGroup) mSelectedView;
+	}
+
+	private View.OnClickListener mAvatarClickListener = new View.OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			Object obj = v.getTag();
+			if (obj != null) {
+				Invitation inv = (Invitation) obj;
+				boolean selected = containInv(inv);
+				Log.d(TAG, "avatar clicked: %s", inv.getId());
+				if (selected) {
+					removeInv(inv);
+				} else {
+					addInv(inv, v);
+				}
+				if (!isSelectedInvEmpty()) {
+					showDropdown(getAnchorView());
+				} else {
+					hideDropdown(getAnchorView());
+				}
+				showToolBar();
+			}
+		}
+	};
+
+	protected void showDropdown(final View v) {
+
+		if (v == null) {
+			return;
+		}
+
+		if (mPopupView == null) {
+			LayoutInflater inflater = getLayoutInflater();
+			mPopupView = inflater.inflate(R.layout.avatar_popup, null);
+			SparseArray<TextView> holder = new SparseArray<TextView>();
+			holder.append(R.id.textView1,
+					(TextView) mPopupView.findViewById(R.id.textView1));
+			holder.append(R.id.textView2,
+					(TextView) mPopupView.findViewById(R.id.textView2));
+			mPopupView.setTag(holder);
+		}
+		hideDropdown(v);
+		@SuppressWarnings("unchecked")
+		SparseArray<TextView> holder = (SparseArray<TextView>) mPopupView
+				.getTag();
+		Invitation inv = (Invitation) v.getTag();
+		Resources res = getResources();
+		if (inv.isHost()) {
+			String str = res.getString(R.string.two_sentences, res
+					.getString(R.string.host), res.getString(Rsvp
+					.getRsvpStatusResourceId(inv.getRsvpStatus())));
+			holder.get(R.id.textView1).setText(str);
+		} else {
+			String str = null;
+			int mates = inv.getMates();
+			if (mates > 0) {
+				str = res.getQuantityString(R.plurals.rsvp_with_mates, mates,
+						res.getString(Rsvp.getRsvpStatusResourceId(inv
+								.getRsvpStatus())), mates);
+			} else {
+				str = res.getString(R.string.one_sentence, res.getString(Rsvp
+						.getRsvpStatusResourceId(inv.getRsvpStatus())));
+			}
+			holder.get(R.id.textView1).setText(Html.fromHtml(str));
+		}
+
+		if (inv.getIdentity() != null) {
+			Identity ident = inv.getIdentity();
+			TextView tv = holder.get(R.id.textView2);
+			int provider = Provider.getValue(ident.getProvider());
+			tv.getCompoundDrawables()[0].setLevel(provider);
+			if (provider == Provider.TWITTER) {
+				tv.setText(String.format("@%s", inv.getIdentity()
+						.getExternalUsername()));
+			} else {
+				tv.setText(inv.getIdentity().getExternalUsername());
+			}
+			tv.requestLayout();
+		}
+
+		int[] location = new int[2];
+		v.getLocationOnScreen(location);
+
+		Object tag = v.getTag(R.id.field_attached);
+		int type = 0;
+		if (tag != null) {
+			int index = (Integer) tag;
+			type = index / 3 % 2;
+		}
+
+		final WindowManager.LayoutParams params = mParams;
+		params.height = WindowManager.LayoutParams.WRAP_CONTENT;
+		params.width = WindowManager.LayoutParams.WRAP_CONTENT;
+		params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+				| WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+				| WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
+		params.format = PixelFormat.TRANSLUCENT;
+		params.type = WindowManager.LayoutParams.TYPE_TOAST;
+		params.setTitle("Toast");
+
+		if (type == 0) {
+			params.gravity = Gravity.TOP | Gravity.LEFT;
+			params.x = location[0];
+			params.y = location[1] - (int) (100 * mDm.density);
+		} else {
+			params.gravity = Gravity.TOP | Gravity.RIGHT;
+			params.x = mDm.widthPixels - location[0] - v.getWidth();
+			params.y = location[1] - (int) (100 * mDm.density);
+		}
+		mPopupView.getBackground().setLevel(type);
+		getWindowManager().addView(mPopupView, params);
+		mPopupView.setTag(R.id.field_attached, Boolean.TRUE);
+		Tool.showForSeconds(mPopupView, 6, hideDropdownRunnable);
+	}
+
+	protected Runnable hideDropdownRunnable = new Runnable() {
+
+		@Override
+		public void run() {
+			hideDropdown(null);
+		}
+	};
+
+	protected void hideDropdown(View anchorView) {
+		if (mPopupView != null) {
+			Object obj = mPopupView.getTag(R.id.field_attached);
+			if (obj != null && (Boolean) obj == true) {
+				getWindowManager().removeView(mPopupView);
+				mPopupView.setTag(R.id.field_attached, Boolean.FALSE);
+			}
+		}
+	}
+
+	private View.OnClickListener mToolBarClickListener = new View.OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			int id = v.getId();
+			Log.d(TAG, "Toobar button %d clicked.", id);
+			int rsvp = -1;
+
+			switch (id) {
+			case R.id.x_rsvp_others_accept:
+				if (rsvp == -1) {
+					rsvp = Rsvp.ACCEPTED;
+				}
+			case R.id.x_rsvp_others_ignore:
+				if (rsvp == -1) {
+					rsvp = Rsvp.NORESPONSE;
+				}
+				// update others rsvp status
+				if (rsvp != -1) {
+					updateInv(rsvp);
+				}
+				showToolBar();
+				fillAvatars(mCross);
+				break;
+			case R.id.x_rsvp_others_remove:
+				if (!mSelectedInv.isHost()) {
+					hideDropdown(null);
+					deleteSelctedInv();
+					fillAvatars(mCross);
+				}
+				break;
+			// R.id.x_rsvp_others_change_mate
+			case R.id.zoom_in:
+				increaseMates();
+				fillAvatars(mCross);
+				break;
+			case R.id.zoom_out:
+				decreaseMates();
+				fillAvatars(mCross);
+				break;
+			}
+		}
+	};
+
+	private void showToolBar() {
+		if (mToolBar != null) {
+			View v = mToolBar.findViewById(R.id.x_rsvp_action_bar_others);
+			if (v != null) {
+				if (!isSelectedInvEmpty()) {
+					int rsvp = mSelectedInv.getRsvpStatus();
+					View accept = v.findViewById(R.id.x_rsvp_others_accept);
+					if (accept != null) {
+						accept.setVisibility(rsvp == Rsvp.ACCEPTED ? View.GONE
+								: View.VISIBLE);
+					}
+					View pending = v.findViewById(R.id.x_rsvp_others_ignore);
+					if (pending != null) {
+						pending.setVisibility(rsvp == Rsvp.NORESPONSE ? View.GONE
+								: View.VISIBLE);
+					}
+					v.setVisibility(View.VISIBLE);
+				} else {
+					v.setVisibility(View.INVISIBLE);
+				}
+			}
+		}
+	}
+
+	private boolean isSelectedInvEmpty() {
+		return mSelectedInv == null;
+	}
+
+	private void addInv(Invitation inv, View view) {
+		mSelectedInv = inv;
+		if (mSelectedView != null) {
+			mSelectedView.setSelected(false);
+			ImageView rsvpImage = (ImageView) mSelectedView
+					.findViewById(R.id.x_exfer_rsvp);
+			if (rsvpImage != null) {
+				rsvpImage.setVisibility(View.INVISIBLE);
+			}
+		}
+		mSelectedView = view;
+		mSelectedView.setSelected(true);
+
+		ImageView rsvpImage = (ImageView) mSelectedView
+				.findViewById(R.id.x_exfer_rsvp);
+		if (rsvpImage != null) {
+			rsvpImage.setVisibility(View.VISIBLE);
+		}
+	}
+
+	private boolean containInv(Invitation inv) {
+		return mSelectedInv != null && inv != null
+				&& mSelectedInv.getId() == inv.getId();
+	}
+
+	private boolean removeInv(Invitation inv) {
+		if (mSelectedView != null) {
+			mSelectedView.setSelected(false);
+			ImageView rsvpImage = (ImageView) mSelectedView
+					.findViewById(R.id.x_exfer_rsvp);
+			if (rsvpImage != null) {
+				rsvpImage.setVisibility(View.INVISIBLE);
+			}
+		}
+		mSelectedInv = null;
+		mSelectedView = null;
+		return true;
+	}
+
+	private boolean updateInv(int rsvp) {
+		if (mSelectedInv != null) {
+			mSelectedInv.setRsvpStatus(rsvp);
+			return true;
+		}
+		return false;
+	}
+
+	private boolean deleteSelctedInv() {
+		if (mSelectedInv != null) {
+			boolean b = mCross.getExfee().getInvitations().remove(mSelectedInv);
+			removeInv(mSelectedInv);
+			return b;
+		}
+		return false;
+	}
+
+	private boolean increaseMates() {
+		if (mSelectedInv != null) {
+			int m = mSelectedInv.getMates();
+			if (m < 9) {
+				mSelectedInv.setMates(m + 1);
+				// refresh UI
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean decreaseMates() {
+		if (mSelectedInv != null) {
+			int m = mSelectedInv.getMates();
+			if (m > 0) {
+				mSelectedInv.setMates(m - 1);
+				// refresh UI
+				return true;
+			}
+		}
+		return false;
 	}
 }

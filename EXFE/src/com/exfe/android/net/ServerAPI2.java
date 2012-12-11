@@ -60,7 +60,7 @@ public class ServerAPI2 {
 
 	public static String OVERIDE_PROTOCAL = Const.override_domain ? "http"
 			: null;
-	public static String OVERIDE_DOMAIN = Const.override_domain ? "api.white.0d0f.com"
+	public static String OVERIDE_DOMAIN = Const.override_domain ? "api.0d0f.com"
 			: null;
 	public static String OVERIDE_PORT = Const.override_domain ? null : null;
 	public static String OVERIDE_PATHROOT = Const.override_domain ? null : null;
@@ -71,6 +71,12 @@ public class ServerAPI2 {
 
 	private static final String FIELD_QUERY_PREFEIX = "QUERY_";
 	private static final String FIELD_TOKEN = "QUERY_token";
+
+	private static final DateFormat STD_DATETIME_FMT = new SimpleDateFormat(
+			"yyyy-MM-dd HH:mm:ss", Locale.US);
+	static {
+		STD_DATETIME_FMT.setTimeZone(TimeZone.getTimeZone("UTC"));
+	}
 
 	// private Model mModel;
 	private URL mServerApiRoot;
@@ -142,8 +148,8 @@ public class ServerAPI2 {
 			if (needEncoding) {
 				k = URLEncoder.encode(key, "UTF-8");
 			} else {
-				k = key.replace("&", URLEncoder.encode("&", "UTF-8"))
-						.replace("=", URLEncoder.encode("=", "UTF-8"));
+				k = key.replace("&", URLEncoder.encode("&", "UTF-8")).replace(
+						"=", URLEncoder.encode("=", "UTF-8"));
 			}
 
 			if (needEncoding) {
@@ -455,10 +461,7 @@ public class ServerAPI2 {
 		config.put(FIELD_TOKEN, mAppKey);
 		config.put(FIELD_API_NAME, String.format("users/%d/crosses", userId));
 		if (d != null) {
-
-			DateFormat dft = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			dft.setTimeZone(TimeZone.getTimeZone("UTC"));
-			payload.put("updated_at", dft.format(d));
+			payload.put("updated_at", STD_DATETIME_FMT.format(d));
 		}
 		if (userId == 0) {
 			String result = String
@@ -505,12 +508,15 @@ public class ServerAPI2 {
 		return request(config, payload);
 	}
 
-	public Response getCrossById(long crossId) {
+	public Response getCrossById(long crossId, Date lastUpdate) {
 		HashMap<String, String> config = new LinkedHashMap<String, String>();
 		HashMap<String, String> payload = new LinkedHashMap<String, String>();
 		config.put(FIELD_HTTP_TYPE, "GET");
 		config.put(FIELD_TOKEN, mAppKey);
 		config.put(FIELD_API_NAME, String.format("crosses/%d", crossId));
+		if (lastUpdate != null) {
+			payload.put("updated_at", STD_DATETIME_FMT.format(lastUpdate));
+		}
 		return request(config, payload);
 	}
 
@@ -532,7 +538,8 @@ public class ServerAPI2 {
 		config.put(FIELD_TOKEN, mAppKey);
 		config.put(FIELD_API_NAME,
 				String.format("crosses/%d/edit", cross.getId()));
-		payload.put("cross", cross.toJSON().toString());
+		config.put(FIELD_CONTECT_TYPE, "application/json; charset=utf-8");
+		payload.put("", cross.toJSON().toString());
 		return request(config, payload);
 	}
 

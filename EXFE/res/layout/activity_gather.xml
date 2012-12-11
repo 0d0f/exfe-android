@@ -15,11 +15,16 @@
         <Button
             android:id="@+id/nav_btn_back"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="30dp"
             android:layout_gravity="center_vertical"
             android:layout_marginLeft="@dimen/base_small_margin"
             android:background="@drawable/btn_back_bg"
-            android:text="@string/home"
+            android:gravity="center_vertical"
+            android:paddingBottom="0dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="@dimen/base_margin"
+            android:paddingTop="0dp"
+            android:text="@string/cancel"
             android:textColor="@color/gray_8"
             android:textSize="@dimen/button_text_size"
             android:textStyle="bold" />
@@ -40,160 +45,261 @@
         <Button
             android:id="@+id/nav_btn_action"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/nav_btn_height"
+            android:layout_height="30dp"
             android:layout_gravity="center_vertical"
             android:layout_marginRight="@dimen/base_small_margin"
-            android:background="@drawable/btn_dark_bg"
-            android:text="Gather" />
+            android:background="@drawable/btn_blue_round_bg"
+            android:minEms="4"
+            android:minHeight="@dimen/nav_btn_height"
+            android:paddingLeft="@dimen/base_margin"
+            android:paddingRight="@dimen/base_margin"
+            android:text="@string/done"
+            android:textColor="@color/gray_8"
+            android:textSize="@dimen/button_text_size"
+            android:textStyle="bold" />
     </LinearLayout>
 
-    <LinearLayout
+    <FrameLayout
+        android:id="@+id/x_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="match_parent" >
 
-        <ImageButton
-            android:id="@+id/edit_exfee_hint"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/question_circle" />
-
-        <EditText
-            android:id="@+id/edit_title"
+        <ScrollView
+            android:id="@+id/x_detail"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:hint="edit title"  
-            android:singleLine="true"/>
-    </LinearLayout>
+            android:layout_height="match_parent"
+            android:background="@drawable/x_bg"
+            android:fillViewport="true" >
 
-    <TableLayout
-        android:id="@+id/exfee_root"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="50dp"
-        android:background="@android:color/background_light" >
-    </TableLayout>
-
-    <LinearLayout
-        android:id="@+id/group_middle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="15dp"
-        android:orientation="horizontal" >
-
-        <LinearLayout
-            android:id="@+id/group_middle_left"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical" >
-
-            <TextView
-                android:id="@+id/x_rel_date"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center|left"
-                android:hint="SomeTime"
-                android:shadowColor="@android:color/white"
-                android:shadowDy="2"
-                android:shadowRadius="1"
-                android:textColor="@color/cross_important_text_color"
-                android:textSize="21sp"
-                android:textStyle="bold" />
+                android:orientation="vertical" >
 
-            <TextView
-                android:id="@+id/x_time_date"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center|left"
-                android:hint="Tap here to set time"
-                android:shadowColor="@android:color/white"
-                android:shadowDy="2"
-                android:shadowRadius="1"
-                android:textColor="@color/cross_minor_text_color"
-                android:textSize="13sp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" >
 
-            <TextView
-                android:id="@+id/x_zone"
-                android:layout_width="match_parent"
-                android:layout_height="20dp"
-                android:drawableLeft="@drawable/timezone_13"
-                android:drawablePadding="4dp"
-                android:gravity="center|left"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
-                android:shadowColor="@android:color/white"
-                android:shadowDy="2"
-                android:shadowRadius="1"
-                android:textColor="@color/cross_minor_text_color"
-                android:textSize="13sp" />
+                    <ImageView
+                        android:id="@+id/edit_exfee_hint"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="0dp"
+                        android:layout_marginLeft="4dp"
+                        android:layout_marginRight="4dp"
+                        android:layout_marginTop="0dp"
+                        android:padding="0dp"
+                        android:src="@drawable/gather_badge" />
 
-            <TextView
-                android:id="@+id/x_addr_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="15dp"
-                android:gravity="center|left"
-                android:hint="Somewhere"
-                android:maxLines="2"
-                android:shadowColor="@android:color/white"
-                android:shadowDy="2"
-                android:shadowRadius="1"
-                android:textColor="@color/cross_important_text_color"
-                android:textSize="21sp"
-                android:textStyle="bold" />
+                    <EditText
+                        android:id="@+id/edit_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:ems="10"
+                        android:hint="edit title"
+                        android:singleLine="true" />
+                </LinearLayout>
 
-            <TextView
-                android:id="@+id/x_addr_desc"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="15dp"
-                android:layout_marginLeft="15dp"
-                android:layout_marginRight="15dp"
-                android:hint="Tap here to set place"
-                android:maxLines="4"
-                android:shadowColor="@android:color/white"
-                android:shadowDy="2"
-                android:shadowRadius="1"
-                android:textColor="@color/cross_minor_text_color"
-                android:textSize="13sp" />
-        </LinearLayout>
+                <TableLayout
+                    android:id="@+id/exfee_root"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/background_light"
+                    android:minHeight="50dp" >
+                </TableLayout>
+
+                <LinearLayout
+                    android:id="@+id/group_middle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15dp"
+                    android:orientation="horizontal" >
+
+                    <LinearLayout
+                        android:id="@+id/group_middle_left"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical" >
+
+                        <TextView
+                            android:id="@+id/x_rel_date"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center|left"
+                            android:hint="@string/sometime"
+                            android:shadowColor="@android:color/white"
+                            android:shadowDy="2"
+                            android:shadowRadius="1"
+                            android:textColor="@color/cross_important_text_color"
+                            android:textSize="21sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/x_time_date"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center|left"
+                            android:hint="@string/tap_here_to_set_time"
+                            android:shadowColor="@android:color/white"
+                            android:shadowDy="2"
+                            android:shadowRadius="1"
+                            android:textColor="@color/cross_minor_text_color"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/x_zone"
+                            android:layout_width="match_parent"
+                            android:layout_height="20dp"
+                            android:drawableLeft="@drawable/timezone_13"
+                            android:drawablePadding="4dp"
+                            android:gravity="center|left"
+                            android:paddingLeft="4dp"
+                            android:paddingRight="4dp"
+                            android:shadowColor="@android:color/white"
+                            android:shadowDy="2"
+                            android:shadowRadius="1"
+                            android:textColor="@color/cross_minor_text_color"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/x_addr_title"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="15dp"
+                            android:gravity="center|left"
+                            android:hint="@string/somewhere"
+                            android:maxLines="2"
+                            android:shadowColor="@android:color/white"
+                            android:shadowDy="2"
+                            android:shadowRadius="1"
+                            android:textColor="@color/cross_important_text_color"
+                            android:textSize="21sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/x_addr_desc"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="15dp"
+                            android:layout_marginLeft="0dp"
+                            android:layout_marginRight="8dp"
+                            android:hint="@string/tap_here_to_set_place"
+                            android:maxLines="4"
+                            android:shadowColor="@android:color/white"
+                            android:shadowDy="2"
+                            android:shadowRadius="1"
+                            android:textColor="@color/cross_minor_text_color"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <FrameLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="11dp" >
+
+                        <ImageView
+                            android:id="@+id/x_map"
+                            android:layout_width="128dp"
+                            android:layout_height="84dp"
+                            android:paddingBottom="6dp"
+                            android:paddingLeft="7dp"
+                            android:paddingRight="4dp"
+                            android:paddingTop="5dp"
+                            android:src="@drawable/map_nil" />
+
+                        <ImageView
+                            android:id="@+id/x_map_frame"
+                            android:layout_width="128dp"
+                            android:layout_height="84dp"
+                            android:src="@drawable/map_framepin"
+                            android:visibility="invisible" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/edit_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:ellipsize="none"
+                    android:gravity="top|left"
+                    android:hint="@string/edit_description"
+                    android:lines="7"
+                    android:maxHeight="300dp"
+                    android:textColor="@color/cross_minor_text_color"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </ScrollView>
 
         <FrameLayout
-            android:layout_width="wrap_content"
+            android:id="@+id/x_rsvp_action_bar"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginRight="11dp" >
+            android:layout_gravity="bottom" >
 
-            <ImageView
-                android:id="@+id/x_map"
-                android:layout_width="128dp"
-                android:layout_height="84dp"
-                android:paddingBottom="6dp"
-                android:paddingLeft="7dp"
-                android:paddingRight="4dp"
-                android:paddingTop="5dp"
-                android:src="@drawable/map_nil" />
+            <LinearLayout
+                android:id="@+id/x_rsvp_action_bar_others"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="@drawable/toolbar_bg"
+                android:orientation="horizontal"
+                android:visibility="invisible" >
 
-            <ImageView
-                android:id="@+id/x_map_frame"
-                android:layout_width="128dp"
-                android:layout_height="84dp"
-                android:src="@drawable/map_framepin"
-                android:visibility="invisible" />
+                <Button
+                    android:id="@+id/x_rsvp_others_accept"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="top"
+                    android:layout_weight="3"
+                    android:background="@android:color/transparent"
+                    android:drawablePadding="0dp"
+                    android:drawableTop="@drawable/toolbar_accept"
+                    android:paddingTop="2dp"
+                    android:text="@string/accepted"
+                    android:textColor="@color/gray_7"
+                    android:textSize="10sp" />
+
+                <Button
+                    android:id="@+id/x_rsvp_others_ignore"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="top"
+                    android:layout_weight="3"
+                    android:background="@android:color/transparent"
+                    android:drawablePadding="0dp"
+                    android:drawableTop="@drawable/rsvp_pending_toolbar"
+                    android:paddingTop="2dp"
+                    android:text="@string/pending"
+                    android:textColor="@color/gray_7"
+                    android:textSize="10sp" />
+
+                <com.exfe.android.view.CountControls
+                    android:id="@+id/x_rsvp_others_change_mate"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="top"
+                    android:layout_weight="4"
+                    android:paddingTop="2dp" />
+
+                <Button
+                    android:id="@+id/x_rsvp_others_remove"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="top"
+                    android:layout_weight="3"
+                    android:background="@android:color/transparent"
+                    android:drawablePadding="0dp"
+                    android:drawableTop="@drawable/remove_toolbar"
+                    android:paddingTop="2dp"
+                    android:text="@string/unavailable"
+                    android:textColor="@color/gray_7"
+                    android:textSize="10sp" />
+            </LinearLayout>
         </FrameLayout>
-    </LinearLayout>
-
-    <EditText
-        android:id="@+id/edit_description"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="15dp"
-        android:layout_marginRight="15dp"
-        android:ellipsize="none"
-        android:maxHeight="300dp"
-        android:textColor="@color/cross_minor_text_color"
-        android:textSize="13sp"
-        android:lines="7"
-        android:hint="edit description" />
+    </FrameLayout>
 
 </LinearLayout>
