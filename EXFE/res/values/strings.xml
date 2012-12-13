@@ -57,7 +57,9 @@
 	<string name="place_title_or_location_is_needed">Place title or location is needed</string>
     <string name="warning">Warning</string>
 	<string name="i_see">I see</string>
-	<string name="you_hove_no_access_to_the_private_x">You have no access to this private &lt;font color="#0000ff">·X·&lt;/font>.</string>
+	<string name="you_hove_no_access_to_the_private_x">You have no access to this private &lt;font color="#3784D5">·X·&lt;/font>.</string>
+	<string name="right_here">Right here</string>
+	<string name="do_you_want_to_remove_the_editing_venue">Do you want to remove the editing venue?</string>
 	
     <!-- function string -->
     <string name="app_name">EXFE</string>

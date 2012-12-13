@@ -21,11 +21,16 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.ContactsContract;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.text.style.ForegroundColorSpan;
 import android.view.Gravity;
@@ -47,6 +52,7 @@ import com.example.android.bitmapfun.util.ImageWorker;
 import com.exfe.android.Activity;
 import com.exfe.android.Const;
 import com.exfe.android.Fragment;
+import com.exfe.android.MessageID;
 import com.exfe.android.R;
 import com.exfe.android.model.entity.EntityFactory;
 import com.exfe.android.model.entity.Identity;
@@ -88,6 +94,27 @@ public class LoginFragment extends Fragment implements Observer {
 	private String mKeyword = null;
 	private int mUiMode = UI_MODE_SIGN_IN;
 	private int mQueryStatus = REG_QUERY_NONE;
+
+	private Handler mHandler = new Handler() {
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see android.os.Handler#handleMessage(android.os.Message)
+		 */
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case MessageID.MSG_ID_CHECK_EMAIL:
+				checkAvailable(msg.obj.toString());
+				break;
+			default:
+				super.handleMessage(msg);
+			}
+
+		}
+
+	};
 
 	/** Called when the activity is first created. */
 	@Override
@@ -152,6 +179,32 @@ public class LoginFragment extends Fragment implements Observer {
 		v = view.findViewById(R.id.input_indentity);
 		if (v != null) {
 			etIdentity = (EditText) v;
+			etIdentity.addTextChangedListener(new TextWatcher() {
+
+				@Override
+				public void afterTextChanged(Editable s) {
+					mHandler.removeMessages(MessageID.MSG_ID_CHECK_EMAIL);
+					Message msg = Message.obtain(mHandler,
+							MessageID.MSG_ID_CHECK_EMAIL, s.toString());
+					mHandler.sendMessageDelayed(msg,
+							Const.SEARCH_TRIGGER_DELAY_IN_MS);
+				}
+
+				@Override
+				public void beforeTextChanged(CharSequence s, int start,
+						int count, int after) {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public void onTextChanged(CharSequence s, int start,
+						int before, int count) {
+					// TODO Auto-generated method stub
+
+				}
+			});
+			// etIdentity.setOnFocusChangeListener(focusChangeListener);
 			InputMethodManager imm = (InputMethodManager) getActivity()
 					.getSystemService(Context.INPUT_METHOD_SERVICE);
 			imm.showSoftInput(etIdentity, 0);
@@ -233,8 +286,6 @@ public class LoginFragment extends Fragment implements Observer {
 				if (etIdentity != null) {
 					etIdentity.setText(defAccount);
 					etIdentity.setSelection(defAccount.length());
-					etIdentity.setOnFocusChangeListener(focusChangeListener);
-
 				}
 			}
 		}
@@ -248,22 +299,23 @@ public class LoginFragment extends Fragment implements Observer {
 		}
 	}
 
-	View.OnFocusChangeListener focusChangeListener = new View.OnFocusChangeListener() {
-
-		@Override
-		public void onFocusChange(View v, boolean hasFocus) {
-
-			if (!hasFocus) {
-				final TextView tv = (TextView) v;
-				final String external_name = tv.getText().toString().trim();
-
-				checkAvailable(external_name);
-			} else {
-				getActivity().getWindow().setSoftInputMode(
-						WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-			}
-		}
-	};
+	// View.OnFocusChangeListener focusChangeListener = new
+	// View.OnFocusChangeListener() {
+	//
+	// @Override
+	// public void onFocusChange(View v, boolean hasFocus) {
+	//
+	// if (!hasFocus) {
+	// final TextView tv = (TextView) v;
+	// final String external_name = tv.getText().toString().trim();
+	//
+	// checkAvailable(external_name);
+	// } else {
+	// getActivity().getWindow().setSoftInputMode(
+	// WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+	// }
+	// }
+	// };
 
 	LoaderManager.LoaderCallbacks<Cursor> mQueryLoaderHandler = new LoaderManager.LoaderCallbacks<Cursor>() {
 		final String[] PROJECTION = { "data1" /*
@@ -327,7 +379,6 @@ public class LoginFragment extends Fragment implements Observer {
 				if (etIdentity != null) {
 					etIdentity.setText(defAccount);
 					etIdentity.setSelection(defAccount.length());
-					etIdentity.setOnFocusChangeListener(focusChangeListener);
 					etIdentity.requestFocus();
 					InputMethodManager imm = (InputMethodManager) etIdentity
 							.getContext().getSystemService(
@@ -514,6 +565,12 @@ public class LoginFragment extends Fragment implements Observer {
 	}
 
 	protected void checkAvailable(final String external_name) {
+
+		int provider = Provider.checkType(external_name);
+
+		if (provider != Provider.EMAIL) {
+			return;
+		}
 		Runnable run = new Runnable() {
 
 			@Override
@@ -524,7 +581,7 @@ public class LoginFragment extends Fragment implements Observer {
 
 				Response resp = getModel().getServer().getRegistrationFlag(
 						external_name, Provider.STR_EMAIL);
-				getModel().mHandler.post(new Runnable() {
+				mHandler.post(new Runnable() {
 
 					@Override
 					public void run() {
@@ -545,14 +602,7 @@ public class LoginFragment extends Fragment implements Observer {
 								.create(resp.getResponse().optJSONObject(
 										"identity"));
 						if (ident != null) {
-							try {
-								getModel().getHelper().getIdentityDao()
-										.update(ident);
-							} catch (SQLException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							getModel().mHandler.post(new Runnable() {
+							mHandler.post(new Runnable() {
 
 								@Override
 								public void run() {
@@ -569,11 +619,19 @@ public class LoginFragment extends Fragment implements Observer {
 												null);
 									}
 								}
+
 							});
+							try {
+								getModel().getHelper().getIdentityDao()
+										.update(ident);
+							} catch (SQLException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 						}
 					} else if ("SIGN_UP".equalsIgnoreCase(regFlag)) {
 						mQueryStatus = REG_QUERY_QUERIED_SIGN_UP;
-						getModel().mHandler.post(new Runnable() {
+						mHandler.post(new Runnable() {
 
 							@Override
 							public void run() {
@@ -705,7 +763,7 @@ public class LoginFragment extends Fragment implements Observer {
 				}
 
 				// reset UI;
-				getModel().mHandler.post(new Runnable() {
+				mHandler.post(new Runnable() {
 
 					@Override
 					public void run() {
@@ -732,10 +790,12 @@ public class LoginFragment extends Fragment implements Observer {
 
 						mModel.Me().fetchProfile();
 
-						((Activity) getActivity()).registGCM();
-
+						FragmentActivity act = getActivity();
+						if (act != null) {
+							((Activity) act).registGCM();
+						}
 						if (mCallBack != null) {
-							mModel.mHandler.post(new Runnable() {
+							mHandler.post(new Runnable() {
 
 								@Override
 								public void run() {
@@ -750,7 +810,7 @@ public class LoginFragment extends Fragment implements Observer {
 						}
 						break;
 					case HttpStatus.SC_FORBIDDEN:
-						getModel().mHandler.post(new Runnable() {
+						mHandler.post(new Runnable() {
 
 							@Override
 							public void run() {

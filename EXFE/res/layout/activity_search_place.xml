@@ -127,6 +127,8 @@
         android:layout_weight="2"
         android:descendantFocusability="blocksDescendants"
         android:divider="@color/list_place_divider"
-        android:dividerHeight="2dp" />
+        android:dividerHeight="2dp" 
+        android:fadingEdge="none"
+        android:fadingEdgeLength="0dp"/>
 
 </LinearLayout>

@@ -36,7 +36,8 @@ public class OneDaySelector extends View {
 	private static final long ONE_HOUR = 60 * ONE_MINUTE;
 	private static final long ONE_DAY = 24 * ONE_HOUR;
 
-	private static final float GAP_X = 15;
+	private static final float GAP_X = 20;
+	private static final float GAP_Y = 25;
 	private static final long LARGE_STEP = 15 * ONE_MINUTE;
 	private static final long SMALL_STEP = ONE_MINUTE;
 	private static final long SMALL_FULL_RANGE = 15 * ONE_MINUTE;
@@ -201,6 +202,186 @@ public class OneDaySelector extends View {
 
 	public void setDateChangeListener(DateChangeListener listener) {
 		mDateChangeListener = listener;
+	}
+
+	class Simple2GestureListener extends
+			GestureDetector.SimpleOnGestureListener {
+		private static final int DETECTED_MODE_VERTICAL = 0;
+		private static final int DETECTED_MODE_HORIZON = 1;
+
+		int mWidth = 0;
+		int mHeight = 0;
+
+		boolean isStoppedFling = false;
+		long deltaMajor = 0;
+
+		int detectedMode = DETECTED_MODE_VERTICAL;
+		PointF base = new PointF();
+
+		@Override
+		public boolean onDown(MotionEvent e) {
+
+			isStoppedFling = false;
+			if (!mScroller.isFinished()) { // is flinging
+				mScroller.forceFinished(true); // to stop flinging on touch
+				isStoppedFling = true;
+				return true;
+			}
+
+			mWidth = getWidth();
+			mHeight = getHeight();
+			isSelecting = false;
+			deltaMajor = 0;
+
+			mCurrentPoint.x = 0;
+			mCurrentPoint.y = 0;
+			mPressPoint.x = 0;
+			mPressPoint.y = 0;
+			mDownPoint.x = e.getX();
+			mDownPoint.y = e.getY();
+			base.x = 0;
+			base.y = 0;
+			detectedMode = DETECTED_MODE_VERTICAL;
+			invalidate();
+
+			// Log.d("Time", "DOWN: %d, (%f, %f)",
+			// e.getAction(),e.getX(),e.getY());
+			return true;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * android.view.GestureDetector.SimpleOnGestureListener#onFling(android
+		 * .view.MotionEvent, android.view.MotionEvent, float, float)
+		 */
+		@Override
+		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+				float velocityY) {
+			// Log.d("Time", "Fling: [%f, %f]", velocityX, velocityY);
+
+			if (isSelecting) {
+				return super.onFling(e1, e2, velocityX, velocityY);
+			} else {
+				mScroller.fling(getScrollX(), getScrollY(), -(int) velocityX,
+						-(int) velocityY, -(int) mMaxScrollX,
+						(int) mMaxScrollX, (int) mMaxScrollYTop,
+						(int) mMaxScrollYBottom);
+				invalidate();
+				return true;
+			}
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * android.view.GestureDetector.SimpleOnGestureListener#onScroll(android
+		 * .view.MotionEvent, android.view.MotionEvent, float, float)
+		 */
+		@Override
+		public boolean onScroll(MotionEvent e1, MotionEvent e2,
+				float distanceX, float distanceY) {
+
+			boolean result = false;
+			if (isSelecting) {
+				int action = e2.getAction();
+				float ax = e2.getX();
+				float ay = e2.getY();
+
+				float dx = (ax - base.x);
+				float dy = (ay - base.y);
+
+				long deltaMiner = 0;
+				if (detectedMode == DETECTED_MODE_VERTICAL) {
+					deltaMajor = getRelativeTimeFromPosition(ax, ay)
+							/ LARGE_STEP * LARGE_STEP;
+					if (Math.abs(dx) - GAP_X * mDensity > 0) {
+						base.set(ax, ay);
+						detectedMode = DETECTED_MODE_HORIZON;
+					}
+				} else {
+					deltaMiner = ((long) Math.round(dx / (mWidth / 2)
+							* SMALL_FULL_RANGE))
+							/ SMALL_STEP * SMALL_STEP;
+					if (Math.abs(dy) - GAP_Y * mDensity > 0) {
+						base.set(ax, ay);
+						detectedMode = DETECTED_MODE_VERTICAL;
+					}
+
+				}
+				long delta = deltaMajor + deltaMiner;
+
+				switch (action) {
+				case MotionEvent.ACTION_MOVE:
+					mTempTime.setTime(mCurrentDate.getTimeInMillis() + delta);
+
+					mDeltaMajor = deltaMajor;
+					mDeltaMinor = deltaMiner;
+					mCurrentPoint.x = e2.getX();
+					mCurrentPoint.y = e2.getY();
+					invalidate();
+					result = true;
+					break;
+				default:
+					break;
+				}
+			} else {
+				float target = distanceY + getScrollY();
+				if (target < mMaxScrollYTop) {
+					target = mMaxScrollYTop;
+				} else if (target > mMaxScrollYBottom) {
+					target = mMaxScrollYBottom;
+				}
+				scrollTo(0, (int) target);
+				// invalidate();
+				result = true;
+			}
+
+			if (!result) {
+				result = super.onScroll(e1, e2, distanceX, distanceY);
+			}
+			return result;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * android.view.GestureDetector.SimpleOnGestureListener#onShowPress(
+		 * android.view.MotionEvent)
+		 */
+		@Override
+		public void onShowPress(MotionEvent e) {
+			// relocate time & position
+
+			// Log.d("Time", "onShowPress: %d, (%f, %f)", e.getAction(),
+			// e.getX(),e.getY());
+			if (isStoppedFling) {
+				isStoppedFling = false;
+				return;
+			}
+
+			if (isSelecting == false) {
+				isSelecting = true;
+
+				hasTime = true;
+				long delta = getRelativeTimeFromPosition(e.getX(), e.getY())
+						/ LARGE_STEP * LARGE_STEP;
+				long time = mCurrentDate.getTimeInMillis() + delta;
+				mDownTime.setTime(time);
+				mTempTime.setTime(time);
+
+				mPressPoint.x = e.getX();
+				mPressPoint.y = e.getY();
+
+				base.set(mPressPoint);
+
+				invalidate();
+			}
+			super.onShowPress(e);
+		}
 	}
 
 	class SimpleGestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -395,7 +576,7 @@ public class OneDaySelector extends View {
 	}
 
 	GestureDetector mDetector = new GestureDetector(getContext(),
-			new SimpleGestureListener());
+			new Simple2GestureListener());
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
@@ -490,6 +671,16 @@ public class OneDaySelector extends View {
 				- mCurrentDate.getTimeInMillis());
 	}
 
+	protected Long getRelativeTimeFromPosition(float x, float y) {
+		return (int) ((y + getScrollY() - mBaseY) / mBarHeightPerHour * 60)
+				* ONE_MINUTE;
+	}
+
+	protected Date getTimeFromPosition(float x, float y) {
+		return new Date(mCurrentDate.getTimeInMillis()
+				+ getRelativeTimeFromPosition(x, y));
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -512,9 +703,11 @@ public class OneDaySelector extends View {
 				boolean isWhite = hour_of_day >= 6 && hour_of_day <= 18;
 				if (hour_of_day % 3 == 0) {
 					mPaintGraduation.setColor(Color.rgb(0x77, 0x77, 0x77));
-					String hour_str = sHH_AM_FORMATTER.format(mDrawCalendar.getTime());
-					if (i == 0){
-						hour_str = sKK_AM_FORMATTER.format(mDrawCalendar.getTime());
+					String hour_str = sHH_AM_FORMATTER.format(mDrawCalendar
+							.getTime());
+					if (i == 0) {
+						hour_str = sKK_AM_FORMATTER.format(mDrawCalendar
+								.getTime());
 					}
 					canvas.drawText(
 							hour_str,

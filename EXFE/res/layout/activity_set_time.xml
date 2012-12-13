@@ -51,6 +51,7 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/time_top_layer"
         android:layout_width="match_parent"
         android:layout_height="46dp"
         android:background="@color/rich_month_background"

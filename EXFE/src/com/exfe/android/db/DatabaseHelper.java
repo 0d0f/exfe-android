@@ -6,7 +6,9 @@ import java.util.HashMap;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.exfe.android.Application;
 import com.exfe.android.debug.Log;
+import com.exfe.android.model.Model;
 import com.exfe.android.model.entity.Cross;
 import com.exfe.android.model.entity.Exfee;
 import com.exfe.android.model.entity.Identity;
@@ -22,20 +24,23 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
 	private final String TAG = getClass().getSimpleName();
 
+	private Context mContext;
+
 	// name of the database file for your application -- change to something
 	// appropriate for your app
-	private static final String DATABASE_NAME = "exfe.sqlite";
+	private static final String DATABASE_NAME = "exfe1.sqlite";
 	// any time you make changes to your database objects, you may have to
 	// increase the database version
 	private static final int DATABASE_VERSION = 1;
 
 	private HashMap<Class<?>, Object> daoCache = new HashMap<Class<?>, Object>();
+	private static final Class<?>[] clzs = { Cross.class, Identity.class,
+			Invitation.class, Exfee.class, User.class, Post.class };
 
 	public DatabaseHelper(Context context) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
+		mContext = context;
 		try {
-			Class<?>[] clzs = { Cross.class, Identity.class, Invitation.class,
-					Exfee.class, User.class, Post.class};
 			for (Class<?> c : clzs) {
 				TableUtils.createTableIfNotExists(getConnectionSource(), c);
 				Dao dao = getDao(c);
@@ -49,6 +54,11 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
 	}
 
+	public void cleanUpTimeStamp() {
+		Model mModel = ((Application) mContext.getApplicationContext()).getModel();
+		mModel.Crosses().setLastUpdateQuery(null);
+	}
+
 	/**
 	 * This is called when the database is first created. Usually you should
 	 * call createTable statements here to create the tables that will store
@@ -58,6 +68,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	public void onCreate(SQLiteDatabase db, ConnectionSource connectionSource) {
 		Log.i(TAG, "onCreate");
 		createTables();
+		cleanUpTimeStamp();
 	}
 
 	/**
@@ -69,9 +80,11 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	public void onUpgrade(SQLiteDatabase db, ConnectionSource connectionSource,
 			int oldVersion, int newVersion) {
 		Log.i(TAG, "onUpgrade");
-		dropTables();
-		// after we drop the old databases, we create the new ones
-		createTables();
+		if (newVersion > oldVersion) {
+			dropTables(oldVersion);
+			// after we drop the old databases, we create the new ones
+			createTables();
+		}
 	}
 
 	private void createTables() {
@@ -85,13 +98,14 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 		}
 	}
 
-	private void dropTables() {
+	private void dropTables(int version) {
 		try {
+
 			for (Class<?> clz : daoCache.keySet()) {
 				TableUtils.dropTable(getConnectionSource(), clz, true);
 			}
 		} catch (SQLException e) {
-			Log.e(TAG, "Can't create database", e);
+			Log.e(TAG, "Can't drop database", e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -121,8 +135,8 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 		super.close();
 		daoCache.clear();
 	}
-	
-	public Dao<Cross, Long> getCrossDao(){
+
+	public Dao<Cross, Long> getCrossDao() {
 		try {
 			return getCachedDao(Cross.class);
 		} catch (SQLException e) {
@@ -132,7 +146,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 		return null;
 	}
 
-	public Dao<Exfee, Long> getExfeeDao(){
+	public Dao<Exfee, Long> getExfeeDao() {
 		try {
 			return getCachedDao(Exfee.class);
 		} catch (SQLException e) {
@@ -141,8 +155,8 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 		}
 		return null;
 	}
-	
-	public Dao<Invitation, Long> getInvitationDao(){
+
+	public Dao<Invitation, Long> getInvitationDao() {
 		try {
 			return getCachedDao(Invitation.class);
 		} catch (SQLException e) {
@@ -151,8 +165,8 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 		}
 		return null;
 	}
-	
-	public Dao<Identity, Long> getIdentityDao(){
+
+	public Dao<Identity, Long> getIdentityDao() {
 		try {
 			return getCachedDao(Identity.class);
 		} catch (SQLException e) {

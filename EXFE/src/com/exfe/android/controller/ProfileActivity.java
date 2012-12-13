@@ -149,7 +149,7 @@ public class ProfileActivity extends Activity implements Observer {
 							KeyEvent event) {
 						if (actionId == EditorInfo.IME_ACTION_DONE
 								|| event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-							new UpdateUsernameTask(v.getText().toString())
+							new UpdateUsernameTask(v.getText().toString().trim())
 									.execute();
 							return true;
 						}
@@ -165,7 +165,6 @@ public class ProfileActivity extends Activity implements Observer {
 				ViewSwitcher switcher = (ViewSwitcher) v.getParent();
 				mNameInput.setText(((TextView) v).getText());
 				switcher.showNext();
-
 			}
 		});
 
@@ -353,17 +352,17 @@ public class ProfileActivity extends Activity implements Observer {
 			// mDeviceAdapter.notifyDataSetChanged();
 		}
 	}
-
-	@Override
-	protected void onStart() {
-		// TODO Auto-generated method stub
-		super.onStart();
-	}
-
+	
 	@Override
 	protected void onRestart() {
 		// TODO Auto-generated method stub
 		super.onRestart();
+	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		mModel.Me().fetchProfile();
 	}
 
 	@Override

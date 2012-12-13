@@ -544,15 +544,26 @@ public class ServerAPI2 {
 	}
 
 	public Response getMyProfile() {
-		return getProfile(mUserId);
+		return getProfileById(mUserId, null);
 	}
 
-	public Response getProfile(long userId) {
+	public Response getMyProfile(Date lastUpdate) {
+		return getProfileById(mUserId, lastUpdate);
+	}
+
+	public Response getProfileById(long userId) {
+		return getProfileById(userId, null);
+	}
+
+	public Response getProfileById(long userId, Date lastUpdate) {
 		HashMap<String, String> config = new LinkedHashMap<String, String>();
 		HashMap<String, String> payload = new LinkedHashMap<String, String>();
 		config.put(FIELD_HTTP_TYPE, "GET");
 		config.put(FIELD_TOKEN, mAppKey);
 		config.put(FIELD_API_NAME, String.format("users/%d", userId));
+		if (lastUpdate != null) {
+			payload.put("updated_at", STD_DATETIME_FMT.format(lastUpdate));
+		}
 		return request(config, payload);
 	}
 

@@ -634,8 +634,11 @@ public class CrossDetailFragment extends Fragment implements Observer {
 				rsvp.setByIdentity(mMyInvitation.getIdentity());
 				rsvps.add(rsvp);
 				// submit the change to server
+				((Activity) getActivity()).showProgressBar("RSVP",
+						"Submiting...", Const.SHOW_PROGRESS_BAR_DELAY_IN_MS);
 				Response res = mModel.getServer().updateRSVP(
 						mCross.getExfee().getId(), rsvps);
+				((Activity) getActivity()).hideProgressBar();
 				if (res.getCode() != HttpStatus.SC_OK) {
 					Log.w(TAG, "Submit fail");
 					return;
@@ -708,8 +711,11 @@ public class CrossDetailFragment extends Fragment implements Observer {
 						inv.setMates(mates);
 					}
 				}
+				((Activity) getActivity()).showProgressBar("Change mates",
+						"Submiting...", Const.SHOW_PROGRESS_BAR_DELAY_IN_MS);
 				Response resp = mModel.getServer().editExfee(
 						mMyInvitation.getIdentity(), exfee);
+				((Activity) getActivity()).hideProgressBar();
 				if (resp.getCode() != HttpStatus.SC_OK) {
 					Log.w(TAG, "Submit fail");
 					return;
@@ -1246,7 +1252,7 @@ public class CrossDetailFragment extends Fragment implements Observer {
 						if (e != null) {
 							Exfee newExfee = (Exfee) EntityFactory.create(e);
 							if (newExfee != null) {
-								//exfee.trimDao(mModel.getHelper());
+								// exfee.trimDao(mModel.getHelper());
 								newExfee.saveToDao(mModel.getHelper());
 								final Cross x = mCross.cloneSelf();
 								x.setExfee(newExfee);

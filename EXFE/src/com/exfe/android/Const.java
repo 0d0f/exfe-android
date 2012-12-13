@@ -11,7 +11,7 @@ import android.text.TextUtils;
 
 public class Const {
 
-	public static final boolean override_domain = BuildConfig.DEBUG;
+	public static final boolean override_domain = false;// BuildConfig.DEBUG;
 
 	public static final String FLURRY_APP_ID = "4B9VJPB4DC7VPTTCS3G6";
 	public static final String PUSH_PROJECT_ID = override_domain ? "313001677673"
@@ -91,6 +91,7 @@ public class Const {
 	public static final String ACCOUNT_TYPE_GOOGLE = "com.google";
 	
 	public static final long SEARCH_TRIGGER_DELAY_IN_MS = 650;
+	public static final long SHOW_PROGRESS_BAR_DELAY_IN_MS = 1000;
 
 	public static URL getDefaultAPIURL(String protocal, String domain,
 			String port, String pathRoot) {

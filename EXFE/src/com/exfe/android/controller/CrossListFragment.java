@@ -199,24 +199,21 @@ public class CrossListFragment extends ListFragment implements Observer {
 		// or start a new one.
 		getLoaderManager().initLoader(LOADER_QUERY_LOCAL, null,
 				mQueryLoaderHandler);
+
+		mModel.Me().fetchProfile();
 	}
 
 	@Override
 	public void onStart() {
 		// TODO Auto-generated method stub
 		super.onStart();
+		mModel.Crosses().freshCrosses();
 	}
 
 	@Override
 	public void onResume() {
 		// TODO Auto-generated method stub
 		super.onResume();
-
-		Date last = mModel.Crosses().getLastUpdateQuery();
-		Date now = new Date();
-		if (last == null || now.getTime() - last.getTime() > 15 * 3600 * 1000) {
-			mModel.Crosses().freshCrosses();
-		}
 	}
 
 	@Override
@@ -249,8 +246,7 @@ public class CrossListFragment extends ListFragment implements Observer {
 		case R.id.btn_clear:
 			Log.v(TAG, "%s is clicked", "clear");
 			mModel.Crosses().clearCrosses();
-			mModel.Crosses().setLastUpdateQuery(null);// new Date(112, 4,1,
-														// 0,0,0)
+			mModel.Crosses().setLastUpdateQuery(null);
 			getLoaderManager().restartLoader(LOADER_QUERY_LOCAL, null,
 					mQueryLoaderHandler);
 			return true;
@@ -426,7 +422,6 @@ public class CrossListFragment extends ListFragment implements Observer {
 
 		@Override
 		public void onScrollStateChanged(AbsListView view, int scrollState) {
-			// TODO Auto-generated method stub
 			switch (scrollState) {
 			case AbsListView.OnScrollListener.SCROLL_STATE_FLING:
 				break;

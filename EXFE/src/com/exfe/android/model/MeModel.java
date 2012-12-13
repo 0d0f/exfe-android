@@ -174,11 +174,7 @@ public class MeModel {
 	public void setProfile(User profile) {
 		try {
 			if (profile != null) {
-
-				// User current = mRoot.Me().getProfile();
-				// if (current == null ||
-				// profile.getLatestModify().getTime() >
-				// current.getLatestModify().getTime()) {
+				
 				profile.saveToDao(mRoot.getHelper());
 				getDao().createOrUpdate(profile);
 				setUserId(profile.getId());
@@ -199,19 +195,18 @@ public class MeModel {
 	private Date lastProfileQuery;
 
 	public void fetchProfile() {
-		// Date now = new Date();
-		// if (lastProfileQuery == null || (now.getTime() -
-		// lastProfileQuery.getTime()) > Const.HALF_HOUR){
-		// lastProfileQuery = now;
-		//
-		// }
 
 		Runnable run = new Runnable() {
 
 			@Override
 			public void run() {
-				// TODO Auto-generated method stub
-				Response result = mRoot.getServer().getMyProfile();
+				User u = getProfile();
+				Date lastUpdate = null;
+				if (u != null){
+					lastUpdate = u.getUpdatedAt();
+				}
+				
+				Response result = mRoot.getServer().getMyProfile(lastUpdate);
 				if (result != null) {
 					try {
 						int code = result.getCode();

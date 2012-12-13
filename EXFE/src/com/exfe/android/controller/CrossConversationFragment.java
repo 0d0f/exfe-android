@@ -313,7 +313,6 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 		@Override
 		public void onScroll(AbsListView view, int firstVisibleItem,
 				int visibleItemCount, int totalItemCount) {
-
 			if (mScrollTopTime != null) {
 				if (visibleItemCount > 0 && firstVisibleItem != lastIndex) {
 					allShown = visibleItemCount == totalItemCount;
@@ -348,25 +347,32 @@ public class CrossConversationFragment extends ListFragment implements Observer 
 
 		@Override
 		public void onScrollStateChanged(AbsListView view, int scrollState) {
-
-			Log.d(TAG, "scroll: %d", scrollState);
-			if (scrollState != SCROLL_STATE_IDLE) {
-				if (view.getFirstVisiblePosition() == 0
-						|| view.getLastVisiblePosition() + 1 == view
-								.getAdapter().getCount()) {
-					// getLoaderManager().restartLoader(LOADER_QUERY_NETWORK,
-					// null,
-					// mQueryLoaderHandler);
+			switch (scrollState) {
+			case AbsListView.OnScrollListener.SCROLL_STATE_FLING:
+				if (scrollState != SCROLL_STATE_IDLE && !allShown) {
+					showForSeconds(mScrollTopTime, 1);
+				}
+				break;
+			case AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL:
+				if (scrollState != SCROLL_STATE_IDLE && !allShown) {
+					showForSeconds(mScrollTopTime, 1);
+				}
+				break;
+			case AbsListView.OnScrollListener.SCROLL_STATE_IDLE:
+				if (view.getFirstVisiblePosition() == 0) {
+					Log.d("ListView", "refresh new");
 					if (mCross != null) {
 						mModel.Conversations().refreshPosts(mCross);
 					}
 				}
+				if (view.getLastVisiblePosition() == view.getAdapter()
+						.getCount() - 1) {
+					if (mCross != null) {
+						mModel.Conversations().refreshPosts(mCross);
+					}
+				}
+				break;
 			}
-
-			if (scrollState != SCROLL_STATE_IDLE && !allShown) {
-				showForSeconds(mScrollTopTime, 1);
-			}
-
 		}
 	};
 

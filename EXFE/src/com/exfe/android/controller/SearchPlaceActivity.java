@@ -18,8 +18,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -55,6 +57,7 @@ import android.widget.Toast;
 import com.exfe.android.Activity;
 import com.exfe.android.Application;
 import com.exfe.android.Const;
+import com.exfe.android.MessageID;
 import com.exfe.android.R;
 import com.exfe.android.debug.Log;
 import com.exfe.android.maps.ItemizedOverlay;
@@ -85,8 +88,6 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 	private static final int UI_MODE_EDIT = 1;
 	private static final int UI_MODE_VENUE_POPUP = 2;
 
-	private static final int MSG_ID_TRIGGER_SERACH = 1;
-
 	protected Model mModel = null;
 	private MapController mMapController;
 	private MapView mMapView;
@@ -103,6 +104,7 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 	private EditText mVenueDescription = null;
 	private boolean needFixQuery = true;
 	private Geocoder mGeoCoder = null;
+	private boolean ignoreChange = false;
 
 	private Place mSelectedPlace;
 	private int mSelectedIndex;
@@ -115,14 +117,53 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 		public void handleMessage(Message msg) {
 
 			switch (msg.what) {
-			case MSG_ID_TRIGGER_SERACH:
+			case MessageID.MSG_ID_TRIGGER_SERACH:
 				searchVenues(msg.obj.toString());
+				break;
+			case MessageID.MSG_ID_NEED_CLEAR_CUSTOM_VENUE:
+				AlertDialog.Builder builder = new AlertDialog.Builder(
+						SearchPlaceActivity.this);
+				DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						switch (which) {
+						case DialogInterface.BUTTON_POSITIVE:
+							setUIMode(UI_MODE_SEARCH);
+							if (mCustomOverlay != null) {
+								mCustomOverlay.clear();
+							}
+							mCustomPlace = null;
+							mSelectedPlace = null;
+							if (mInput != null) {
+								mInput.setText("");
+							}
+							break;
+						case DialogInterface.BUTTON_NEGATIVE:
+							dialog.dismiss();
+							break;
+						}
+					}
+				};
+				builder.setMessage(
+						R.string.do_you_want_to_remove_the_editing_venue)
+						.setPositiveButton(android.R.string.ok, clickListener)
+						.setNegativeButton(android.R.string.cancel,
+								clickListener);
+				AlertDialog dia = builder.create();
+				dia.show();
+
 				break;
 			case ReverseGeocodingTask.MSG_ID_FILL_ADDRESS:
 				if (getUIMode() == UI_MODE_EDIT) {
 					if (mVenueDescription != null) {
-						if (TextUtils.isEmpty(mVenueDescription.getText())) {
+						if (mVenueDescription.length() == 0) {
+							ignoreChange = true;
+							if (mVenueName != null && mVenueName.length() == 0) {
+								mVenueName.setText(R.string.right_here);
+							}
 							mVenueDescription.setText(msg.obj.toString());
+							ignoreChange = false;
 						}
 					}
 				}
@@ -136,99 +177,111 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 	};
 
 	/** Functions in Activity */
-	protected void postInUI(Runnable run) {
-		mModel.mHandler.post(run);
-	}
+	protected Handler mUIHandler = new Handler() {
 
-	protected Runnable createToastMessage(final String msg) {
-		return new Runnable() {
-
-			@Override
-			public void run() {
-				Toast toast = Toast.makeText(getApplicationContext(), msg,
-						Toast.LENGTH_SHORT);
-				toast.show();
-			}
-
-		};
-	}
-
-	protected Runnable hideProgressBar = new Runnable() {
-
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see android.os.Handler#handleMessage(android.os.Message)
+		 */
 		@Override
-		public void run() {
-			hideProgressBar();
-		}
-	};
+		public void handleMessage(Message msg) {
 
-	protected ProgressDialog mProgressDialog = null;
-
-	protected void showProgressBar(final String title, final String message) {
-		postInUI(new Runnable() {
-
-			@Override
-			public void run() {
+			switch (msg.what) {
+			case MessageID.MSG_ID_SHOW_PROGRESS_BAR:
+				Log.i(TAG, "process showProgressBar msg");
 				if (mProgressDialog == null) {
 					mProgressDialog = new ProgressDialog(
 							SearchPlaceActivity.this);
-				} else {
-					mProgressDialog.setTitle(title);
-					mProgressDialog.setMessage(message);
 				}
+				String[] data = (String[]) msg.obj;
+				mProgressDialog.setTitle(data[0]);
+				mProgressDialog.setMessage(data[1]);
+
 				if (!mProgressDialog.isShowing()) {
 					mProgressDialog.show();
 				}
-			}
-		});
-	}
-
-	protected void hideProgressBar() {
-		postInUI(new Runnable() {
-
-			@Override
-			public void run() {
+				break;
+			case MessageID.MSG_ID_DIMISS_PROGRESS_BAR:
+				Log.i(TAG, "process hideProgressBar msg");
 				if (mProgressDialog != null && mProgressDialog.isShowing()) {
 					mProgressDialog.dismiss();
 				}
-			}
-		});
-	}
-
-	protected Toast mToast = null;
-
-	protected void showToast(int resID) {
-		showToast(getText(resID).toString(), Toast.LENGTH_SHORT);
-	}
-
-	protected void showToast(String msg) {
-		showToast(msg, Toast.LENGTH_SHORT);
-	}
-
-	protected void showToast(String msg, int duration) {
-		showToast(msg, duration, false);
-	}
-
-	protected void showToast(final String msg, final int duration,
-			final boolean showNow) {
-
-		postInUI(new Runnable() {
-
-			@Override
-			public void run() {
+				break;
+			case MessageID.MSG_ID_SHOW_TOAST:
+				int duration = msg.arg1;
+				boolean showNow = msg.arg2 == 1;
+				String message = msg.obj.toString();
 				if (showNow && mToast != null) {
 					mToast.cancel();
 				}
 				if (mToast == null) {
-					mToast = Toast.makeText(SearchPlaceActivity.this, msg,
+					mToast = Toast.makeText(SearchPlaceActivity.this, message,
 							duration);
 				} else {
-					mToast.setText(msg);
+					mToast.setText(message);
 					mToast.setDuration(duration);
 				}
 				mToast.show();
-			}
-		});
+				break;
+			default:
+				super.handleMessage(msg);
 
+			}
+
+		}
+
+	};
+
+	protected ProgressDialog mProgressDialog = null;
+
+	public void showProgressBar(final String title, final String message) {
+		Message.obtain(mUIHandler, MessageID.MSG_ID_SHOW_PROGRESS_BAR,
+				new String[] { title, message }).sendToTarget();
+	}
+
+	public void showProgressBar(final String title, final String message,
+			long delayMS) {
+		Log.i(TAG, "send showProgressBar msg");
+		Message msg = Message.obtain(mUIHandler,
+				MessageID.MSG_ID_SHOW_PROGRESS_BAR, new String[] { title,
+						message });
+		mUIHandler.sendMessageDelayed(msg, delayMS);
+	}
+
+	public void hideProgressBar() {
+		Log.i(TAG, "remove showProgressBar msg");
+		mUIHandler.removeMessages(MessageID.MSG_ID_SHOW_PROGRESS_BAR);
+		Log.i(TAG, "send hideProgressBar msg");
+		Message.obtain(mUIHandler, MessageID.MSG_ID_DIMISS_PROGRESS_BAR)
+				.sendToTarget();
+	}
+
+	protected Toast mToast = null;
+
+	public void showToast(int msg) {
+		showToast(getResources().getString(msg), Toast.LENGTH_SHORT);
+	}
+
+	public void showToast(String msg) {
+		showToast(msg, Toast.LENGTH_SHORT);
+	}
+
+	public void showToast(int msg, int duration) {
+		showToast(getResources().getString(msg), duration, false);
+	}
+
+	public void showToast(String msg, int duration) {
+		showToast(msg, duration, false);
+	}
+
+	public void showToast(int msg, int duration, boolean showNow) {
+		showToast(getResources().getString(msg), duration, showNow);
+	}
+
+	public void showToast(String msg, int duration, boolean showNow) {
+		Message.obtain(mUIHandler, MessageID.MSG_ID_SHOW_TOAST, duration,
+				showNow ? 1 : 0, msg).sendToTarget();
 	}
 
 	/** Functions in Activity */
@@ -265,6 +318,36 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 		v = findViewById(R.id.venue_name);
 		if (v != null) {
 			mVenueName = (EditText) v;
+			mVenueName.addTextChangedListener(new TextWatcher() {
+
+				int len = 0;
+
+				@Override
+				public void afterTextChanged(Editable s) {
+					if (!ignoreChange) {
+						if (len > 0 && s.length() == 0) {
+							Message.obtain(mHandler,
+									MessageID.MSG_ID_NEED_CLEAR_CUSTOM_VENUE)
+									.sendToTarget();
+						}
+					}
+				}
+
+				@Override
+				public void beforeTextChanged(CharSequence s, int start,
+						int count, int after) {
+					if (s != null) {
+						len = s.length();
+					}
+				}
+
+				@Override
+				public void onTextChanged(CharSequence s, int start,
+						int before, int count) {
+					// TODO Auto-generated method stub
+
+				}
+			});
 		}
 
 		v = findViewById(R.id.venue_description);
@@ -344,14 +427,24 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 
 				@Override
 				public void onClick(View v) {
+
+					int previous = getUIMode();
 					setUIMode(UI_MODE_SEARCH);
 					if (TextUtils.isEmpty(mInput.getText().toString())) {
 						mCustomPlace = null;
 						mSelectedPlace = null;
 						mCustomOverlay.clear();
 					}
-					mListOverlay.clear();
-
+					if (previous == UI_MODE_EDIT) {
+						mListOverlay.clear();
+					} else {
+						if (mList != null
+								&& mList.getVisibility() != View.VISIBLE
+								&& mList.getAdapter() != null
+								&& mList.getAdapter().getCount() > 0) {
+							mList.setVisibility(View.VISIBLE);
+						}
+					}
 				}
 			});
 			mInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -361,7 +454,7 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 						KeyEvent event) {
 					if (actionId == EditorInfo.IME_ACTION_SEARCH
 							|| actionId == EditorInfo.IME_ACTION_DONE) {
-						mHandler.removeMessages(MSG_ID_TRIGGER_SERACH);
+						mHandler.removeMessages(MessageID.MSG_ID_TRIGGER_SERACH);
 						searchVenues(v.getText().toString());
 						return true;
 					}
@@ -372,9 +465,9 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 
 				@Override
 				public void afterTextChanged(Editable s) {
-					mHandler.removeMessages(MSG_ID_TRIGGER_SERACH);
+					mHandler.removeMessages(MessageID.MSG_ID_TRIGGER_SERACH);
 					Message msg = Message.obtain(mHandler,
-							MSG_ID_TRIGGER_SERACH, s.toString());
+							MessageID.MSG_ID_TRIGGER_SERACH, s.toString());
 					msg.getTarget().sendMessageDelayed(msg,
 							Const.SEARCH_TRIGGER_DELAY_IN_MS);
 				}
@@ -413,11 +506,10 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 							@Override
 							public void run() {
 								Location loc = myLocationOverlay.getLastFix();
-								myLocationOverlay.disableMyLocation();
-
+								// myLocationOverlay.disableMyLocation();
 								final List<PlaceResult> list = searchnearby(loc);
 
-								postInUI(new Runnable() {
+								mHandler.post(new Runnable() {
 
 									@Override
 									public void run() {
@@ -437,8 +529,6 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 				}
 			}
 		});
-
-		myLocationOverlay.enableMyLocation();
 		mMapView.getOverlays().add(myLocationOverlay);
 
 		Drawable drawable = getResources().getDrawable(R.drawable.map_pin);
@@ -455,9 +545,9 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 		if (mCustomPlace != null
 				&& (mCustomPlace.hasGeo() || !TextUtils.isEmpty(mCustomPlace
 						.getTitle()))) {
-			needFixQuery = false;
+			needFixQuery = !mCustomPlace.hasGeo();
 			setUIMode(UI_MODE_EDIT);
-			if (mMapController != null) {
+			if (mMapController != null && mCustomPlace.hasGeo()) {
 				mMapController.animateTo(Tool
 						.getGeoPointFromLocation(mCustomPlace.getLocation()));
 			}
@@ -476,26 +566,30 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 				if (loc != null) {
 					final List<PlaceResult> list;
 					if (TextUtils.isEmpty(keyword)) {
-						// showProgressBar("Search Venues",
-						// "Searching places near here");
 						list = searchnearby(loc);
 					} else {
-						// showProgressBar("Search Venues", String.format(
-						// "Searching places contains %s.", keyword));
 						list = searchtext(keyword.trim(), loc);
 					}
 
-					// hideProgressBar();
-					postInUI(new Runnable() {
-
-						@Override
-						public void run() {
-
-							if (list != null) {
-								showPlaces(list, keyword.trim());
-							}
+					boolean needfill = false;
+					if (mInput != null) {
+						if (keyword.contentEquals(mInput.getText())) {
+							needfill = true;
 						}
-					});
+					}
+
+					if (needfill) {
+						mHandler.post(new Runnable() {
+
+							@Override
+							public void run() {
+
+								if (list != null) {
+									showPlaces(list, keyword.trim());
+								}
+							}
+						});
+					}
 				}
 
 			}
@@ -538,7 +632,7 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 		// TODO Auto-generated method stub
 		if (keyCode == KeyEvent.KEYCODE_SEARCH) {
 			if (mInput != null) {
-				mHandler.removeMessages(MSG_ID_TRIGGER_SERACH);
+				mHandler.removeMessages(MessageID.MSG_ID_TRIGGER_SERACH);
 				searchVenues(mInput.getText().toString());
 				return true;
 			}
@@ -606,6 +700,10 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 		// TODO Auto-generated method stub
 		super.onResume();
 
+		if (myLocationOverlay != null) {
+			myLocationOverlay.enableMyLocation();
+		}
+
 		if (mInput != null) {
 			mInput.post(new Runnable() {
 				public void run() {
@@ -633,8 +731,10 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 	@Override
 	protected void onPause() {
 		// TODO Auto-generated method stub
+		if (myLocationOverlay != null) {
+			myLocationOverlay.disableMyLocation();
+		}
 		super.onPause();
-
 	}
 
 	/*
@@ -644,10 +744,6 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 	 */
 	@Override
 	protected void onStop() {
-		if (myLocationOverlay != null) {
-			myLocationOverlay.disableCompass();
-			myLocationOverlay.disableMyLocation();
-		}
 		super.onStop();
 	}
 
@@ -673,6 +769,12 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 			switch (id) {
 			case R.id.btn_action:
 				if (getUIMode() == UI_MODE_EDIT) {
+					if ((mVenueName != null && mVenueName.length() == 0
+							&& mVenueDescription != null && mVenueDescription
+							.length() > 0)) {
+						showToast(R.string.place_title_or_location_is_needed);
+						break;
+					}
 					setUIMode(UI_MODE_SEARCH);
 					mSelectedPlace = mCustomPlace;
 				}
@@ -1418,8 +1520,10 @@ public class SearchPlaceActivity extends MapActivity implements Observer {
 		if (mVenueName != null && mVenueDescription != null) {
 			mSelectedPlace = place;
 			View root = (View) mVenueName.getParent();
+			ignoreChange = true;
 			mVenueName.setText(place.getTitle());
 			mVenueDescription.setText(place.getDescription());
+			ignoreChange = false;
 			root.setVisibility(View.VISIBLE);
 			mVenueName.requestFocus();
 		}

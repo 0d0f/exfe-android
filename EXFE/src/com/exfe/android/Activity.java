@@ -8,11 +8,14 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.FragmentActivity;
 import android.widget.Toast;
 
 import com.exfe.android.controller.LandingActivity;
 import com.exfe.android.controller.SearchPlaceActivity;
+import com.exfe.android.debug.Log;
 import com.exfe.android.model.Model;
 import com.exfe.android.model.entity.Response;
 import com.flurry.android.FlurryAgent;
@@ -49,6 +52,33 @@ public class Activity extends FragmentActivity {
 			e.printStackTrace();
 		}
 	}
+	
+	@Override
+	protected void onRestart(){
+		super.onRestart();
+	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		FlurryAgent.onStartSession(this, Const.FLURRY_APP_ID);
+	}
+
+	@Override
+	protected void onResume(){
+		super.onResume();
+	}
+	
+	@Override
+	protected void onPause(){
+		super.onPause();
+	}
+	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		FlurryAgent.onEndSession(this);
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -60,18 +90,6 @@ public class Activity extends FragmentActivity {
 		super.onDestroy();
 	}
 
-	@Override
-	protected void onStart() {
-		super.onStart();
-		FlurryAgent.onStartSession(this, Const.FLURRY_APP_ID);
-	}
-
-	@Override
-	protected void onStop() {
-		super.onStop();
-		FlurryAgent.onEndSession(this);
-	}
-
 	/**
 	 * @return the model
 	 */
@@ -79,91 +97,111 @@ public class Activity extends FragmentActivity {
 		return this.mModel;
 	}
 
-	protected void postInUI(Runnable run) {
-		mModel.mHandler.post(run);
-	}
+	protected Handler mUIHandler = new Handler() {
 
-	protected Runnable createToastMessage(final String msg) {
-		return new Runnable() {
-
-			@Override
-			public void run() {
-				Toast toast = Toast.makeText(getApplicationContext(), msg,
-						Toast.LENGTH_SHORT);
-				toast.show();
-			}
-
-		};
-	}
-
-	protected Runnable hideProgressBar = new Runnable() {
-
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see android.os.Handler#handleMessage(android.os.Message)
+		 */
 		@Override
-		public void run() {
-			hideProgressBar();
-		}
-	};
+		public void handleMessage(Message msg) {
 
-	protected ProgressDialog mProgressDialog = null;
-
-	protected void showProgressBar(final String title, final String message) {
-		postInUI(new Runnable() {
-
-			@Override
-			public void run() {
+			switch (msg.what) {
+			case MessageID.MSG_ID_SHOW_PROGRESS_BAR:
+				Log.i(TAG, "process showProgressBar msg");
 				if (mProgressDialog == null) {
 					mProgressDialog = new ProgressDialog(Activity.this);
-				} else {
-					mProgressDialog.setTitle(title);
-					mProgressDialog.setMessage(message);
 				}
+				String[] data = (String[]) msg.obj;
+				mProgressDialog.setTitle(data[0]);
+				mProgressDialog.setMessage(data[1]);
+
 				if (!mProgressDialog.isShowing()) {
 					mProgressDialog.show();
 				}
-			}
-		});
-	}
-
-	protected void hideProgressBar() {
-		postInUI(new Runnable() {
-
-			@Override
-			public void run() {
+				break;
+			case MessageID.MSG_ID_DIMISS_PROGRESS_BAR:
+				Log.i(TAG, "process hideProgressBar msg");
 				if (mProgressDialog != null && mProgressDialog.isShowing()) {
 					mProgressDialog.dismiss();
 				}
-			}
-		});
-	}
-
-	protected Toast mToast = null;
-
-	protected void showToast(String msg) {
-		showToast(msg, Toast.LENGTH_SHORT);
-	}
-
-	protected void showToast(String msg, int duration) {
-		showToast(msg, duration, false);
-	}
-
-	protected void showToast(final String msg, final int duration, final boolean showNow) {
-		postInUI(new Runnable(){
-
-			@Override
-			public void run() {
+				break;
+			case MessageID.MSG_ID_SHOW_TOAST:
+				int duration = msg.arg1;
+				boolean showNow = msg.arg2 == 1;
+				String message = msg.obj.toString();
 				if (showNow && mToast != null) {
 					mToast.cancel();
 				}
 				if (mToast == null) {
-					mToast = Toast.makeText(Activity.this, msg, duration);
+					mToast = Toast.makeText(Activity.this, message, duration);
 				} else {
-					mToast.setText(msg);
+					mToast.setText(message);
 					mToast.setDuration(duration);
 				}
 				mToast.show();
-			}});
+				break;
+			default:
+				super.handleMessage(msg);
+
+			}
+
+		}
+
+	};
+
+	protected ProgressDialog mProgressDialog = null;
+
+	public void showProgressBar(final String title, final String message) {
+		Message.obtain(mUIHandler, MessageID.MSG_ID_SHOW_PROGRESS_BAR,
+				new String[] { title, message }).sendToTarget();
 	}
 
+	public void showProgressBar(final String title, final String message,
+			long delayMS) {
+		Log.i(TAG, "send showProgressBar msg");
+		Message msg = Message.obtain(mUIHandler,
+				MessageID.MSG_ID_SHOW_PROGRESS_BAR, new String[] { title,
+						message });
+		mUIHandler.sendMessageDelayed(msg, delayMS);
+	}
+
+	public void hideProgressBar() {
+		Log.i(TAG, "remove showProgressBar msg");
+		mUIHandler.removeMessages(MessageID.MSG_ID_SHOW_PROGRESS_BAR);
+		Log.i(TAG, "send hideProgressBar msg");
+		Message.obtain(mUIHandler, MessageID.MSG_ID_DIMISS_PROGRESS_BAR)
+				.sendToTarget();
+	}
+
+	protected Toast mToast = null;
+
+	public void showToast(int msg) {
+		showToast(getResources().getString(msg), Toast.LENGTH_SHORT);
+	}
+
+	public void showToast(String msg) {
+		showToast(msg, Toast.LENGTH_SHORT);
+	}
+
+	public void showToast(int msg, int duration) {
+		showToast(getResources().getString(msg), duration, false);
+	}
+
+	public void showToast(String msg, int duration) {
+		showToast(msg, duration, false);
+	}
+
+	public void showToast(int msg, int duration, boolean showNow) {
+		showToast(getResources().getString(msg), duration, showNow);
+	}
+
+	public void showToast(String msg, int duration, boolean showNow) {
+		Message.obtain(mUIHandler, MessageID.MSG_ID_SHOW_TOAST, duration,
+				showNow ? 1 : 0, msg).sendToTarget();
+	}
+	
 	public void registGCM() {
 		Intent regIntent = new Intent("com.google.android.c2dm.intent.REGISTER");
 		regIntent.putExtra(Const.GCM_FIELD_APP,

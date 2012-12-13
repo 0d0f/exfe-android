@@ -9,6 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.exfe.android.Const;
 import com.exfe.android.db.DatabaseHelper;
 import com.exfe.android.db.IdentityArrayPersister;
 import com.exfe.android.util.Tool;
@@ -35,6 +36,10 @@ public class User extends Entity {
 	private List<Identity> identities;
 	@DatabaseField
 	private int cross_quantity;
+	@DatabaseField
+	private Date created_at;
+	@DatabaseField
+	private Date updated_at;
 
 	public User() {
 		mType = EntityFactory.TYPE_USER;
@@ -50,14 +55,18 @@ public class User extends Entity {
 		mType = EntityFactory.TYPE_USER;
 
 		mId = json.optLong("id", NO_ID);
-		name = Tool.parseString(json, "name");
-		bio = Tool.parseString(json, "bio");
-		avatar_filename = Tool.parseString(json, "avatar_filename");
-		avatar_updated_at = Tool.parseString(json, "avatar_updated_at");
-		timezone = Tool.parseString(json, "timezone");
+		name = json.optString("name", "");
+		bio = json.optString("bio", "");
+		avatar_filename = json.optString("avatar_filename", "");
+		avatar_updated_at = json.optString("avatar_updated_at", "");
+		timezone = json.optString("timezone", "");
 		cross_quantity = json.optInt("cross_quantity", 0);
-
 		identities = new ArrayList<Identity>();
+		created_at = Tool.parseDate(json, "created_at");
+		updated_at = Tool.parseDate(json, "updated_at", created_at);
+		if (updated_at == null) {
+			updated_at = created_at;
+		}
 		JSONArray idArray = json.optJSONArray("identities");
 		if (idArray != null) {
 			for (int i = 0; i < idArray.length(); i++) {
@@ -71,10 +80,43 @@ public class User extends Entity {
 				}
 			}
 		}
+
 	}
 
 	public JSONObject toJSON(boolean deep) {
 		JSONObject json = super.toJSON(deep);
+		try {
+			json.put("id", mId);
+			json.put("name", name);
+			json.put("bio", bio);
+			json.put("avatar_filename", avatar_filename);
+			json.put("avatar_updated_at", avatar_updated_at);
+			json.put("timezone", timezone);
+			json.put("cross_quantity", cross_quantity);
+			if (created_at == null) {
+				json.put("created_at", "");
+			} else {
+				json.put("created_at",
+						Const.UTC_DATE_TIME_TIMEZONE_FORMAT.format(created_at));
+			}
+			if (updated_at == null) {
+				json.put("updated_at", "");
+			} else {
+				json.put("updated_at",
+						Const.UTC_DATE_TIME_TIMEZONE_FORMAT.format(updated_at));
+			}
+
+			JSONArray array = new JSONArray();
+			for (Identity ident : identities) {
+				if (ident != null) {
+					array.put(ident.toJSON(deep));
+				}
+			}
+			json.put("identities", array);
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 		return json;
 	}
 
@@ -198,6 +240,36 @@ public class User extends Entity {
 		this.cross_quantity = crossQuantity;
 	}
 
+	/**
+	 * @return the createdAt
+	 */
+	public Date getCreatedAt() {
+		return this.created_at;
+	}
+
+	/**
+	 * @param createdAt
+	 *            the createdAt to set
+	 */
+	public void setCreatedAt(Date createdAt) {
+		this.created_at = createdAt;
+	}
+
+	/**
+	 * @return the updatedAt
+	 */
+	public Date getUpdatedAt() {
+		return this.updated_at;
+	}
+
+	/**
+	 * @param updatedAt
+	 *            the updatedAt to set
+	 */
+	public void setUpdatedAt(Date updatedAt) {
+		this.updated_at = updatedAt;
+	}
+	
 	public void saveToDao(DatabaseHelper dbhelper) {
 		try {
 			Dao<User, Long> dao = dbhelper.getCachedDao(getClass());
@@ -219,24 +291,5 @@ public class User extends Entity {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-
-	public Date getLatestModify() {
-		long latest = 0;
-		Date data = null;
-		Date result = new Date(0L);
-
-		if (identities != null) {
-			for (Identity ident : identities) {
-				if (ident != null) {
-					data = ident.getUpdatedAt();
-					if (latest < data.getTime()) {
-						latest = data.getTime();
-						result = data;
-					}
-				}
-			}
-		}
-		return result;
 	}
 }

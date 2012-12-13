@@ -6,6 +6,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
@@ -125,7 +126,7 @@ public class SetTimeActivity extends Activity implements Observer {
 		super.onCreate(savedInstanceState);
 		mModel.addObserver(this);
 		setContentView(R.layout.activity_set_time);
-		
+
 		mNow.setTimeInMillis(System.currentTimeMillis());
 
 		fmt_MMMM_yyyy = new SimpleDateFormat(getResources().getString(
@@ -213,6 +214,18 @@ public class SetTimeActivity extends Activity implements Observer {
 
 		}
 
+		v = findViewById(R.id.time_top_layer);
+		if (v != null) {
+			v.setOnLongClickListener(new View.OnLongClickListener() {
+
+				@Override
+				public boolean onLongClick(View v) {
+					v.post(gotoToday);
+					return true;
+				}
+			});
+		}
+
 		mDateSelector = (ListView) findViewById(R.id.date_selector);
 
 		Calendar cal = null;
@@ -280,16 +293,7 @@ public class SetTimeActivity extends Activity implements Observer {
 		mAdapter = new DateAdapter(this, R.layout.listitem_rich_date);
 		mDateSelector.setChoiceMode(AbsListView.CHOICE_MODE_SINGLE);
 		mDateSelector.setAdapter(mAdapter);
-		mDateSelector.post(new Runnable() {
-
-			@Override
-			public void run() {
-				int first = mDateSelector.getFirstVisiblePosition();
-				int last = mDateSelector.getLastVisiblePosition();
-				mDateSelector.setSelection(Integer.MAX_VALUE / 2
-						- (last - first) / 2);
-			}
-		});
+		mDateSelector.post(gotoToday);
 		mDateSelector.setOnItemClickListener(mListener);
 		mDateSelector.setOnScrollListener(new AbsListView.OnScrollListener() {
 
@@ -297,7 +301,8 @@ public class SetTimeActivity extends Activity implements Observer {
 			public void onScroll(AbsListView view, int firstVisibleItem,
 					int visibleItemCount, int totalItemCount) {
 				if (mAdapter != null) {
-					Calendar mid = mAdapter.getItem(firstVisibleItem + visibleItemCount / 2);
+					Calendar mid = mAdapter.getItem(firstVisibleItem
+							+ visibleItemCount / 2);
 					updateMonth(mid);
 				}
 			}
@@ -309,6 +314,19 @@ public class SetTimeActivity extends Activity implements Observer {
 			}
 		});
 	}
+
+	private Runnable gotoToday = new Runnable() {
+
+		@Override
+		public void run() {
+			if (mDateSelector != null) {
+				int first = mDateSelector.getFirstVisiblePosition();
+				int last = mDateSelector.getLastVisiblePosition();
+				mDateSelector.setSelection(Integer.MAX_VALUE / 2
+						- (last - first) / 2);
+			}
+		}
+	};
 
 	private void updateMonth(Calendar date) {
 		Log.d(TAG, "update month...");
@@ -394,7 +412,7 @@ public class SetTimeActivity extends Activity implements Observer {
 								Response result = mModel.getServer()
 										.formatTime(raw);
 
-								postInUI(hideProgressBar);
+								hideProgressBar();
 								if (result != null) {
 									int code = result.getCode();
 									switch (code) {
@@ -406,27 +424,28 @@ public class SetTimeActivity extends Activity implements Observer {
 											CrossTime ct = (CrossTime) EntityFactory
 													.create(time);
 											if (ct != null) {
-												postInUI(new Runnable() {
+												mModel.mHandler
+														.post(new Runnable() {
 
-													@Override
-													public void run() {
+															@Override
+															public void run() {
 
-														saveResultAndFinish(time
-																.toString());
-													}
-												});
+																saveResultAndFinish(time
+																		.toString());
+															}
+														});
 											}
 										}
 										break;
 									case HttpStatus.SC_NOT_FOUND:
-										postInUI(createToastMessage("API not found."));
+										showToast("API not found.");
 										break;
 									default:
-										postInUI(createToastMessage("Unhandled error."));
+										showToast("Unhandled error.");
 										break;
 									}
 								} else {
-									postInUI(createToastMessage("Bad response."));
+									showToast("Bad response.");
 								}
 							}
 						};
@@ -498,8 +517,7 @@ public class SetTimeActivity extends Activity implements Observer {
 
 		@Override
 		public long getItemId(int position) {
-			// TODO Auto-generated method stub
-			return 0;
+			return position - mBasePosition;
 		}
 
 		@Override
