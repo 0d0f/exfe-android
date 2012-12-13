@@ -11,10 +11,10 @@ import android.text.TextUtils;
 
 public class Const {
 
-	public static final boolean override_domain = false;// BuildConfig.DEBUG;
+	public static final boolean DEBUG = false;// BuildConfig.DEBUG;
 
 	public static final String FLURRY_APP_ID = "4B9VJPB4DC7VPTTCS3G6";
-	public static final String PUSH_PROJECT_ID = override_domain ? "313001677673"
+	public static final String PUSH_PROJECT_ID = DEBUG ? "313001677673"
 			: "905549742932";
 
 	public static final String GCM_FIELD_APP = "app";
@@ -74,16 +74,16 @@ public class Const {
 	public static final String DEFAULT_API_SERVER_PORT = "";
 	public static final String DEFAULT_API_SERVER_ROOT_PATH = "/v2";
 
-	public static final String DEFAULT_IMG_DEFAULT_URL = Const.override_domain ? "http://img.0d0f.com/web/80_80_%s"
+	public static final String DEFAULT_IMG_DEFAULT_URL = Const.DEBUG ? "http://img.0d0f.com/web/80_80_%s"
 			: "http://img.exfe.com/web/80_80_%s";
-	public static final String DEFAULT_IMG_POOL_URL = Const.override_domain ? "http://img.0d0f.com/%c/%c/80_80_%s"
+	public static final String DEFAULT_IMG_POOL_URL = Const.DEBUG ? "http://img.0d0f.com/%c/%c/80_80_%s"
 			: "http://img.exfe.com/%c/%c/80_80_%s";
 
-	public static final String DEFAULT_IMG_WIDGET_URL = Const.override_domain ? "http://0d0f.com/static/img/xbg"
+	public static final String DEFAULT_IMG_WIDGET_URL = Const.DEBUG ? "http://0d0f.com/static/img/xbg"
 			: "http://exfe.com/static/img/xbg";
 
 	public static final String DEFAULT_OAUTH_PROTOCAL = "http";
-	public static final String DEFAULT_OAUTH_SERVER_DOMAIN = Const.override_domain ? "0d0f.com"
+	public static final String DEFAULT_OAUTH_SERVER_DOMAIN = Const.DEBUG ? "0d0f.com"
 			: "exfe.com";
 	public static final String DEFAULT_OAUTH_SERVER_PORT = "";
 	public static final String DEFAULT_OAUTH_SERVER_ROOT_PATH = "/oAuth";

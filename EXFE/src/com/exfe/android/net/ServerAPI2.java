@@ -58,12 +58,12 @@ public class ServerAPI2 {
 	// public static final String lineSeparator =
 	// System.getProperty("line.separator");
 
-	public static String OVERIDE_PROTOCAL = Const.override_domain ? "http"
+	public static String OVERIDE_PROTOCAL = Const.DEBUG ? "http"
 			: null;
-	public static String OVERIDE_DOMAIN = Const.override_domain ? "api.0d0f.com"
+	public static String OVERIDE_DOMAIN = Const.DEBUG ? "api.0d0f.com"
 			: null;
-	public static String OVERIDE_PORT = Const.override_domain ? null : null;
-	public static String OVERIDE_PATHROOT = Const.override_domain ? null : null;
+	public static String OVERIDE_PORT = Const.DEBUG ? null : null;
+	public static String OVERIDE_PATHROOT = Const.DEBUG ? null : null;
 
 	private static final String FIELD_API_NAME = "API-Name";
 	private static final String FIELD_CONTECT_TYPE = "Content-Type";

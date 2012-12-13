@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.util.Set;
 
 import com.exfe.android.BuildConfig;
+import com.exfe.android.Const;
 
 import android.content.Context;
 import android.content.Intent;
@@ -15,7 +16,7 @@ import android.os.Bundle;
 import android.os.Environment;
 
 public class Log {
-	public static boolean DEBUG = BuildConfig.DEBUG;
+	public static boolean DEBUG = Const.DEBUG;
 	public static int LOG_LEVEL = DEBUG ? android.util.Log.VERBOSE
 			: android.util.Log.WARN;
 
