@@ -30,6 +30,7 @@ public class Activity extends FragmentActivity {
 		// TODO Auto-generated constructor stub
 	}
 
+	//region Activity lifecycle
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -89,7 +90,8 @@ public class Activity extends FragmentActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 	}
-
+	//endregion
+	
 	/**
 	 * @return the model
 	 */
@@ -97,6 +99,7 @@ public class Activity extends FragmentActivity {
 		return this.mModel;
 	}
 
+	//region UI Service
 	protected Handler mUIHandler = new Handler() {
 
 		/*
@@ -201,6 +204,7 @@ public class Activity extends FragmentActivity {
 		Message.obtain(mUIHandler, MessageID.MSG_ID_SHOW_TOAST, duration,
 				showNow ? 1 : 0, msg).sendToTarget();
 	}
+	//endregion
 	
 	public void registGCM() {
 		Intent regIntent = new Intent("com.google.android.c2dm.intent.REGISTER");

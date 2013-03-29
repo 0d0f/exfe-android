@@ -7,8 +7,6 @@ import java.util.List;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 
-import com.google.android.maps.GeoPoint;
-import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 
 public class ItemizedOverlay<T extends ItemizedOverlay.IOverlayItem> extends
